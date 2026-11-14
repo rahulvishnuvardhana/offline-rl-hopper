@@ -1,0 +1,42 @@
+# Shared defaults for every run. Algo files (configs/algo/*.yaml) and CLI overrides
+# (key.sub=value) are merged on top. Hyperparameters follow the IQL paper's MuJoCo
+# setting (ROADMAP Section 5); do not tune per p.
+seed: 0
+
+data:
+  expert_id: mujoco/hopper/expert-v0
+  simple_id: mujoco/hopper/simple-v0
+  p_expert: 1.0
+  n_transitions: 900000
+  mixture_dir: data/mixtures
+  normalize_states: true
+  state_std_eps: 1.0e-3
+  scale_rewards: false
+
+net:
+  hidden: [256, 256]
+  log_std_min: -20.0
+  log_std_max: 2.0
+
+train:
+  steps: 300000
+  batch_size: 256
+  lr: 3.0e-4
+  log_every: 1000
+  eval_every: 5000
+  checkpoint_every: 25000
+  device: auto
+  out_dir: runs
+
+eval:
+  episodes: 10
+  seed_offset: 10000
+  final_score_last_n: 5
+
+score:
+  # 0 and 100 of the normalized score; filled from the Phase 2 EDA.
+  r_simple: null
+  r_expert: null
+
+algo:
+  name: bc

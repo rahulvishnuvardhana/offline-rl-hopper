@@ -1,0 +1,56 @@
+"""Run metadata: enough to say exactly which code, packages and machine produced a result."""
+
+from __future__ import annotations
+
+import json
+import os
+import platform
+import subprocess
+from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+from typing import Any
+
+import torch
+
+PACKAGES = ("torch", "numpy", "gymnasium", "mujoco", "minari", "pandas")
+
+
+def _git(*args: str) -> str | None:
+    try:
+        out = subprocess.run(["git", *args], capture_output=True, text=True, check=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout.strip()
+
+
+def _package_version(name: str) -> str | None:
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return None
+
+
+def collect_metadata() -> dict[str, Any]:
+    """Git commit and dirty flag, package versions, host, GPU and Slurm job id."""
+    status = _git("status", "--porcelain")
+    return {
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": bool(status) if status is not None else None,
+        "python": platform.python_version(),
+        "packages": {name: _package_version(name) for name in PACKAGES},
+        "hostname": platform.node(),
+        "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
+        "slurm_array_task_id": os.environ.get("SLURM_ARRAY_TASK_ID"),
+        "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+
+
+def write_metadata(run_dir: str | Path) -> dict[str, Any]:
+    """Write ``meta.json`` into the run folder and return it."""
+    meta = collect_metadata()
+    path = Path(run_dir) / "meta.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    return meta

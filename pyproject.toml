@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "offrl"
+version = "0.1.0"
+description = "How much expert data does offline RL need? BC vs. IQL on mixed-quality Minari Hopper datasets."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Rahul Vishnuvardhana" }]
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "torch==2.11.0",
+    "minari[all]==0.5.4",
+    "gymnasium[mujoco]==1.4.0",
+    "mujoco==3.2.3",
+    "numpy==2.4.6",
+    "pandas==3.1.1",
+    "matplotlib==3.11.2",
+    "tensorboard==2.21.0",
+    "rliable==1.2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.2.0", "ruff==0.17.5", "pre-commit>=4.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

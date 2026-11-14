@@ -1,0 +1,12 @@
+# IQL, MuJoCo locomotion setting from Kostrikov et al. (2022), Appendix B.
+data:
+  scale_rewards: true   # r * 1000 / (max_return - min_return), fit on the mixture
+
+algo:
+  name: iql
+  expectile: 0.7
+  beta: 3.0
+  discount: 0.99
+  target_update_rate: 0.005
+  exp_adv_max: 100.0
+  actor_cosine_lr: true

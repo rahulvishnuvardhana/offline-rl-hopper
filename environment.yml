@@ -1,0 +1,27 @@
+# Explorer env. Build on a compute node:
+#   srun --partition=short --cpus-per-task=4 --mem=8G --time=01:00:00 --pty bash
+#   module load miniconda3/24.11.1
+#   conda env create --prefix /scratch/$USER/envs/offrl -f environment.yml
+name: offrl
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # Pinned to the versions verified on the laptop (Phase 0, 2026-11-13).
+      # Explorer GPU drivers support CUDA <= 12.8 (checked 2026-11-13), but the default
+      # PyPI torch 2.15 wheel is built for CUDA 13.2 and silently falls back to CPU.
+      # Newest cu128 build is 2.11.0, so both machines pin 2.11.0.
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.11.0+cu128
+      - minari[all]==0.5.4
+      - gymnasium[mujoco]==1.4.0
+      - mujoco==3.2.3
+      - numpy==2.4.6
+      - pandas==3.1.1
+      - matplotlib==3.11.2
+      - tensorboard==2.21.0
+      - rliable==1.2.0
+      - pytest==9.2.0
+      - ruff==0.17.5

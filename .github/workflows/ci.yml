@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  OWNER_EMAIL: rahulvishnuvardhana32@gmail.com
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: pre-commit (ruff check, ruff format, whitespace, yaml, large files)
+        run: |
+          pip install pre-commit
+          pre-commit run --all-files --show-diff-on-failure
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install (CPU torch, no datasets downloaded)
+        run: |
+          pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[dev]"
+      - name: pytest
+        run: pytest
+
+  commit-policy:
+    # Sole-contributor rule: every commit authored by the owner, no co-author trailers.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check authors and trailers
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="origin/${{ github.base_ref }}..${{ github.event.pull_request.head.sha }}"
+          else
+            range="${{ github.sha }}~1..${{ github.sha }}"
+            git rev-parse -q --verify "${{ github.sha }}~1" >/dev/null || range="${{ github.sha }}"
+          fi
+          echo "Checking $range"
+          fail=0
+          for c in $(git rev-list "$range"); do
+            author=$(git log -1 --format='%ae' "$c")
+            case "$author" in
+              "$OWNER_EMAIL"|*rahulvishnuvardhana@users.noreply.github.com) ;;
+              *) echo "::error::$c authored by $author (expected $OWNER_EMAIL)"; fail=1 ;;
+            esac
+            if git log -1 --format='%B' "$c" | grep -qiE '^co-authored-by:|generated with \[?claude'; then
+              echo "::error::$c contains a co-author or generated-with line"; fail=1
+            fi
+          done
+          exit $fail

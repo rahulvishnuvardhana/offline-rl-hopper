@@ -1,0 +1,4 @@
+# BC = IQL's policy loss with beta = 0 (every weight is 1). No value functions.
+algo:
+  name: bc
+  beta: 0.0
