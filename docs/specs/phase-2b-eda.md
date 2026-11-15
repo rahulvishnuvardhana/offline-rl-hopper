@@ -1,63 +1,128 @@
 # Spec: Phase 2B, exploratory data analysis (EDA)
 
-**Status:** draft for review | **Branch:** `phase-2-data-eda` | **Roadmap:** Phase 2, "Tasks: EDA" | **Depends on:** Phase 2A (validator, `report/data_audit.json`)
+**Status:** v2, approved 2026-11-15 (v1 reviewed by two fresh reviewers; 17 changes accepted, 1 rejected, 1 deferred to Phase 4) | **Branch:** `phase-2-data-eda` | **Roadmap:** Phase 2, "Tasks: EDA" | **Depends on:** Phase 2A (validator, `report/data_audit.json`)
 
 ## 1. Goal
-Produce the dataset facts the rest of the project depends on: the two reference returns that define the normalized score, evidence for or against hypothesis H1 (unimodal Gaussian BC averaging two behaviors), and numbers that justify the preprocessing choices (state normalization, reward scaling). Everything machine-readable, reproducible, and reconciled against the Phase 2A audit.
+Produce the dataset facts the rest of the project depends on:
+- the reference returns that define the normalized score (Section 5);
+- the per-`p` reference curves and sanity bands that later phases are checked against;
+- evidence for or against H1 (a unimodal Gaussian BC averaging two behaviors);
+- numbers that justify the preprocessing choices (state normalization, reward scaling).
+
+Everything is machine-readable, reproducible and reconciled against the Phase 2A audit.
 
 ## 2. Inputs
-- `mujoco/hopper/expert-v0` and `mujoco/hopper/simple-v0`, loaded with `offrl.data.load.load_episodes` (already validated: all 9 checks pass in `report/data_audit.json`).
-- The recovered evaluation env (`dataset.recover_environment()`, Hopper-v5) for the random-policy baseline.
+- `mujoco/hopper/expert-v0` and `mujoco/hopper/simple-v0`, loaded with `offrl.data.load.load_episodes` (all 9 checks pass in `report/data_audit.json`, audit commit `19c118c`).
+- The recovered evaluation env (`dataset.recover_environment()`, Hopper-v5) for the random policy.
 
 ## 3. Outputs
 | File | Content |
 |---|---|
-| `report/eda_summary.json` | All numbers below, per dataset, plus provenance (git commit, data sha256 copied from the audit) |
-| `report/figures/*.png` | 6 figures listed in Section 4 |
-| `report/eda_summary.md` | One page of human interpretation, written after reading the numbers |
-| `configs/base.yaml` | `score.r_simple`, `score.r_expert` filled in |
+| `report/eda_summary.json` | Every number below, per dataset, plus provenance (Section 7) |
+| `report/figures/*.png` | 8 figures (Section 4), each under 1 MB |
+| `report/eda_summary.md` | One page of interpretation, written after reading the numbers |
+| `configs/base.yaml` | `score.r_random`, `score.r_expert` (and `score.r_simple` for reference), written only with `--write-config` |
 
 ## 4. Analyses
-Observation layout (Hopper-v5, x excluded): `obs[0]` torso z, `obs[1]` torso angle, `obs[2:5]` thigh/leg/foot angles, `obs[5]` x velocity, `obs[6]` z velocity, `obs[7]` angular velocity of torso, `obs[8:11]` thigh/leg/foot angular velocities. Velocities are clipped to [-10, 10] by the env.
+Observation layout (Hopper-v5, x excluded): `obs[0]` torso z, `obs[1]` torso angle, `obs[2:5]` thigh/leg/foot angles, `obs[5]` x velocity, `obs[6]` z velocity, `obs[7]` torso angular velocity, `obs[8:11]` thigh/leg/foot angular velocities. The env clips velocities to [-10, 10]. The health rule's `|state| < 100` bound applies to the unclipped state, so it cannot be checked from observations; we only report clipping.
+
+"State statistics" always use `obs[:-1]` (states that have an action). **All dataset-wide state statistics in this phase are descriptive only.** Training normalizers are fit on each mixture (ADR-5) and never on these numbers.
+
+**Subsampling rule (A7, A8, A9):** sample whole episodes uniformly (seeded) and then states within them, so neighbouring states of one episode are not counted as independent. Seeds 0, 1, 2 for each subsampled analysis; report the mean and the min to max range across seeds.
 
 | # | Analysis | Output |
 |---|---|---|
-| A1 | Episode lengths: mean, std, min, median, max; histogram expert vs. simple | numbers + `lengths.png` |
-| A2 | Undiscounted episode returns: mean, std, min, median, max; histogram | numbers + `returns.png` |
-| A3 | Termination rate (fraction of episodes ending by falling vs. time limit) | numbers |
-| A4 | Per-dimension state mean and std (over `obs[:-1]` of every episode, i.e. states that have an action) | numbers + `state_std.png` |
-| A5 | Velocity clipping: fraction of values at abs 10 per dimension | numbers |
-| A6 | Action mean/std per dimension; fraction at the bound | numbers |
-| A7 | Reward vs. forward velocity `obs[5]` (2-D histogram, subsample) | `reward_vs_velocity.png` |
-| A8 | State coverage: PCA (2 components) fitted on standardized states from both datasets (20k subsample each, seed 0) | `pca_coverage.png` + explained variance |
-| A9 | Action disagreement in shared states: for 5k simple states, nearest expert state in standardized space; for pairs closer than the median expert-to-expert nearest-neighbour distance, the L2 action difference. Baseline: same statistic for expert-vs-expert pairs. | numbers + `action_disagreement.png` |
-| A10 | Random policy: 10 episodes, seeds 0 to 9, uniform actions from the seeded action space; mean and std return | numbers |
+| A1 | Episode lengths: mean, std, min, median, max | numbers + `lengths.png` |
+| A2 | Episode returns: mean, std, min, median, max | numbers + `returns.png` |
+| A3 | Fall rate: fraction of episodes ending in termination vs. truncation at 1,000 | numbers |
+| A3b | **Fall split:** A1 and A2 statistics for `fell` and `no_fall` episodes separately, plus each group's share of episodes and transitions | numbers + `returns_by_fall.png` |
+| A4 | Per-dimension state mean and std (descriptive only) | numbers + `state_std.png` |
+| A5 | Velocity clipping: fraction of values with `abs == 10` (exact, `np.isclose(atol=1e-9)`) per dimension `obs[5:11]`, per dataset | numbers |
+| A6 | Action mean and std per dimension; fraction at the bound | numbers |
+| A7 | **Reward decomposition:** per step, `healthy = 1.0`, `forward = next_obs[5]`, `ctrl = 1e-3 * ||a||^2`; mean of each term per dataset; residual `rew - (healthy + forward - ctrl)` summary (mean, median and p99 of abs) | numbers + `reward_terms.png` |
+| A8 | State coverage: PCA (2 components) on pooled standardized states, 20k per source per seed; signs fixed so the largest-abs loading of each component is positive | `pca_coverage.png` + explained variance |
+| A9 | **Source separability and action disagreement** (replaces v1's nearest-neighbour threshold), Section 4.1 | numbers + `knn_actions.png` |
+| A10 | Random policy: 100 episodes, seeds 0 to 99, `env.reset(seed=s)` and `env.action_space.seed(s)`; mean, std, SE | numbers |
+| A11 | **Per-`p` dataset reference curve:** the expected normalized score of each mixture's own episodes for `p` in {0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0}, using the Phase 3 sampling rule (Section 4.2) | numbers + `mixture_reference.png` |
+| A12 | **IQL reward-scale preview:** for the same `p` values, `1000 / (max_ret - min_ret)` over the mixture's episodes (Section 4.2) | numbers |
 
-## 5. Score reference values
-`r_simple` = A2 mean return of simple-v0, `r_expert` = A2 mean return of expert-v0, as stated in the proposal. Normalized score = `100 * (R - r_simple) / (r_expert - r_simple)`. The random-policy return (A10) is reported for context only.
+### 4.1 A9 detail
+Pools per seed: 20k expert and 20k simple states (by the subsampling rule), standardized with the pooled mean and std. Split by **episode**, 80% train and 20% test.
+1. **Separability:** kNN classifier (k = 10, Euclidean) predicting the source from the state alone. Score = fraction of expert neighbours in the train pool. Report held-out ROC AUC.
+2. **Action disagreement:** for each simple test state, `d_mix` = L2 distance between the mean action of its k expert train neighbours and the mean action of its k simple train neighbours. Baseline `d_same`: split the expert train episodes into two halves and compute the same statistic between the halves for each expert test state. Report the medians and the ratio `d_mix / d_same`.
+
+Pre-registered reading:
+
+| Result | Reading |
+|---|---|
+| AUC near 1 | The sources occupy different states, so a state-conditioned BC can tell them apart. This weakens H1's averaging explanation. |
+| AUC well below 1 and `d_mix / d_same` clearly above 1 | The same states get different actions. This supports H1. |
+
+Memory: distances are computed in blocks of 512 test rows against the train pool (512 x 32k x 8 bytes is about 130 MB), never the full matrix.
+
+### 4.2 Mixture sampling rule used by A11 and A12
+For each of seeds 0, 1, 2: shuffle each source's episode IDs with the seed and take whole episodes until the source's budget (`p * 900,000` expert, the rest simple) is reached. The last episode is trimmed (it counts as truncated, not fallen). A11 averages episode returns over the mixture, with a trimmed episode counted at its trimmed return. Report the mean and range across seeds.
+
+This is a preview function in `eda.py`. Phase 3's `mixture.py` must reproduce these numbers for the same seeds, and its test reconciles them against `eda_summary.json`.
+
+## 5. Score definition (changes ADR-6, before any training result exists)
+v1 used 0 = simple mean and 100 = expert mean. The returns are bimodal, so that scale gives no-fall simple episodes a score of 69 and no-fall expert episodes 114 (fall rates 66.3% and 28.4%). We therefore use the D4RL convention:
+
+- `r_random` = A10 mean return, `r_expert` = A2 mean return of expert-v0.
+- Normalized score = `100 * (R - r_random) / (r_expert - r_random)`.
+- `r_simple` (A2 mean of simple-v0) is recorded and shown as a reference line.
+- **Every reported score also gives the raw return and the fall rate.**
+- H2's threshold (score >= 90) is unchanged; on this scale it means 90% of the expert dataset mean above random.
+
+**Sanity bands for Phase 4 (pre-registered here, written to `eda_summary.json` as `sanity_bands`):** for each dataset, the band is [score of the `fell` mean return, score of the `no_fall` mean return] from A3b. BC at `p = 1` should land in the expert band and BC at `p = 0` in the simple band. Its fall rate is reported next to it.
 
 ## 6. Design
-- `src/offrl/analysis/eda.py`: pure functions taking `Sequence[Episode]` (and arrays) and returning dicts/arrays. No file I/O, no Minari import, so all are unit-testable on synthetic episodes.
-- `scripts/eda.py`: loads data, calls the functions, writes JSON and figures. Deterministic: every subsample and the random policy use fixed seeds.
-- PCA and nearest neighbours implemented with NumPy only (SVD; brute-force or chunked distance on at most 20k x 20k), no new dependencies.
-- Figures: matplotlib, Agg backend, fixed size and DPI.
+- `src/offrl/analysis/eda.py`: pure functions taking `Sequence[Episode]` and arrays, returning dicts and arrays. No file I/O, no Minari import, so all are unit-testable on synthetic episodes. Includes `knn_blocks`, `pca_2d` (NumPy SVD), `roc_auc` (rank based), `sample_mixture_episodes` and `subsample_states`.
+- `src/offrl/rollout.py`: `run_policy(env, policy_fn, seeds) -> returns, lengths, fell`, used here for the random policy and reused by Phase 4's `eval.py`.
+- `src/offrl/analysis/eda_plots.py`: one function per figure, taking the summary dict and arrays and returning a `Figure`. Agg backend, fixed size and DPI, `metadata={"Software": None}` in `savefig` so PNGs carry no version stamp; scatter plots are subsampled and rasterized to stay under 1 MB.
+- `scripts/eda.py`: loads the data, calls the functions, runs the Section 7 checks, writes the JSON (`allow_nan=False`, `indent=2`, LF line endings) and figures. Flags: `--write-config` (writes the Section 5 values to `configs/base.yaml`), `--allow-dirty` (development only; the run is then marked `git_dirty: true`).
+- `offrl.runmeta.PACKAGES` gains `matplotlib`. `scripts/validate_data.py` also writes LF line endings.
+- NumPy only for PCA, kNN and AUC. No new dependencies.
 
-## 7. Reconciliation and audit checks (script fails if any is false)
-1. Sum of episode lengths and episode counts equal the values in `report/data_audit.json`.
-2. Dataset sha256 values equal the audit's.
-3. Each episode return equals the sum of its rewards (recomputed independently).
-4. `r_expert > r_simple`.
-5. `configs/base.yaml` score values equal `eda_summary.json` (also a unit test).
-6. Running the script twice produces identical JSON apart from the timestamp.
+## 7. Reconciliation and audit checks (the script exits 1 if any fails)
+| # | Check | Independent of |
+|---|---|---|
+| C1 | Step and episode counts equal `report/data_audit.json` | The audit's own computation |
+| C2 | **Re-hash** the dataset files now and compare with the audit's `file_sha256` | The audit's stored hashes |
+| C3 | Reward decomposition (A7): abs(mean residual) < 0.02 and median abs residual < 0.1 per dataset. Measured while writing this spec: mean -0.002 / -0.004, median 0.034 / 0.022. A wrong reward scale or a missing survival bonus would fail it. | The recorded rewards |
+| C4 | Fall split adds up: `n_fell + n_no_fall = n_episodes`, transitions likewise, and the group means weighted by count reproduce the A2 mean (`rtol=1e-12`) | The A2 computation |
+| C5 | `r_expert > r_simple > r_random` | |
+| C6 | A11 at `p = 0` and `p = 1` equals the A2-based scores of simple and expert within the trimming effect (abs diff < 1 point) | A2 |
+| C7 | Determinism: the analysis is computed twice in one process and every number agrees (`rtol=1e-9`). Same-machine guarantee only. | |
+| C8 | Clean tree: refuses to run if `git status --porcelain` shows changes outside `report/` (unless `--allow-dirty`). Records `git_commit`, `git_dirty` and the SHA-256 of `report/data_audit.json` it reconciled against. | |
+
+Separately, `tests/test_eda_config.py` asserts that `configs/base.yaml` score values equal `eda_summary.json` (`rtol=1e-9`). It is a pytest, not a script check, so the script never checks its own output.
+
+**Commit order (provenance):**
+1. Commit the code.
+2. Run `python scripts/eda.py --write-config` on the clean tree.
+3. Commit `report/` and `configs/base.yaml` together.
+
+The summary's `git_commit` then names the code commit, as with the Phase 2A audit.
 
 ## 8. Tests
-Synthetic episodes with known answers for: length/return stats, termination rate, clipping fraction, state stats excluding the final observation, PCA on data with a known dominant direction, nearest-neighbour action difference on constructed pairs, and the config-equals-summary check.
+Synthetic episodes with known answers, each asserting exact values:
+- length, return and fall statistics, and the fall split (C4 identities);
+- clipping fraction; state stats exclude the final observation;
+- reward decomposition with a constructed residual of 0;
+- PCA recovers a known dominant direction, with the sign convention;
+- `knn_blocks` equals a brute-force result for several block sizes;
+- `roc_auc` gives 1.0, 0.5 and 0.0 on constructed scores;
+- `sample_mixture_episodes` hits the budget exactly, with `p = 0` taking no expert and `p = 1` no simple;
+- `run_policy` with a fake env.
+- Plot smoke tests: every figure function runs on synthetic data and returns a `Figure` with the expected number of axes.
+- The config-equals-summary test.
 
 ## 9. Definition of Done
-- All tests and CI green; all Section 7 checks pass.
-- `eda_summary.json`, 6 figures and `eda_summary.md` committed.
-- `score.r_simple` and `score.r_expert` set in `configs/base.yaml`.
+- All tests and CI green; all Section 7 checks pass; the summary has `git_dirty: false`.
+- `eda_summary.json`, 8 figures and `eda_summary.md` committed; every figure under 1 MB.
+- Section 5 values in `configs/base.yaml`; ROADMAP updated (ADR-6, Phase 2 deliverables, Phase 4 DoD, layout).
+- A fresh reviewer has reviewed the PR diff before merge.
 
-## 10. Open questions
-1. Should the 0-point of the score be the simple dataset mean (as in the proposal) or the random policy?
-2. Is the A9 threshold (median expert-to-expert NN distance) a sensible definition of "same state"?
+## 10. Deferred
+- Whether simple-v0 and expert-v0 were collected with stochastic SAC actions. If so, deterministic BC at `p = 1` may score above the dataset mean. Measured in Phase 4.
