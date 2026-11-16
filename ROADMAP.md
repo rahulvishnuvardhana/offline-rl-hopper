@@ -172,12 +172,13 @@ offline-rl-hopper/
 |---|---|---|---|
 | ADR-1 | Self-written BC and IQL in PyTorch; CQL (optional) uses CORL unchanged with a Minari loader | Learning goal + full control of the "one design choice differs" comparison | Using CORL for everything (less learning, harder to guarantee identical BC/IQL setup) |
 | ADR-2 | BC = IQL policy loss with `beta = 0`, same Gaussian policy | Any gap is attributable to value learning only [1] | CORL's deterministic MSE BC (different network and loss, confounds the comparison) |
-| ADR-3 | Follow the **IQL paper's** MuJoCo settings, not CORL's per-dataset configs | One published setting for all `p`; CORL's hopper configs differ between datasets | Tuning per `p` (biases the comparison) |
+| ADR-3 | Follow the **IQL paper's** MuJoCo settings, not CORL's per-dataset configs. Two deviations, both as in CORL: the reward-scale min/max uses complete episodes only, and states are normalized (the original IQL code does neither) | One published setting for all `p`; CORL's hopper configs differ between datasets | Tuning per `p` (biases the comparison) |
 | ADR-4 | Mixture defined by **transitions**, sampled by whole episodes, trimmed to exactly 900k | Simple episodes are about half as long as expert ones | Mixing by episode count (would make `p` misleading) |
 | ADR-5 | Normalizers are fit on **each mixture**, never on the full expert data | Fitting on expert data leaks information into low-`p` runs | Global normalizer |
 | ADR-6 | Own score normalization, D4RL convention: 0 = random-policy mean return, 100 = expert dataset mean return; raw return and fall rate always reported too. Revised 2026-11-15, before any training result, because the returns are bimodal (spec `docs/specs/phase-2b-eda.md` Section 5) | Minari has no reference scores for these datasets; a simple-mean zero point sits in the gap between falling and non-falling episodes | D4RL constants (wrong env version); 0 = simple dataset mean (the original proposal) |
 | ADR-7 | Plain YAML configs + a tiny loader, CSV + TensorBoard logging | Few dependencies, works offline on the cluster, free | Hydra (learning cost), W&B (optional, see Open Questions) |
 | ADR-8 | Data, envs and checkpoints on `/scratch`; code and final results in git | Home quota is 75 GB and fixed; scratch is purged monthly, so anything precious is copied out | Everything in `/home` |
+| ADR-9 | IQL reward scale `1000 / (max_ret - min_ret)` per mixture, over its untrimmed episodes (decided 2026-11-15, `docs/specs/phase-3-mixtures.md` Section 4) | Faithful to the paper's rule; for every `p >= 0.01` the scale is 0.25 to 0.27, so H2 and H3 are unaffected. Caveat, stated in the report: at `p = 0` the scale is 1.4x larger, so IQL's effective `beta` there is about 4.4 instead of 3; every run logs `beta_eff` | One fixed scale for all `p` (departs from the paper; a data-derived constant carries expert information into `p = 0`) |
 
 ### 3.4 Interface contracts
 
@@ -199,13 +200,14 @@ class Batch:
     done: Tensor  # (B, 1)  float32, = terminations ONLY
 ```
 
-Mixture manifest (`mix_p0.05_s0.json`), written next to every mixture file:
+Mixture manifest (`report/mixtures/mix_p0.05_s0.json`, committed; full field list in `docs/specs/phase-3-mixtures.md` Section 3.7). Values below are illustrative:
 
 ```json
-{"p_target": 0.05, "p_actual": 0.0501, "n_transitions": 900000,
- "expert_episode_ids": [...], "simple_episode_ids": [...],
- "seed": 0, "source_versions": {"expert": "expert-v0", "simple": "simple-v0"},
- "sha256": "..."}
+{"p_target": 0.05, "p_actual": 0.05, "n_transitions": 900000, "seed": 0,
+ "picks": {"expert": [[512, 913], ...], "simple": [[87, 240], ...]},
+ "n_trimmed": 2, "source_versions": {"expert": "expert-v0", "simple": "simple-v0"},
+ "source_sha256": {...}, "file_sha256": "...", "content_sha256": "...",
+ "state_mean": [...], "state_std": [...], "reward_scale": 0.2512, "git_commit": "..."}
 ```
 
 ---
@@ -425,7 +427,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 - normalizer fit uses only the mixture's own data;
 - per-`p` mixture scores and reward scales reproduce the Phase 2 previews (A11, A12 in `report/eda_summary.json`) for the same seeds.
 
-**Decision due in this phase:** the reward scale `1000 / (max_ret - min_ret)` is about 27% lower already at `p = 0.01` than at `p = 0` (Phase 2, A12), so IQL's effective `beta` depends on `p`. Decide (and write down in an ADR) whether to keep the per-mixture scale, as in the IQL paper, or fix one scale for all `p`. This matters for H3.
+**Decided in this phase:** ADR-9 (per-mixture reward scale, with the `p = 0` caveat). Full spec: `docs/specs/phase-3-mixtures.md`. Final mixtures use seeds 0 to 2; development mixtures (Phases 4 to 6) use seeds 100+, so no debugging decision is tuned on final data.
 
 **Pitfalls:** trimming an episode and marking the cut as a terminal (it is not); fitting normalizers before mixing.
 
@@ -443,7 +445,8 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 2. `bc.py`: loss `-mean(log pi(a|s))`, implemented by calling the IQL policy loss with all weights = 1 (so the code path really is shared).
 3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`. Seeds come from `offrl.rollout.eval_seeds` only: the datasets were collected from reset seeds 123 to 2074 (Phase 2, C9), and evaluating from those seeds would start episodes in training states (leakage; `tests/test_leakage.py` guards it).
 4. `train.py`: loop with logging every 1k steps, eval every 5k, checkpoint every 25k, resume from latest checkpoint.
-5. Sanity runs (local CPU or `gpu-short`, 100k steps is enough): BC at `p = 0` and `p = 1`.
+5. Sanity runs (local CPU or `gpu-short`, 100k steps is enough): BC at `p = 0` and `p = 1`, on **development** mixtures (seed 100+) with **development** evaluation seeds (`eval.seed_offset: 20000`); seeds 10000+ and mixture seeds 0 to 2 are reserved for the final grid.
+6. Final score of every run: mean over the last 5 evaluations (pre-registered; no early stopping or checkpoint selection), with the final evaluation over 50 episodes because a fall is all or nothing. Report wording: disjoint seeds prevent exact replay of a training trajectory, but starting states stay close to training ones (reset noise 0.005).
 
 **Deliverables:** BC learning curves at `p = 0` and `p = 1`, `tests/test_losses.py` (BC part).
 
@@ -546,7 +549,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **Tasks**
 1. `aggregate.py`: run folders -> tidy DataFrame (algo, p, tau, seed, step, return, normalized score).
-2. Main figure: final normalized score vs. `p`, one line per method, mean with 95% bootstrap CI band; dashed lines at 0 and 100.
+2. Main figure: final normalized score vs. `p`, one line per method, mean with 95% bootstrap CI band; dashed lines at 0 and 100. Also the paired per-seed difference IQL minus BC (same mixture per seed), and the ADR-9 note on `p = 0`. Any "time in the expert region" measure is reported with the distance to the nearest dataset state.
 3. Learning curves: 5 panels (one per `p`), both methods.
 4. Ablation figure: score vs. `tau` at `p = 0.05` and `p = 0.5`.
 5. Table: mean +/- std and 95% CI for every cell; raw returns in an appendix table.

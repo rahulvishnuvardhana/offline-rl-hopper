@@ -9,6 +9,9 @@ import numpy as np
 # Seeds for every rollout we run. Both must stay disjoint from the datasets' collection seeds
 # (offrl.data.leakage.COLLECTION_SEEDS); tests/test_leakage.py enforces it.
 RANDOM_BASELINE_SEEDS = range(100)
+# Evaluation seed offsets: base.yaml holds the development offset (Phases 4 to 6); the final
+# grid (Phases 7, 8) overrides it with this one, so debugging never sees the final seeds.
+FINAL_EVAL_SEED_OFFSET = 10_000
 
 
 def eval_seeds(eval_cfg: dict) -> range:
