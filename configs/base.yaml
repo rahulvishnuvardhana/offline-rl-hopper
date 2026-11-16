@@ -36,9 +36,9 @@ eval:
 score:
   # ADR-6: score = 100 * (R - r_random) / (r_expert - r_random). Written by
   # `python scripts/eda.py --write-config`; r_simple is a reference line only.
-  r_random: null
-  r_expert: null
-  r_simple: null
+  r_random: 17.02882347293913
+  r_expert: 3857.803603002423
+  r_simple: 1655.6250879864187
 
 algo:
   name: bc
