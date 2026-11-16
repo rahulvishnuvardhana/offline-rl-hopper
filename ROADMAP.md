@@ -92,7 +92,7 @@ Phase 2 turns "probably clean" into "verified clean" with a written EDA report.
 ```mermaid
 flowchart LR
     A[Minari Hub<br/>expert-v0, simple-v0] -->|minari download| B[Raw cache<br/>/scratch/$USER/minari]
-    B --> C[Validator + EDA<br/>notebooks/01_eda.ipynb]
+    B --> C[Validator + EDA<br/>scripts/validate_data.py, scripts/eda.py]
     B --> D[Mixture builder<br/>offrl/data/mixture.py]
     D -->|mix_p{p}_s{seed}.npz<br/>+ manifest.json| E[Replay buffer<br/>+ state/reward normalizer]
     E --> F[Trainer<br/>BC or IQL]
@@ -133,19 +133,27 @@ offline-rl-hopper/
       base.py             # Trainer interface: update(batch) -> dict of losses
       bc.py               # BC = IQL policy loss with beta = 0
       iql.py              # expectile V, TD Q, AWR policy
+    rollout.py            # run a policy for seeded episodes (random baseline + eval)
     eval.py               # rollouts, normalized score
-    logging.py            # CSV + TensorBoard, run metadata
+    runmeta.py            # run metadata (git commit, dirty flag, versions, Slurm ids)
+    logging.py            # CSV + TensorBoard
     train.py              # entry point: python -m offrl.train --config ...
     sweep.py              # expand a grid file, run index i (for Slurm arrays)
     analysis/
+      eda.py              # Phase 2 EDA: pure functions (stats, PCA, kNN, AUC, mixture preview)
+      eda_plots.py        # Phase 2 EDA figures
       aggregate.py        # collect runs -> tidy DataFrame
       plots.py            # main figure, curves, ablation
       stats.py            # rliable IQM + bootstrap CIs
   slurm/
     grid.sbatch
     smoke.sbatch
+  scripts/
+    smoke.py              # env + GPU + dataset smoke test
+    validate_data.py      # Phase 2A audit -> report/data_audit.json
+    eda.py                # Phase 2B EDA -> report/eda_summary.json + figures
+  docs/specs/             # one reviewed spec per phase
   notebooks/
-    01_eda.ipynb
     02_results.ipynb
   tests/
     test_losses.py
@@ -167,7 +175,7 @@ offline-rl-hopper/
 | ADR-3 | Follow the **IQL paper's** MuJoCo settings, not CORL's per-dataset configs | One published setting for all `p`; CORL's hopper configs differ between datasets | Tuning per `p` (biases the comparison) |
 | ADR-4 | Mixture defined by **transitions**, sampled by whole episodes, trimmed to exactly 900k | Simple episodes are about half as long as expert ones | Mixing by episode count (would make `p` misleading) |
 | ADR-5 | Normalizers are fit on **each mixture**, never on the full expert data | Fitting on expert data leaks information into low-`p` runs | Global normalizer |
-| ADR-6 | Own score normalization: 0 = simple dataset mean return, 100 = expert dataset mean return; raw returns always reported too | Minari has no reference scores for these datasets | D4RL constants (wrong env version) |
+| ADR-6 | Own score normalization, D4RL convention: 0 = random-policy mean return, 100 = expert dataset mean return; raw return and fall rate always reported too. Revised 2026-11-15, before any training result, because the returns are bimodal (spec `docs/specs/phase-2b-eda.md` Section 5) | Minari has no reference scores for these datasets; a simple-mean zero point sits in the gap between falling and non-falling episodes | D4RL constants (wrong env version); 0 = simple dataset mean (the original proposal) |
 | ADR-7 | Plain YAML configs + a tiny loader, CSV + TensorBoard logging | Few dependencies, works offline on the cluster, free | Hydra (learning cost), W&B (optional, see Open Questions) |
 | ADR-8 | Data, envs and checkpoints on `/scratch`; code and final results in git | Home quota is 75 GB and fixed; scratch is purged monthly, so anything precious is copied out | Everything in `/home` |
 
@@ -374,19 +382,19 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 7. No duplicated episodes (hash each episode's actions).
 8. **Optional dynamics check:** for a sample of 1,000 transitions, reset the MuJoCo state from `obs` (x position is not in the obs but does not affect dynamics), apply the action, and compare with `next_obs`. Confirms the data matches the evaluation env.
 
-**Tasks: EDA (`notebooks/01_eda.ipynb`)**
-1. Episode length histograms, expert vs. simple.
-2. Episode return histograms; record mean, std, min, max. **These means define the 0 and 100 of our normalized score.**
-3. Termination (fall) rate per dataset.
-4. Per-dimension state statistics (mean, std); confirms normalization is needed.
-5. State coverage: PCA (or t-SNE on a subsample) of states colored by source. Overlap tells you whether expert and simple visit the same states.
-6. Action distribution in overlapping states: nearest-neighbor states from each source and their actions. If the actions differ a lot at the same states, the unimodal-Gaussian averaging story behind H1 is plausible.
-7. Reward per step vs. forward velocity, expert vs. simple.
-8. Random-policy return over 10 episodes (an extra reference point for the report).
+**Tasks: EDA (`scripts/eda.py` + `offrl/analysis/eda.py`; full spec in `docs/specs/phase-2b-eda.md`)**
+1. Episode length and return statistics and histograms, expert vs. simple.
+2. Fall rate, and every statistic split by `fell` vs. `no_fall`. The returns are bimodal (simple: 66% of episodes fall), so a single mean hides the structure.
+3. Per-dimension state statistics (descriptive only; training normalizers are fit per mixture, ADR-5) and velocity clipping per dimension.
+4. Reward decomposition (survival + forward velocity - control cost), reconciled against the recorded rewards.
+5. State coverage: PCA of states colored by source.
+6. Source separability (kNN classifier AUC, split by episode) and action disagreement between kNN neighbours from each source. Tests the averaging story behind H1.
+7. Random-policy return over 100 seeded episodes: the 0 of the normalized score (ADR-6).
+8. Per-`p` reference curve (the score of each mixture's own episodes) and the IQL reward-scale preview per `p`.
 
-**Deliverables:** `validate.py`, `tests/test_validate.py`, `notebooks/01_eda.ipynb`, `report/eda_summary.md` (one page: numbers + 4 figures + "implications for modeling").
+**Deliverables:** `validate.py`, `tests/test_validate.py`, `report/data_audit.json`, `scripts/eda.py`, `report/eda_summary.json`, `report/eda_summary.md` (one page: numbers + 8 figures + "implications for modeling").
 
-**DoD:** every integrity check passes (or each failure is explained and handled); reference returns recorded in `configs/base.yaml`.
+**DoD:** every integrity check and every EDA reconciliation check passes; `r_random` and `r_expert` recorded in `configs/base.yaml`; Phase 4 sanity bands recorded in `eda_summary.json`.
 
 **Pitfalls:** computing statistics on `obs` including the final observation (biases means slightly; use `obs[:-1]` for state stats); eyeballing instead of asserting.
 
@@ -414,7 +422,10 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 - `p = 0` contains zero expert transitions and `p = 1` zero simple ones;
 - no transition pairs an `obs` from one episode with a `next_obs` from another;
 - `done` is 1 only on terminal steps, never on truncation;
-- normalizer fit uses only the mixture's own data.
+- normalizer fit uses only the mixture's own data;
+- per-`p` mixture scores and reward scales reproduce the Phase 2 previews (A11, A12 in `report/eda_summary.json`) for the same seeds.
+
+**Decision due in this phase:** the reward scale `1000 / (max_ret - min_ret)` is about 27% lower already at `p = 0.01` than at `p = 0` (Phase 2, A12), so IQL's effective `beta` depends on `p`. Decide (and write down in an ADR) whether to keep the per-mixture scale, as in the IQL paper, or fix one scale for all `p`. This matters for H3.
 
 **Pitfalls:** trimming an episode and marking the cut as a terminal (it is not); fitting normalizers before mixing.
 
@@ -430,13 +441,13 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Tasks**
 1. `nets.py`: MLP, GaussianPolicy (state-independent log-std, mean through tanh), TwinQ, ValueNet.
 2. `bc.py`: loss `-mean(log pi(a|s))`, implemented by calling the IQL policy loss with all weights = 1 (so the code path really is shared).
-3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw and normalized score `100 * (R - R_simple) / (R_expert - R_simple)`.
+3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`. Seeds come from `offrl.rollout.eval_seeds` only: the datasets were collected from reset seeds 123 to 2074 (Phase 2, C9), and evaluating from those seeds would start episodes in training states (leakage; `tests/test_leakage.py` guards it).
 4. `train.py`: loop with logging every 1k steps, eval every 5k, checkpoint every 25k, resume from latest checkpoint.
 5. Sanity runs (local CPU or `gpu-short`, 100k steps is enough): BC at `p = 0` and `p = 1`.
 
 **Deliverables:** BC learning curves at `p = 0` and `p = 1`, `tests/test_losses.py` (BC part).
 
-**DoD:** BC at `p = 1` scores near 100 and at `p = 0` near 0 (within the noise you saw in Phase 2); killing and resuming a run continues the same curve.
+**DoD:** BC at `p = 1` lands in the expert sanity band and at `p = 0` in the simple sanity band (`sanity_bands` in `report/eda_summary.json`, pre-registered in Phase 2), reported with fall rates; check whether deterministic eval beats the dataset mean (were the data actions stochastic?); killing and resuming a run continues the same curve.
 
 **Pitfalls:** evaluating with sampled actions instead of the mean; forgetting to normalize eval observations; eval env seeds not fixed (noisy curves that look like bugs).
 

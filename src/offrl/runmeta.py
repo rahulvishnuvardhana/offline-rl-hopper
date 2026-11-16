@@ -13,12 +13,18 @@ from typing import Any
 
 import torch
 
-PACKAGES = ("torch", "numpy", "gymnasium", "mujoco", "minari", "pandas")
+PACKAGES = ("torch", "numpy", "gymnasium", "mujoco", "minari", "pandas", "matplotlib")
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _git(*args: str) -> str | None:
+    # cwd pinned to this repo: launched from elsewhere, git would describe a different repo.
     try:
-        out = subprocess.run(["git", *args], capture_output=True, text=True, check=True, timeout=10)
+        out = subprocess.run(
+            ["git", *args], capture_output=True, text=True, check=True, timeout=10, cwd=REPO_ROOT
+        )
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip()
@@ -52,5 +58,5 @@ def write_metadata(run_dir: str | Path) -> dict[str, Any]:
     meta = collect_metadata()
     path = Path(run_dir) / "meta.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8", newline="\n")
     return meta

@@ -1,0 +1,146 @@
+{
+  "generated_utc": "2026-11-15T19:47:22+00:00",
+  "run": {
+    "git_commit": "19c118c83b94e37ca8c21a100840fead1a2f5060",
+    "git_dirty": false,
+    "python": "3.11.18",
+    "packages": {
+      "torch": "2.11.0",
+      "numpy": "2.4.6",
+      "gymnasium": "1.4.0",
+      "mujoco": "3.2.3",
+      "minari": "0.5.4",
+      "pandas": "3.1.1"
+    },
+    "hostname": "LAPTOP-R2PPDIPL",
+    "gpu": null,
+    "slurm_job_id": null,
+    "slurm_array_task_id": null,
+    "started_utc": "2026-11-15T19:47:22+00:00"
+  },
+  "datasets": {
+    "mujoco/hopper/expert-v0": {
+      "documented": {
+        "total_steps": 999164,
+        "total_episodes": 1086
+      },
+      "metadata": {
+        "total_steps": 999164,
+        "total_episodes": 1086
+      },
+      "file_sha256": {
+        "data/main_data.hdf5": "0859f299974a2ebb05d72e0935874773f412ba46a3275a3a13f7977b0caa0c5e",
+        "data/metadata.json": "a7b69aabfd3cffc3dc33a8f04981f0849a452905871e5ec8e1278ce5f22d9071"
+      },
+      "checks": [
+        {
+          "name": "counts_reconcile",
+          "passed": true,
+          "detail": "documented={'total_steps': 999164, 'total_episodes': 1086}; ours={'total_steps': 999164, 'total_episodes': 1086}; metadata={'total_steps': 999164, 'total_episodes': 1086}"
+        },
+        {
+          "name": "unique_episode_ids",
+          "passed": true,
+          "detail": "all unique"
+        },
+        {
+          "name": "shapes_obs_is_n_plus_1",
+          "passed": true,
+          "detail": "all consistent"
+        },
+        {
+          "name": "no_nan_or_inf",
+          "passed": true,
+          "detail": "all finite"
+        },
+        {
+          "name": "actions_in_bounds",
+          "passed": true,
+          "detail": "0 values outside [-1.0, 1.0]; 0.01% of values at the bound (informational)"
+        },
+        {
+          "name": "episode_ends_well_formed",
+          "passed": true,
+          "detail": "all well formed"
+        },
+        {
+          "name": "obs_within_health_bound",
+          "passed": true,
+          "detail": "max |obs| = 10.000 (bound 100.0)"
+        },
+        {
+          "name": "termination_matches_physics",
+          "passed": true,
+          "detail": "unhealthy before termination: 0 episodes []; healthy at termination: 0 episodes []"
+        },
+        {
+          "name": "no_duplicate_episodes",
+          "passed": true,
+          "detail": "0 duplicated episodes (by action hash)"
+        }
+      ]
+    },
+    "mujoco/hopper/simple-v0": {
+      "documented": {
+        "total_steps": 999206,
+        "total_episodes": 1952
+      },
+      "metadata": {
+        "total_steps": 999206,
+        "total_episodes": 1952
+      },
+      "file_sha256": {
+        "data/main_data.hdf5": "1c513a5e1e0b686190566ac12b5562016955b4863a991d8b1e4b866c31a474a1",
+        "data/metadata.json": "0aae273c3c5e9e6cd49c66ef18b1da3f21b20788b5678beaf859e63c01996579"
+      },
+      "checks": [
+        {
+          "name": "counts_reconcile",
+          "passed": true,
+          "detail": "documented={'total_steps': 999206, 'total_episodes': 1952}; ours={'total_steps': 999206, 'total_episodes': 1952}; metadata={'total_steps': 999206, 'total_episodes': 1952}"
+        },
+        {
+          "name": "unique_episode_ids",
+          "passed": true,
+          "detail": "all unique"
+        },
+        {
+          "name": "shapes_obs_is_n_plus_1",
+          "passed": true,
+          "detail": "all consistent"
+        },
+        {
+          "name": "no_nan_or_inf",
+          "passed": true,
+          "detail": "all finite"
+        },
+        {
+          "name": "actions_in_bounds",
+          "passed": true,
+          "detail": "0 values outside [-1.0, 1.0]; 0.02% of values at the bound (informational)"
+        },
+        {
+          "name": "episode_ends_well_formed",
+          "passed": true,
+          "detail": "all well formed"
+        },
+        {
+          "name": "obs_within_health_bound",
+          "passed": true,
+          "detail": "max |obs| = 10.000 (bound 100.0)"
+        },
+        {
+          "name": "termination_matches_physics",
+          "passed": true,
+          "detail": "unhealthy before termination: 0 episodes []; healthy at termination: 0 episodes []"
+        },
+        {
+          "name": "no_duplicate_episodes",
+          "passed": true,
+          "detail": "0 duplicated episodes (by action hash)"
+        }
+      ]
+    }
+  },
+  "all_passed": true
+}

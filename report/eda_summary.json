@@ -1,0 +1,914 @@
+{
+  "generated_utc": "2026-11-16T01:06:50+00:00",
+  "run": {
+    "git_commit": "1a333f22d439639eb327b385040008061f3eca4f",
+    "git_dirty": false,
+    "python": "3.11.18",
+    "packages": {
+      "torch": "2.11.0",
+      "numpy": "2.4.6",
+      "gymnasium": "1.4.0",
+      "mujoco": "3.2.3",
+      "minari": "0.5.4",
+      "pandas": "3.1.1",
+      "matplotlib": "3.11.2"
+    },
+    "hostname": "LAPTOP-R2PPDIPL",
+    "gpu": null,
+    "slurm_job_id": null,
+    "slurm_array_task_id": null,
+    "started_utc": "2026-11-16T01:05:51+00:00"
+  },
+  "audit": {
+    "path": "report/data_audit.json",
+    "sha256_of_committed_blob": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
+    "git_commit": "19c118c83b94e37ca8c21a100840fead1a2f5060"
+  },
+  "dataset_ids": {
+    "expert": "mujoco/hopper/expert-v0",
+    "simple": "mujoco/hopper/simple-v0"
+  },
+  "datasets": {
+    "expert": {
+      "episodes": {
+        "n_episodes": 1086,
+        "n_transitions": 999164,
+        "fall_rate": 0.283609576427256,
+        "length": {
+          "n": 1086,
+          "mean": 920.0405156537753,
+          "std": 160.8647620051785,
+          "min": 131.0,
+          "median": 1000.0,
+          "max": 1000.0
+        },
+        "return": {
+          "n": 1086,
+          "mean": 3857.803603002423,
+          "std": 644.2104757416718,
+          "min": 395.6389765468187,
+          "median": 4139.3407504108945,
+          "max": 4376.326745837254
+        },
+        "fell": {
+          "n_episodes": 308,
+          "n_transitions": 221164,
+          "share_episodes": 0.283609576427256,
+          "share_transitions": 0.2213490478039641,
+          "length": {
+            "n": 308,
+            "mean": 718.0649350649351,
+            "std": 185.2006870525486,
+            "min": 131.0,
+            "median": 736.5,
+            "max": 999.0
+          },
+          "return": {
+            "n": 308,
+            "mean": 3102.774001468834,
+            "std": 812.7160911422512,
+            "min": 395.6389765468187,
+            "median": 3158.2899028229162,
+            "max": 4376.326745837254
+          }
+        },
+        "no_fall": {
+          "n_episodes": 778,
+          "n_transitions": 778000,
+          "share_episodes": 0.716390423572744,
+          "share_transitions": 0.7786509521960359,
+          "length": {
+            "n": 778,
+            "mean": 1000.0,
+            "std": 0.0,
+            "min": 1000.0,
+            "median": 1000.0,
+            "max": 1000.0
+          },
+          "return": {
+            "n": 778,
+            "mean": 4156.709923403895,
+            "std": 52.807911297487436,
+            "min": 4007.658997364615,
+            "median": 4157.622845990249,
+            "max": 4375.7757534080365
+          }
+        }
+      },
+      "state_stats_descriptive_only": {
+        "mean": [
+          1.3798099311878127,
+          -0.048611214556678016,
+          -0.18367617011785986,
+          -0.6014144824804087,
+          -0.150608025085116,
+          3.1924021967702783,
+          -0.003977486765141492,
+          -0.0024319178036362574,
+          -0.051237881055220695,
+          -0.05326462175940505,
+          -0.36702399962970667
+        ],
+        "std": [
+          0.13821066923371378,
+          0.07877857851817281,
+          0.1944969719165639,
+          0.3791217437748487,
+          0.6385129779603105,
+          0.8447472072862041,
+          1.2927084251520264,
+          1.5885598931506044,
+          2.6558784417150907,
+          4.76735543247818,
+          6.783461409827177
+        ]
+      },
+      "velocity_clip_fraction": {
+        "obs[5]": 0.0,
+        "obs[6]": 0.0,
+        "obs[7]": 0.0,
+        "obs[8]": 0.00028023427585461446,
+        "obs[9]": 0.053399642100796264,
+        "obs[10]": 0.2531676481538566
+      },
+      "actions": {
+        "mean": [
+          0.1479617090662769,
+          0.0036138274148806025,
+          -0.19309465846672066
+        ],
+        "std": [
+          0.5765385485941453,
+          0.651402747640277,
+          0.7223841166981683
+        ],
+        "frac_at_bound": [
+          1.000836699480766e-06,
+          5.204350837299983e-05,
+          0.00021517989038836468
+        ]
+      },
+      "reward_decomposition": {
+        "mean_reward": 4.193080127847512,
+        "mean_healthy": 0.9996917422965599,
+        "mean_forward": 3.196835689650512,
+        "mean_ctrl": 0.0013377523239329048,
+        "residual_mean": -0.002109551775626557,
+        "residual_abs_median": 0.03426180546233759,
+        "residual_abs_p99": 0.15044189296115057,
+        "residual_abs_max": 0.6104194862684267
+      }
+    },
+    "simple": {
+      "episodes": {
+        "n_episodes": 1952,
+        "n_transitions": 999206,
+        "fall_rate": 0.6629098360655737,
+        "length": {
+          "n": 1952,
+          "mean": 511.88831967213116,
+          "std": 362.747594679189,
+          "min": 172.0,
+          "median": 290.0,
+          "max": 1000.0
+        },
+        "return": {
+          "n": 1952,
+          "mean": 1655.6250879864187,
+          "std": 1139.7355126341458,
+          "min": 574.2854485574121,
+          "median": 961.9600957469934,
+          "max": 3298.5853804160047
+        },
+        "fell": {
+          "n_episodes": 1294,
+          "n_transitions": 341206,
+          "share_episodes": 0.6629098360655737,
+          "share_transitions": 0.34147713284347775,
+          "length": {
+            "n": 1294,
+            "mean": 263.6831530139103,
+            "std": 125.45780799276335,
+            "min": 172.0,
+            "median": 208.0,
+            "max": 997.0
+          },
+          "return": {
+            "n": 1294,
+            "mean": 881.005953026702,
+            "std": 423.4594412135006,
+            "min": 574.2854485574121,
+            "median": 666.3659805370776,
+            "max": 3298.5853804160047
+          }
+        },
+        "no_fall": {
+          "n_episodes": 658,
+          "n_transitions": 658000,
+          "share_episodes": 0.33709016393442626,
+          "share_transitions": 0.6585228671565223,
+          "length": {
+            "n": 658,
+            "mean": 1000.0,
+            "std": 0.0,
+            "min": 1000.0,
+            "median": 1000.0,
+            "max": 1000.0
+          },
+          "return": {
+            "n": 658,
+            "mean": 3178.964237892002,
+            "std": 18.69274471745026,
+            "min": 3136.1028038714235,
+            "median": 3178.7330452599026,
+            "max": 3283.3754826575414
+          }
+        }
+      },
+      "state_stats_descriptive_only": {
+        "mean": [
+          1.2734739225300606,
+          0.043592155350810693,
+          -0.18271177464929336,
+          -0.5072576457823561,
+          -0.005682471296564338,
+          2.233534907930989,
+          -0.07122063476374794,
+          -0.008618128574912497,
+          -0.22348673317403192,
+          -0.09925514157694638,
+          0.18465227974281168
+        ],
+        "std": [
+          0.15779085255338837,
+          0.052253111493629247,
+          0.23467329185459354,
+          0.2083970359438337,
+          0.5803098734539397,
+          0.7200326500484807,
+          1.3630381185529215,
+          0.7776601401013703,
+          1.2206344058187368,
+          1.9209606546322222,
+          5.660248851196987
+        ]
+      },
+      "velocity_clip_fraction": {
+        "obs[5]": 0.0,
+        "obs[6]": 0.0,
+        "obs[7]": 0.0,
+        "obs[8]": 3.0023838928108918e-05,
+        "obs[9]": 0.0,
+        "obs[10]": 0.09585410816188053
+      },
+      "actions": {
+        "mean": [
+          0.09833071646974685,
+          0.011544361335546049,
+          -0.20150257033877494
+        ],
+        "std": [
+          0.3923481184179119,
+          0.47434711110029,
+          0.6720151676807534
+        ],
+        "frac_at_bound": [
+          0.0,
+          0.0,
+          0.0005844640644671869
+        ]
+      },
+      "reward_decomposition": {
+        "mean_reward": 3.2343482442554286,
+        "mean_healthy": 0.9987049717475676,
+        "mean_forward": 2.239469954791333,
+        "mean_ctrl": 0.0008809521013614888,
+        "residual_mean": -0.0029457301821106513,
+        "residual_abs_median": 0.02224236732774454,
+        "residual_abs_p99": 0.1566751377214486,
+        "residual_abs_max": 0.33020546815655294
+      }
+    }
+  },
+  "score": {
+    "formula": "100 * (R - r_random) / (r_expert - r_random)",
+    "r_random": 17.02882347293913,
+    "r_expert": 3857.803603002423,
+    "r_simple": 1655.6250879864187,
+    "simple_dataset_score": 42.66316976582044
+  },
+  "sanity_bands": {
+    "expert": [
+      80.3417371526772,
+      107.78244853081674
+    ],
+    "simple": [
+      22.49486572757606,
+      82.32545764650166
+    ]
+  },
+  "pca": {
+    "per_seed": {
+      "0": {
+        "explained_variance_ratio": [
+          0.2695626759636623,
+          0.23511298002222164
+        ],
+        "components": [
+          [
+            -0.41708876939217904,
+            0.30238738224597717,
+            -0.40223769092577344,
+            0.4657744719892082,
+            0.3811902227534995,
+            -0.04216323266068209,
+            -0.2750984539116922,
+            0.010756408295573977,
+            -0.2296209784826268,
+            0.1434757208811783,
+            -0.24427065057071617
+          ],
+          [
+            0.22238848727714078,
+            -0.12670729300246508,
+            0.13452250986441172,
+            -0.18177236321175838,
+            0.2525349892756193,
+            0.3053408533857553,
+            -0.35497332063844994,
+            0.21919015034707118,
+            -0.406116854936071,
+            0.5240884190309089,
+            0.33569959217169915
+          ]
+        ]
+      },
+      "1": {
+        "explained_variance_ratio": [
+          0.269877943173111,
+          0.2337015274295755
+        ],
+        "components": [
+          [
+            -0.41246241740469586,
+            0.2918974633151322,
+            -0.4063222596006775,
+            0.4598376511609796,
+            0.37957795118621096,
+            -0.01961407856763958,
+            -0.2811759591367951,
+            0.014040830149591718,
+            -0.23915132004294615,
+            0.15903160252167994,
+            -0.24883042132174138
+          ],
+          [
+            0.23310547215716268,
+            -0.1427175865483536,
+            0.1444837512891845,
+            -0.19302774709851372,
+            0.25250605074893145,
+            0.29907870570325124,
+            -0.35277381392396456,
+            0.19802766145336578,
+            -0.4016946033100897,
+            0.520425552038005,
+            0.3436353560099153
+          ]
+        ]
+      },
+      "2": {
+        "explained_variance_ratio": [
+          0.2681521166454154,
+          0.23464567245807508
+        ],
+        "components": [
+          [
+            -0.42262993100104534,
+            0.3033445020494139,
+            -0.408523640434791,
+            0.47106140781585054,
+            0.3742616141003545,
+            -0.04877459378030044,
+            -0.26360619817933517,
+            0.0061361205438293445,
+            -0.21948055278850626,
+            0.13058045111702396,
+            -0.2517460546330347
+          ],
+          [
+            0.21777022104625784,
+            -0.12560473220210921,
+            0.12119893518571304,
+            -0.16661887796244015,
+            0.26453991307364877,
+            0.2996306016505578,
+            -0.36542863264359,
+            0.20435946340633657,
+            -0.4145108415264005,
+            0.526556868879706,
+            0.3319735484778654
+          ]
+        ]
+      }
+    },
+    "summary": {
+      "pc1_explained_variance": {
+        "mean": 0.2691975785940629,
+        "min": 0.2681521166454154,
+        "max": 0.269877943173111
+      },
+      "pc2_explained_variance": {
+        "mean": 0.23448672663662407,
+        "min": 0.2337015274295755,
+        "max": 0.23511298002222164
+      }
+    }
+  },
+  "separability": {
+    "k": 10,
+    "n_states_per_source": 20000,
+    "per_seed": {
+      "0": {
+        "auc": 0.9998745399799264,
+        "d_mix_median": 0.999072465225516,
+        "d_same_median": 0.17379423937993102,
+        "ratio": 5.7485936748538995,
+        "nn_dist_simple_to_expert_median": 2.211364076640994,
+        "nn_dist_simple_to_simple_median": 0.21678692344389078,
+        "nn_dist_expert_to_expert_median": 0.22583162751378444,
+        "n_test_expert": 4018,
+        "n_test_simple": 4148
+      },
+      "1": {
+        "auc": 0.9999989352932541,
+        "d_mix_median": 1.019104468337714,
+        "d_same_median": 0.18000494095831557,
+        "ratio": 5.661536082910701,
+        "nn_dist_simple_to_expert_median": 2.213402980950386,
+        "nn_dist_simple_to_simple_median": 0.21945693136367306,
+        "nn_dist_expert_to_expert_median": 0.22693538725867204,
+        "n_test_expert": 4075,
+        "n_test_simple": 3803
+      },
+      "2": {
+        "auc": 0.9999994835228289,
+        "d_mix_median": 0.9498507766740231,
+        "d_same_median": 0.17651696727568628,
+        "ratio": 5.381073510007313,
+        "nn_dist_simple_to_expert_median": 2.2742736248359248,
+        "nn_dist_simple_to_simple_median": 0.2207054462049801,
+        "nn_dist_expert_to_expert_median": 0.22776639234025836,
+        "n_test_expert": 3856,
+        "n_test_simple": 4017
+      }
+    },
+    "summary": {
+      "auc": {
+        "mean": 0.999957652932003,
+        "min": 0.9998745399799264,
+        "max": 0.9999994835228289
+      },
+      "d_mix_median": {
+        "mean": 0.9893425700790842,
+        "min": 0.9498507766740231,
+        "max": 1.019104468337714
+      },
+      "d_same_median": {
+        "mean": 0.1767720492046443,
+        "min": 0.17379423937993102,
+        "max": 0.18000494095831557
+      },
+      "ratio": {
+        "mean": 5.5970677559239705,
+        "min": 5.381073510007313,
+        "max": 5.7485936748538995
+      },
+      "nn_dist_simple_to_expert_median": {
+        "mean": 2.2330135608091015,
+        "min": 2.211364076640994,
+        "max": 2.2742736248359248
+      },
+      "nn_dist_simple_to_simple_median": {
+        "mean": 0.21898310033751464,
+        "min": 0.21678692344389078,
+        "max": 0.2207054462049801
+      },
+      "nn_dist_expert_to_expert_median": {
+        "mean": 0.22684446903757163,
+        "min": 0.22583162751378444,
+        "max": 0.22776639234025836
+      }
+    }
+  },
+  "mixture_reference": [
+    {
+      "p": 0.0,
+      "mean_return": 1662.6667837187051,
+      "score_mean": 42.846510267060374,
+      "score_min": 42.585860657142966,
+      "score_max": 43.07297316114834,
+      "reward_scale_mean": 0.36775373108457976,
+      "reward_scale_min": 0.3670667786266002,
+      "reward_scale_max": 0.3691276360005389,
+      "per_seed": [
+        {
+          "mean_return": 1671.3647134398282,
+          "n_episodes": 1741,
+          "n_trimmed": 1,
+          "reward_scale": 0.3670667786266002
+        },
+        {
+          "mean_return": 1652.655819238055,
+          "n_episodes": 1761,
+          "n_trimmed": 1,
+          "reward_scale": 0.3691276360005389
+        },
+        {
+          "mean_return": 1663.9798184782317,
+          "n_episodes": 1749,
+          "n_trimmed": 1,
+          "reward_scale": 0.3670667786266002
+        }
+      ]
+    },
+    {
+      "p": 0.01,
+      "mean_return": 1673.4424924304942,
+      "score_mean": 43.127071073937714,
+      "score_min": 42.83485439609823,
+      "score_max": 43.459940873991734,
+      "reward_scale_mean": 0.26865480919565093,
+      "reward_scale_min": 0.2661612419650888,
+      "reward_scale_max": 0.273631064234705,
+      "per_seed": [
+        {
+          "mean_return": 1686.2272717596393,
+          "n_episodes": 1731,
+          "n_trimmed": 2,
+          "reward_scale": 0.26617212138715907
+        },
+        {
+          "mean_return": 1662.2191079664565,
+          "n_episodes": 1756,
+          "n_trimmed": 2,
+          "reward_scale": 0.2661612419650888
+        },
+        {
+          "mean_return": 1671.881097565387,
+          "n_episodes": 1746,
+          "n_trimmed": 2,
+          "reward_scale": 0.273631064234705
+        }
+      ]
+    },
+    {
+      "p": 0.02,
+      "mean_return": 1686.1787496466952,
+      "score_mean": 43.45867753219927,
+      "score_min": 43.09050115920559,
+      "score_max": 43.79454645400994,
+      "reward_scale_mean": 0.2612157901764321,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2662732583374497,
+      "per_seed": [
+        {
+          "mean_return": 1699.078718487877,
+          "n_episodes": 1723,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 1672.0379243685675,
+          "n_episodes": 1751,
+          "n_trimmed": 2,
+          "reward_scale": 0.2661612419650888
+        },
+        {
+          "mean_return": 1687.4196060836412,
+          "n_episodes": 1735,
+          "n_trimmed": 2,
+          "reward_scale": 0.2662732583374497
+        }
+      ]
+    },
+    {
+      "p": 0.05,
+      "mean_return": 1723.235557720609,
+      "score_mean": 44.423503907112455,
+      "score_min": 44.01378208373441,
+      "score_max": 44.90017470591875,
+      "reward_scale_mean": 0.26126881702497723,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.26632032251072424,
+      "per_seed": [
+        {
+          "mean_return": 1741.5434095425433,
+          "n_episodes": 1696,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 1707.499065262077,
+          "n_episodes": 1730,
+          "n_trimmed": 2,
+          "reward_scale": 0.26632032251072424
+        },
+        {
+          "mean_return": 1720.6641983572072,
+          "n_episodes": 1717,
+          "n_trimmed": 2,
+          "reward_scale": 0.2662732583374497
+        }
+      ]
+    },
+    {
+      "p": 0.1,
+      "mean_return": 1791.3174149598383,
+      "score_mean": 46.19611128836508,
+      "score_min": 45.77787916862368,
+      "score_max": 46.842314358641815,
+      "reward_scale_mean": 0.2603347520723826,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2661612419650888,
+      "per_seed": [
+        {
+          "mean_return": 1816.1366195075723,
+          "n_episodes": 1650,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 1775.2540611849188,
+          "n_episodes": 1688,
+          "n_trimmed": 2,
+          "reward_scale": 0.2636301440253011
+        },
+        {
+          "mean_return": 1782.5615641870243,
+          "n_episodes": 1682,
+          "n_trimmed": 2,
+          "reward_scale": 0.2661612419650888
+        }
+      ]
+    },
+    {
+      "p": 0.2,
+      "mean_return": 1930.77925738827,
+      "score_mean": 49.8271974736768,
+      "score_min": 49.4027101144657,
+      "score_max": 50.187854319341604,
+      "reward_scale_mean": 0.2554664052861075,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2636301440253011,
+      "per_seed": [
+        {
+          "mean_return": 1944.6312745572102,
+          "n_episodes": 1586,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 1914.4756539533992,
+          "n_episodes": 1610,
+          "n_trimmed": 2,
+          "reward_scale": 0.2636301440253011
+        },
+        {
+          "mean_return": 1933.2308436542003,
+          "n_episodes": 1595,
+          "n_trimmed": 2,
+          "reward_scale": 0.2515562016062635
+        }
+      ]
+    },
+    {
+      "p": 0.5,
+      "mean_return": 2445.5103613088077,
+      "score_mean": 63.22894929375085,
+      "score_min": 62.550870652219984,
+      "score_max": 64.30525207682018,
+      "reward_scale_mean": 0.2512128702267578,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2512128702267578,
+      "per_seed": [
+        {
+          "mean_return": 2430.215468914601,
+          "n_episodes": 1376,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 2419.466887859514,
+          "n_episodes": 1380,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 2486.848727152308,
+          "n_episodes": 1344,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        }
+      ]
+    },
+    {
+      "p": 0.75,
+      "mean_return": 3034.4743084981824,
+      "score_mean": 78.56345811026432,
+      "score_min": 77.83768292018634,
+      "score_max": 78.94908956188024,
+      "reward_scale_mean": 0.2512128702267578,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2512128702267578,
+      "per_seed": [
+        {
+          "mean_return": 3049.28554403378,
+          "n_episodes": 1167,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 3006.5989180415845,
+          "n_episodes": 1183,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 3047.538463419183,
+          "n_episodes": 1168,
+          "n_trimmed": 2,
+          "reward_scale": 0.2512128702267578
+        }
+      ]
+    },
+    {
+      "p": 1.0,
+      "mean_return": 3860.246931845278,
+      "score_mean": 100.06361551986534,
+      "score_min": 99.92110056008136,
+      "score_max": 100.15363548893964,
+      "reward_scale_mean": 0.2512128702267578,
+      "reward_scale_min": 0.2512128702267578,
+      "reward_scale_max": 0.2512128702267578,
+      "per_seed": [
+        {
+          "mean_return": 3862.263146208971,
+          "n_episodes": 977,
+          "n_trimmed": 1,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 3854.773253212838,
+          "n_episodes": 979,
+          "n_trimmed": 1,
+          "reward_scale": 0.2512128702267578
+        },
+        {
+          "mean_return": 3863.704396114024,
+          "n_episodes": 977,
+          "n_trimmed": 1,
+          "reward_scale": 0.2512128702267578
+        }
+      ]
+    }
+  ],
+  "random_policy": {
+    "env_id": "Hopper-v5",
+    "seeds": [
+      0,
+      99
+    ],
+    "return": {
+      "n": 100,
+      "mean": 17.02882347293913,
+      "std": 16.25922946639935,
+      "min": 4.50786013809891,
+      "median": 11.353287578125144,
+      "max": 123.79446946938859
+    },
+    "return_se": 1.6341140460708208,
+    "length": {
+      "n": 100,
+      "mean": 22.67,
+      "std": 10.10153948663272,
+      "min": 9.0,
+      "median": 20.0,
+      "max": 62.0
+    },
+    "fall_rate": 1.0
+  },
+  "figures": {
+    "lengths.png": 23714,
+    "returns.png": 23173,
+    "returns_by_fall.png": 34388,
+    "state_std.png": 22702,
+    "reward_terms.png": 20516,
+    "pca_coverage.png": 116463,
+    "knn_actions.png": 31922,
+    "mixture_reference.png": 38940
+  },
+  "checks": [
+    {
+      "name": "C1_counts_match_audit[expert]",
+      "passed": true,
+      "detail": "ours={'total_steps': 999164, 'total_episodes': 1086}; audit={'total_steps': 999164, 'total_episodes': 1086}"
+    },
+    {
+      "name": "C2_rehash_matches_audit[expert]",
+      "passed": true,
+      "detail": "2 files re-hashed now vs. audit"
+    },
+    {
+      "name": "C3_reward_decomposition[expert]",
+      "passed": true,
+      "detail": "residual mean -0.0021 (< 0.02), median abs 0.0343 (< 0.1)"
+    },
+    {
+      "name": "C4_fall_split_adds_up[expert]",
+      "passed": true,
+      "detail": "fell 308 + no_fall 778 = 1086"
+    },
+    {
+      "name": "C1_counts_match_audit[simple]",
+      "passed": true,
+      "detail": "ours={'total_steps': 999206, 'total_episodes': 1952}; audit={'total_steps': 999206, 'total_episodes': 1952}"
+    },
+    {
+      "name": "C2_rehash_matches_audit[simple]",
+      "passed": true,
+      "detail": "2 files re-hashed now vs. audit"
+    },
+    {
+      "name": "C3_reward_decomposition[simple]",
+      "passed": true,
+      "detail": "residual mean -0.0029 (< 0.02), median abs 0.0222 (< 0.1)"
+    },
+    {
+      "name": "C4_fall_split_adds_up[simple]",
+      "passed": true,
+      "detail": "fell 1294 + no_fall 658 = 1952"
+    },
+    {
+      "name": "C5_reference_order",
+      "passed": true,
+      "detail": "r_expert 3857.8 > r_simple 1655.6 > r_random 17.0"
+    },
+    {
+      "name": "C6_mixture_endpoints_match_datasets",
+      "passed": true,
+      "detail": "|score gap| at p=0: 0.183, at p=1: 0.064 (< 1 point)"
+    },
+    {
+      "name": "C7_deterministic_rerun",
+      "passed": true,
+      "detail": "0 differing values []"
+    },
+    {
+      "name": "C9_collection_seeds_verified[expert]",
+      "passed": true,
+      "detail": "episode i starts at reset(seed=123+i) for all 1086"
+    },
+    {
+      "name": "C9_collection_seeds_verified[simple]",
+      "passed": true,
+      "detail": "episode i starts at reset(seed=123+i) for all 1952"
+    },
+    {
+      "name": "C10_eval_seeds_disjoint_from_collection",
+      "passed": true,
+      "detail": "10 seeds, no overlap"
+    },
+    {
+      "name": "C10_random_baseline_seeds_disjoint_from_collection",
+      "passed": true,
+      "detail": "100 seeds, no overlap"
+    },
+    {
+      "name": "C11_no_episode_in_both_datasets",
+      "passed": true,
+      "detail": "0 shared by actions, 0 shared by observations"
+    },
+    {
+      "name": "C12_shared_states_only_initial",
+      "passed": true,
+      "detail": "1086 exact shared states, 0 of them not initial states"
+    },
+    {
+      "name": "C8_clean_tree",
+      "passed": true,
+      "detail": "git_dirty=False at commit 1a333f22d439639eb327b385040008061f3eca4f"
+    },
+    {
+      "name": "C8b_audit_on_disk_equals_commit",
+      "passed": true,
+      "detail": "byte-identical to HEAD"
+    },
+    {
+      "name": "figures_under_1MB",
+      "passed": true,
+      "detail": "sizes {'lengths.png': 23714, 'returns.png': 23173, 'returns_by_fall.png': 34388, 'state_std.png': 22702, 'reward_terms.png': 20516, 'pca_coverage.png': 116463, 'knn_actions.png': 31922, 'mixture_reference.png': 38940}"
+    }
+  ],
+  "all_passed": true
+}
