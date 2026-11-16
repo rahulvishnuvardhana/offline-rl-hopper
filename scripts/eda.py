@@ -58,8 +58,14 @@ def dirty_paths() -> list[str]:
     return [line[3:] for line in out.stdout.splitlines() if line.strip()]
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def committed_bytes(path: Path) -> bytes:
+    """The file exactly as committed at HEAD, i.e. the bytes a fresh clone gets.
+
+    The disk copy can differ while `git status` says clean: .gitattributes normalizes line
+    endings, so a CRLF file on disk matches an LF blob. Provenance must hash the blob.
+    """
+    rel = path.relative_to(ROOT).as_posix()
+    return subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True, check=True, cwd=ROOT).stdout
 
 
 def random_policy(dataset_id: str) -> dict[str, Any]:
@@ -295,7 +301,8 @@ def main() -> int:
 
     cfg = load_config(BASE_CONFIG)
     ids = {EXPERT: cfg["data"]["expert_id"], SIMPLE: cfg["data"]["simple_id"]}
-    audit = json.loads(AUDIT.read_text(encoding="utf-8"))
+    audit_blob = committed_bytes(AUDIT)
+    audit = json.loads(audit_blob)
     run = collect_metadata()
     episodes = {s: load_episodes(ids[s]) for s in SOURCES}
 
@@ -315,6 +322,14 @@ def main() -> int:
             + (f"; --allow-dirty with changes: {dirty}" if dirty else ""),
         )
     )
+    same = AUDIT.read_bytes() == audit_blob
+    checks.append(
+        Check(
+            "C8b_audit_on_disk_equals_commit",
+            same,
+            "byte-identical to HEAD" if same else "differs from HEAD (line endings?); git checkout the file",
+        )
+    )
     sizes = write_figures(results, arrays, episodes)
     too_big = {k: v for k, v in sizes.items() if v > FIGURE_MAX_BYTES}
     checks.append(Check("figures_under_1MB", not too_big, f"sizes {sizes}"))
@@ -325,7 +340,7 @@ def main() -> int:
         "run": run,
         "audit": {
             "path": AUDIT.relative_to(ROOT).as_posix(),
-            "sha256": sha256(AUDIT),
+            "sha256_of_committed_blob": hashlib.sha256(audit_blob).hexdigest(),
             "git_commit": audit["run"]["git_commit"],
         },
         "dataset_ids": ids,

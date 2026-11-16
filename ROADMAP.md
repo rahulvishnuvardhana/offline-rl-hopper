@@ -425,7 +425,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 - normalizer fit uses only the mixture's own data;
 - per-`p` mixture scores and reward scales reproduce the Phase 2 previews (A11, A12 in `report/eda_summary.json`) for the same seeds.
 
-**Decision due in this phase:** the reward scale `1000 / (max_ret - min_ret)` jumps once a single expert episode enters the mixture (Phase 2, A12), so IQL's effective `beta` depends on `p`. Decide (and write down in an ADR) whether to keep the per-mixture scale, as in the IQL paper, or fix one scale for all `p`. This matters for H3.
+**Decision due in this phase:** the reward scale `1000 / (max_ret - min_ret)` is about 27% lower already at `p = 0.01` than at `p = 0` (Phase 2, A12), so IQL's effective `beta` depends on `p`. Decide (and write down in an ADR) whether to keep the per-mixture scale, as in the IQL paper, or fix one scale for all `p`. This matters for H3.
 
 **Pitfalls:** trimming an episode and marking the cut as a terminal (it is not); fitting normalizers before mixing.
 
