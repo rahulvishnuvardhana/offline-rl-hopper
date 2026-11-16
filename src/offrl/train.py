@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import random
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,7 @@ from offrl.seeding import derive_seeds, seed_everything
 BASE_CONFIG = REPO_ROOT / "configs" / "base.yaml"
 MANIFEST_DIR = REPO_ROOT / "report" / "mixtures"
 DEV_SEED_MIN = 100  # mixture seeds 0 to 99 are final-grid seeds; 100+ are development
+FINAL_EVAL_SEEDS = range(FINAL_EVAL_SEED_OFFSET, FINAL_EVAL_SEED_OFFSET + 50)  # Phase 4 D1
 TRAINERS = {"bc": BCTrainer}
 EVAL_FIELDS = ["step", "n_episodes", "return_mean", "return_std", "score_mean", "fall_rate", "length_mean"]
 EVAL_FIELDS += [f"sub_{k}" for k in EVAL_FIELDS[1:]]
@@ -85,7 +87,7 @@ def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) ->
         errors.append("evaluation seeds overlap the data collection seeds")
     if seed >= DEV_SEED_MIN and used & set(FINAL_EVAL_RESERVED):
         errors.append("development mixture with evaluation seeds reserved for the final grid")
-    final_ok = ev["seed_offset"] == FINAL_EVAL_SEED_OFFSET and used <= set(FINAL_EVAL_RESERVED)
+    final_ok = used == set(FINAL_EVAL_SEEDS)
     if seed < DEV_SEED_MIN and not final_ok:
         errors.append("final-grid mixture without the final evaluation seeds (load configs/final.yaml)")
     if tr["steps"] % tr["eval_every"] or tr["steps"] % tr["checkpoint_every"]:
@@ -218,6 +220,11 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
     if tr["num_threads"]:
         torch.set_num_threads(int(tr["num_threads"]))
     device = pick_device(tr["device"])
+    if resuming:  # another device or thread count breaks the bitwise continuation
+        now = {"device": str(device), "torch_threads": torch.get_num_threads()}
+        was = {k: meta[k] for k in now}
+        if was != now:
+            raise PreflightError(f"{run_dir} was started with {was}, now {now}; resume on the same setup")
     init_seed, buffer_seed, _diag_seed = derive_seeds(cfg["seed"])
     seed_everything(init_seed)
     buffer = ReplayBuffer.from_mixture(arrays, cfg["data"]["scale_rewards"], device, buffer_seed)
@@ -238,6 +245,7 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
     else:
         for name in ("metrics.csv", "eval.csv", "eval_episodes.csv", "timing.csv"):
             (run_dir / name).unlink(missing_ok=True)  # a run killed before its first checkpoint
+        shutil.rmtree(run_dir / "tb", ignore_errors=True)
         save_config(cfg, run_dir / "config.yaml")
         scale = float(arrays["reward_scale"])
         meta = {

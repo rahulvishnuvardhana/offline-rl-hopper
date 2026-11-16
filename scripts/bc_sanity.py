@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -204,6 +205,7 @@ def main() -> int:
     demo_cfg = config(1.0, args.seeds[0], args.steps, "_resume_demo")
     demo_dir = train.resolve_path(demo_cfg["train"]["out_dir"]) / train.run_name(demo_cfg)
     if not (demo_dir / "final.json").exists():
+        shutil.rmtree(demo_dir, ignore_errors=True)  # a job killed mid-demo: start the demo afresh
         print("resume demonstration: stopping mid-run, then resuming", flush=True)
         train.run(demo_cfg, stop_at=int(RESUME_STOP_FRACTION * args.steps))
         train.run(demo_cfg)

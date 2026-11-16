@@ -158,3 +158,34 @@ def test_truncate_csv_drops_later_and_half_written_rows(tmp_path):
 def test_yaml_typos_are_rejected():
     base = {"train": {"steps": 1}, "algo": {"name": "bc"}}
     assert unknown_keys(base, {"train": {"stpes": 2}, "algo": {"beta": 0}}, free=("algo",)) == ["train.stpes"]
+
+
+def test_r3_final_mixture_needs_exactly_the_final_seeds(small_run):
+    make, manifests = small_run
+    for n, ok in ((50, True), (100, False)):
+        cfg = make("seed=0", "eval.seed_offset=10000", f"eval.final_episodes={n}")
+        name = train.mx.mixture_name(1.0, 0)
+        arrays = train.mx.load_mixture(train.resolve_path(cfg["data"]["mixture_dir"]) / f"{name}.npz")
+        if ok:
+            assert train.preflight(cfg, arrays, manifests)["passed"]
+        else:
+            with pytest.raises(train.PreflightError, match="final evaluation seeds"):
+                train.preflight(cfg, arrays, manifests)
+
+
+def test_resume_refuses_another_device(small_run, env, monkeypatch):
+    make, manifests = small_run
+    cfg = make()
+    train.run(cfg, stop_at=200, env=env, manifest_dir=manifests)
+    monkeypatch.setattr(train, "pick_device", lambda _: torch.device("cuda"))
+    with pytest.raises(train.PreflightError, match="same setup"):
+        train.run(cfg, env=env, manifest_dir=manifests)
+
+
+def test_restart_before_first_checkpoint_clears_tensorboard(small_run, env):
+    make, manifests = small_run
+    cfg = make()
+    run_dir = train.run(cfg, stop_at=100, env=env, manifest_dir=manifests)
+    (run_dir / "tb" / "stale").write_text("x", encoding="utf-8")
+    train.run(cfg, stop_at=150, env=env, manifest_dir=manifests)
+    assert not (run_dir / "tb" / "stale").exists()

@@ -22,8 +22,8 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8  # deterministic cuBLAS, so the resume de
 cd "$SLURM_SUBMIT_DIR"
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
+python -m pytest -o addopts="" -q -rs  # a failing test stops the job before any GPU training
 status=0
-python -m pytest -o addopts="" -q -rs || status=$?
 
 # Development mixtures (npz) into scratch; the committed manifests are rewritten identically,
 # then restored, so the tree is clean again before training records git_dirty.

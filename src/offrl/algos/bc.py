@@ -41,7 +41,8 @@ class BCTrainer:
         self.opt.zero_grad(set_to_none=True)
         loss.backward()
         self.opt.step()
-        lr = torch.tensor(self.opt.param_groups[0]["lr"])
+        # Filled on the device: a host tensor here would cost a host-to-device copy every step.
+        lr = torch.full((), self.opt.param_groups[0]["lr"], device=loss.device)
         if self.sched is not None:
             self.sched.step()
         return {
