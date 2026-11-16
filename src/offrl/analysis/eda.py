@@ -228,12 +228,13 @@ def separability(
     rng = np.random.default_rng(seed)
     xe, ae, ge = subsample_states(expert, n_per_source, rng)
     xs, as_, gs = subsample_states(simple, n_per_source, rng)
-    pooled = np.concatenate([xe, xs])
-    mean, std = pooled.mean(0), pooled.std(0)
-    ze, zs = (xe - mean) / std, (xs - mean) / std
-
     e_tr = split_by_episode(ge, train_frac, rng)
     s_tr = split_by_episode(gs, train_frac, rng)
+
+    # Standardize with train states only: test states must not shape the distance metric.
+    train = np.concatenate([xe[e_tr], xs[s_tr]])
+    mean, std = train.mean(0), train.std(0)
+    ze, zs = (xe - mean) / std, (xs - mean) / std
 
     ref = np.concatenate([ze[e_tr], zs[s_tr]])
     ref_label = np.r_[np.ones(e_tr.sum()), np.zeros(s_tr.sum())]

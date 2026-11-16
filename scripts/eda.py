@@ -26,9 +26,10 @@ from offrl.analysis import eda
 from offrl.analysis import eda_plots as plots
 from offrl.analysis.eda import EXPERT, SIMPLE, SOURCES
 from offrl.config import load_config
+from offrl.data import leakage
 from offrl.data.load import Episode, file_hashes, load_episodes
 from offrl.data.validate import Check
-from offrl.rollout import run_policy
+from offrl.rollout import RANDOM_BASELINE_SEEDS, eval_seeds, run_policy
 from offrl.runmeta import collect_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,7 +41,6 @@ BASE_CONFIG = ROOT / "configs" / "base.yaml"
 
 SEEDS = (0, 1, 2)
 N_STATES = 20_000
-RANDOM_EPISODES = 100
 FIGURE_MAX_BYTES = 1_000_000
 
 # C3 thresholds, set from a measurement before coding (spec Section 7): mean -0.002 / -0.004,
@@ -67,13 +67,13 @@ def random_policy(dataset_id: str) -> dict[str, Any]:
 
     env = minari.load_dataset(dataset_id).recover_environment()
     try:
-        out = run_policy(env, lambda _obs: env.action_space.sample(), range(RANDOM_EPISODES))
+        out = run_policy(env, lambda _obs: env.action_space.sample(), RANDOM_BASELINE_SEEDS)
     finally:
         env.close()
     r = out["returns"]
     return {
         "env_id": env.spec.id,
-        "seeds": [0, RANDOM_EPISODES - 1],
+        "seeds": [RANDOM_BASELINE_SEEDS.start, RANDOM_BASELINE_SEEDS.stop - 1],
         "return": eda.describe(r),
         "return_se": float(r.std(ddof=1) / np.sqrt(len(r))),
         "length": eda.describe(out["lengths"]),
@@ -212,6 +212,31 @@ def run_checks(results: dict, rerun: dict, audit: dict, ids: dict[str, str]) -> 
     return checks
 
 
+def leakage_checks(episodes: dict[str, list[Episode]], ids: dict[str, str], cfg: dict) -> list[Check]:
+    """C9 to C12: datasets vs. each other, and data vs. the seeds our rollouts use."""
+    import minari
+
+    env = minari.load_dataset(ids[EXPERT]).recover_environment()
+    try:
+        checks = []
+        for s in SOURCES:
+            c = leakage.check_collection_seeds(
+                episodes[s], lambda seed: env.reset(seed=seed)[0], leakage.COLLECTION_SEEDS[ids[s]]
+            )
+            checks.append(Check(f"C9_{c.name}[{s}]", c.passed, c.detail))
+    finally:
+        env.close()
+    collection = leakage.COLLECTION_SEEDS.values()
+    for name, seeds in (("eval", eval_seeds(cfg["eval"])), ("random_baseline", RANDOM_BASELINE_SEEDS)):
+        c = leakage.check_seeds_disjoint(name, seeds, collection)
+        checks.append(Check(f"C10_{c.name}", c.passed, c.detail))
+    c = leakage.check_no_cross_duplicates(episodes[EXPERT], episodes[SIMPLE])
+    checks.append(Check(f"C11_{c.name}", c.passed, c.detail))
+    c = leakage.check_shared_states_are_initial(episodes[EXPERT], episodes[SIMPLE])
+    checks.append(Check(f"C12_{c.name}", c.passed, c.detail))
+    return checks
+
+
 def write_score_config(path: Path, values: dict[str, float]) -> None:
     """Replace the score lines in place, keeping the file's comments (yaml.dump would drop them)."""
     text = path.read_text(encoding="utf-8")
@@ -281,6 +306,7 @@ def main() -> int:
     results["random_policy"], rerun["random_policy"] = rand, rand_again
 
     checks = run_checks(results, rerun, audit, ids)
+    checks += leakage_checks(episodes, ids, cfg)
     checks.append(
         Check(
             "C8_clean_tree",

@@ -6,6 +6,15 @@ from collections.abc import Callable, Sequence
 
 import numpy as np
 
+# Seeds for every rollout we run. Both must stay disjoint from the datasets' collection seeds
+# (offrl.data.leakage.COLLECTION_SEEDS); tests/test_leakage.py enforces it.
+RANDOM_BASELINE_SEEDS = range(100)
+
+
+def eval_seeds(eval_cfg: dict) -> range:
+    """The evaluation seeds. Phase 4's evaluator must use this, not its own arithmetic."""
+    return range(eval_cfg["seed_offset"], eval_cfg["seed_offset"] + eval_cfg["episodes"])
+
 
 def run_policy(
     env, policy_fn: Callable[[np.ndarray], np.ndarray], seeds: Sequence[int]

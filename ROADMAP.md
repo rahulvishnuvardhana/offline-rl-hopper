@@ -441,7 +441,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Tasks**
 1. `nets.py`: MLP, GaussianPolicy (state-independent log-std, mean through tanh), TwinQ, ValueNet.
 2. `bc.py`: loss `-mean(log pi(a|s))`, implemented by calling the IQL policy loss with all weights = 1 (so the code path really is shared).
-3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`.
+3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`. Seeds come from `offrl.rollout.eval_seeds` only: the datasets were collected from reset seeds 123 to 2074 (Phase 2, C9), and evaluating from those seeds would start episodes in training states (leakage; `tests/test_leakage.py` guards it).
 4. `train.py`: loop with logging every 1k steps, eval every 5k, checkpoint every 25k, resume from latest checkpoint.
 5. Sanity runs (local CPU or `gpu-short`, 100k steps is enough): BC at `p = 0` and `p = 1`.
 

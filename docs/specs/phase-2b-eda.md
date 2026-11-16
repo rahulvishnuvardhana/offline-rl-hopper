@@ -47,7 +47,7 @@ Observation layout (Hopper-v5, x excluded): `obs[0]` torso z, `obs[1]` torso ang
 | A12 | **IQL reward-scale preview:** for the same `p` values, `1000 / (max_ret - min_ret)` over the mixture's untrimmed episodes (Section 4.2) | numbers |
 
 ### 4.1 A9 detail
-Pools per seed: 20k expert and 20k simple states (by the subsampling rule), standardized with the pooled mean and std. Split by **episode**, 80% train and 20% test.
+Pools per seed: 20k expert and 20k simple states (by the subsampling rule). Split by **episode**, 80% train and 20% test, then standardized with the mean and std of the **train** states only (no test information in the distance metric).
 1. **Separability:** kNN classifier (k = 10, Euclidean) predicting the source from the state alone. Score = fraction of expert neighbours in the train pool. Report held-out ROC AUC.
 2. **Action disagreement:** for each simple test state, `d_mix` = L2 distance between the mean action of its k expert train neighbours and the mean action of its k simple train neighbours. Baseline `d_same`: split the expert train episodes into two halves and compute the same statistic between the halves for each expert test state. All four neighbour pools are half of a source's train episodes, so no pool is denser than another. Report the medians and the ratio `d_mix / d_same`.
 3. **Neighbour distances** (added during implementation): median distance from simple test states to their nearest expert and nearest simple train state. If the expert neighbours are much farther away, `d_mix` partly measures distance between states, not between policies.
@@ -96,6 +96,10 @@ v1 used 0 = simple mean and 100 = expert mean. The returns are bimodal, so that 
 | C6 | A11 at `p = 0` and `p = 1` equals the A2-based scores of simple and expert within the trimming effect (abs diff < 1 point) | A2 |
 | C7 | Determinism: the analysis is computed twice in one process and every number agrees (`rtol=1e-9`). Same-machine guarantee only. | |
 | C8 | Clean tree: refuses to run if `git status --porcelain` shows any change, including stale outputs or an edited audit in `report/` (unless `--allow-dirty`); passes only if the recorded `git_dirty` is false. `git` always runs in the repo root. Records `git_commit`, `git_dirty` and the SHA-256 of `report/data_audit.json` it reconciled against. | |
+| C9 | **Leakage, collection seeds:** episode i of each dataset starts at `env.reset(seed=123 + i)` exactly (verified for all 1,086 + 1,952 episodes), so the collection seeds are known: expert 123 to 1208, simple 123 to 2074 | |
+| C10 | **Leakage, rollout seeds:** evaluation seeds (`offrl.rollout.eval_seeds`) and random-baseline seeds never reuse a collection seed. MuJoCo is deterministic, so such an episode would start from a training state and a memorizing policy could replay it. Also a CI test on `configs/base.yaml` | |
+| C11 | **Leakage, cross-dataset:** no episode appears in both datasets (by action hash and by observation hash), so `p` means what it says | |
+| C12 | **Leakage, shared states:** exact states present in both datasets are all initial states (same reset seeds); none mid-trajectory | |
 
 Separately, `tests/test_eda_config.py` asserts that `configs/base.yaml` score values equal `eda_summary.json` (`rtol=1e-9`). It is a pytest, not a script check, so the script never checks its own output.
 
