@@ -200,7 +200,7 @@ class Batch:
     done: Tensor  # (B, 1)  float32, = terminations ONLY
 ```
 
-Mixture manifest (`report/mixtures/mix_p0.05_s0.json`, committed; full field list in `docs/specs/phase-3-mixtures.md` Section 3.7):
+Mixture manifest (`report/mixtures/mix_p0.05_s0.json`, committed; full field list in `docs/specs/phase-3-mixtures.md` Section 3.7). Values below are illustrative:
 
 ```json
 {"p_target": 0.05, "p_actual": 0.05, "n_transitions": 900000, "seed": 0,

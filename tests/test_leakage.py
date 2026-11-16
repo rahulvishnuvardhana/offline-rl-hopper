@@ -78,7 +78,9 @@ def test_configured_rollout_seeds_never_reuse_collection_seeds():
     cfg = load_config(ROOT / "configs" / "base.yaml")
     collection = leakage.COLLECTION_SEEDS.values()
     assert leakage.check_seeds_disjoint("eval", eval_seeds(cfg["eval"]), collection).passed
-    final = {**cfg["eval"], "seed_offset": FINAL_EVAL_SEED_OFFSET, "episodes": 50}
+    final_cfg = load_config(ROOT / "configs" / "base.yaml", ROOT / "configs" / "final.yaml")
+    assert final_cfg["eval"]["seed_offset"] == FINAL_EVAL_SEED_OFFSET  # final runs get reserved seeds
+    final = {**final_cfg["eval"], "episodes": 50}
     assert leakage.check_seeds_disjoint("final", eval_seeds(final), collection).passed
     # development and final evaluation seeds never overlap either
     assert not set(eval_seeds(cfg["eval"])) & set(eval_seeds(final))

@@ -51,7 +51,7 @@ A corrupted mixture yields a FAIL, never a crash; `tests/test_mixture_audit.py` 
 | M6 | The **stored** `state_mean`, `state_std`, `state_std_eps` and `reward_scale` (what training reads) equal a float64 recomputation from the sources via the index (rtol 1e-12; eps exact); mean and std of the float32 file rows within 1e-6 std of the stored values | The fitting code |
 | M7 | Rebuilding the same `(p, seed)` gives the same `file_sha256` and `content_sha256`; hashes differ across `p` within a seed and across seeds for each `p` (guards, not evidence) | |
 | M8 | Clean tree, committed-blob hashing of the audit, `git_commit` recorded (as Phase 2 C8/C8b) | |
-| M9 | **Informational, never blocks (errors are recorded, not raised):** replay 3 episodes per source (per-source index `i`, seed `123 + i`) with the dataset actions; record max error over steps 1 to 100 and the MuJoCo version (reviewer measured at most 4e-14) | |
+| M9 | **Informational, never blocks (errors are recorded, not raised):** replay 3 episodes per source (per-source index `i`, seed `123 + i`) with the dataset actions; record the max error over the reset observation and steps 1 to 100 (observations and rewards) and the MuJoCo version; `within_1e-9` is reported, not enforced. Official run: 2.2e-10 (expert) and 1.7e-10 (simple), identical on the laptop and Explorer | |
 
 **Cross-machine reconciliation (DoD):** mixtures built on Explorer reproduce the laptop `content_sha256` values.
 

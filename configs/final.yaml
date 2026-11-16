@@ -1,0 +1,5 @@
+# Final-grid overrides (Phases 7, 8): merge on top of base.yaml and the algo file.
+# base.yaml carries the development evaluation seeds (20000+, Phases 4 to 6); final runs
+# must use the reserved seeds. tests/test_leakage.py checks this file resolves to them.
+eval:
+  seed_offset: 10000

@@ -1,5 +1,6 @@
 #!/bin/bash
 # Phase 0 smoke test: 1 small GPU for 10 minutes. See ROADMAP 4.2.1 (responsible use).
+# Submit from the repo root after `mkdir -p logs` (gitignored; Slurm cannot create it).
 #SBATCH --job-name=offrl-smoke
 #SBATCH --partition=gpu-short
 #SBATCH --gres=gpu:t4:1
