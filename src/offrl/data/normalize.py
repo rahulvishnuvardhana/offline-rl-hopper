@@ -26,6 +26,16 @@ class StateNormalizer:
         return ((np.asarray(x, dtype=np.float64) - self.mean) / (self.std + self.eps)).astype(np.float32)
 
 
+def normalizer_from_arrays(arrays: Mapping[str, np.ndarray]) -> StateNormalizer:
+    """The normalizer a mixture file carries. The buffer and the evaluator both use this one
+    object, so training and evaluation observations cannot be transformed differently."""
+    return StateNormalizer(
+        np.asarray(arrays["state_mean"], dtype=np.float64),
+        np.asarray(arrays["state_std"], dtype=np.float64),
+        float(arrays["state_std_eps"]),
+    )
+
+
 def fit_state_normalizer(
     episodes: Mapping[str, Sequence[Episode]], picks: Picks, eps: float = 1e-3
 ) -> StateNormalizer:

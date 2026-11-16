@@ -12,11 +12,15 @@ RANDOM_BASELINE_SEEDS = range(100)
 # Evaluation seed offsets: base.yaml holds the development offset (Phases 4 to 6); the final
 # grid (Phases 7, 8) overrides it with this one, so debugging never sees the final seeds.
 FINAL_EVAL_SEED_OFFSET = 10_000
+# Seeds reserved for the final grid. Development runs may not touch any of them.
+FINAL_EVAL_RESERVED = range(FINAL_EVAL_SEED_OFFSET, FINAL_EVAL_SEED_OFFSET + 1_000)
 
 
-def eval_seeds(eval_cfg: dict) -> range:
-    """The evaluation seeds. Phase 4's evaluator must use this, not its own arithmetic."""
-    return range(eval_cfg["seed_offset"], eval_cfg["seed_offset"] + eval_cfg["episodes"])
+def eval_seeds(eval_cfg: dict, n: int | None = None) -> range:
+    """The evaluation seeds: ``n`` of them (default ``eval.episodes``) from ``eval.seed_offset``.
+    The evaluator must use this, not its own arithmetic; larger ``n`` gives a superset."""
+    n = eval_cfg["episodes"] if n is None else n
+    return range(eval_cfg["seed_offset"], eval_cfg["seed_offset"] + n)
 
 
 def run_policy(

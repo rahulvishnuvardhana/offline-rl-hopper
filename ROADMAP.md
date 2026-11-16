@@ -131,12 +131,13 @@ offline-rl-hopper/
     nets.py               # MLP, GaussianPolicy, TwinQ, ValueNet
     algos/
       base.py             # Trainer interface: update(batch) -> dict of losses
+      losses.py           # the one policy loss (BC: unit weights; IQL: exp(beta * A))
       bc.py               # BC = IQL policy loss with beta = 0
       iql.py              # expectile V, TD Q, AWR policy
     rollout.py            # run a policy for seeded episodes (random baseline + eval)
-    eval.py               # rollouts, normalized score
+    evaluate.py           # rollouts, normalized score
     runmeta.py            # run metadata (git commit, dirty flag, versions, Slurm ids)
-    logging.py            # CSV + TensorBoard
+    runlog.py             # CSV + TensorBoard (not logging.py: would shadow the stdlib)
     train.py              # entry point: python -m offrl.train --config ...
     sweep.py              # expand a grid file, run index i (for Slurm arrays)
     analysis/
@@ -443,14 +444,14 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Tasks**
 1. `nets.py`: MLP, GaussianPolicy (state-independent log-std, mean through tanh), TwinQ, ValueNet.
 2. `bc.py`: loss `-mean(log pi(a|s))`, implemented by calling the IQL policy loss with all weights = 1 (so the code path really is shared).
-3. `eval.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`. Seeds come from `offrl.rollout.eval_seeds` only: the datasets were collected from reset seeds 123 to 2074 (Phase 2, C9), and evaluating from those seeds would start episodes in training states (leakage; `tests/test_leakage.py` guards it).
+3. `evaluate.py`: recovered env via `dataset.recover_environment()`, normalized obs, mean action, 10 fixed seeds, returns raw return, fall rate and normalized score `100 * (R - R_random) / (R_expert - R_random)` (ADR-6). Built on `offrl.rollout.run_policy`. Seeds come from `offrl.rollout.eval_seeds` only: the datasets were collected from reset seeds 123 to 2074 (Phase 2, C9), and evaluating from those seeds would start episodes in training states (leakage; `tests/test_leakage.py` guards it).
 4. `train.py`: loop with logging every 1k steps, eval every 5k, checkpoint every 25k, resume from latest checkpoint.
 5. Sanity runs (local CPU or `gpu-short`, 100k steps is enough): BC at `p = 0` and `p = 1`, on **development** mixtures (seed 100+) with **development** evaluation seeds (`eval.seed_offset: 20000`); seeds 10000+ and mixture seeds 0 to 2 are reserved for the final grid.
 6. Final score of every run: mean over the last 5 evaluations (pre-registered; no early stopping or checkpoint selection), with the final evaluation over 50 episodes because a fall is all or nothing. Report wording: disjoint seeds prevent exact replay of a training trajectory, but starting states stay close to training ones (reset noise 0.005).
 
 **Deliverables:** BC learning curves at `p = 0` and `p = 1`, `tests/test_losses.py` (BC part).
 
-**DoD:** BC at `p = 1` lands in the expert sanity band and at `p = 0` in the simple sanity band (`sanity_bands` in `report/eda_summary.json`, pre-registered in Phase 2), reported with fall rates; check whether deterministic eval beats the dataset mean (were the data actions stochastic?); killing and resuming a run continues the same curve.
+**DoD:** BC at `p = 1` lands in `[80.3, 113.5]` and at `p = 0` in `[22.5, 85.4]` (lower bound: Phase 2 `sanity_bands`; upper bound: the dataset's best episode, decided 2026-11-16, D4), on development seeds 100 and 101, reported with fall rates; a miss is rerun at 300k and both are reported; no-fall return within 10% of the dataset's at both `p` (at least 10 no-fall episodes); `score(p = 1)` vs. `score(p = 0)` reported, not gated (spec Section 8.1); held-out expert action R^2 >= 0.8 on dataset episodes not in the mixture (D3); learned vs. residual action std and no-fall return vs. the dataset answer whether the data actions were noisy; killing and resuming a run is bitwise identical. Final score: mean of the last 5 evaluations, each over 50 episodes (D1). Spec: `docs/specs/phase-4-bc-eval.md`.
 
 **Pitfalls:** evaluating with sampled actions instead of the mean; forgetting to normalize eval observations; eval env seeds not fixed (noisy curves that look like bugs).
 
@@ -519,7 +520,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **Deliverables:** 30 complete run folders; `runs_index.csv` (run id, algo, p, seed, final score).
 
-**DoD:** all 30 runs have 60 evaluations; at `p = 1` curves have plateaued. If IQL is still climbing at 300k, extend those runs to 500k and note it (same budget for BC).
+**DoD:** all 30 runs have 60 evaluations; at `p = 1` curves have plateaued. If IQL is still climbing at 300k, rerun those cells at 500k as fresh runs and note it (same budget for BC); a cosine-schedule run cannot be extended by resuming.
 
 **Pitfalls:** changing code mid-grid (every run must come from the same git commit; check the saved hash).
 

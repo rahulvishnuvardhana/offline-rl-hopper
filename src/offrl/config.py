@@ -72,3 +72,37 @@ def save_config(cfg: Config, path: str | Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(cfg, f, sort_keys=False)
+
+
+def unknown_keys(
+    reference: Mapping[str, Any], update: Mapping[str, Any], free: Iterable[str] = ()
+) -> list[str]:
+    """Dotted keys of ``update`` that ``reference`` lacks. Sections named in ``free`` (top level)
+    may hold anything: algorithm files declare their own ``algo`` keys."""
+    free, bad = set(free), []
+
+    def walk(ref: Mapping[str, Any], upd: Mapping[str, Any], prefix: str) -> None:
+        for key, value in upd.items():
+            name = f"{prefix}{key}"
+            if not prefix and key in free:
+                continue
+            if key not in ref:
+                bad.append(name)
+            elif isinstance(value, Mapping) and isinstance(ref[key], Mapping):
+                walk(ref[key], value, f"{name}.")
+
+    walk(reference, update, "")
+    return bad
+
+
+def load_checked(base: str | Path, *files: str | Path, overrides: Iterable[str] = ()) -> Config:
+    """``load_config`` plus a schema check: every key in ``files`` must exist in ``base`` (except
+    under ``algo``), so a typo in a YAML file fails loudly, as a typo in an override already does."""
+    with open(base, encoding="utf-8") as f:
+        reference = yaml.safe_load(f) or {}
+    for path in files:
+        with open(path, encoding="utf-8") as f:
+            bad = unknown_keys(reference, yaml.safe_load(f) or {}, free=("algo",))
+        if bad:
+            raise KeyError(f"{path}: keys not in {Path(base).name}: {bad}")
+    return load_config(base, *files, overrides=overrides)
