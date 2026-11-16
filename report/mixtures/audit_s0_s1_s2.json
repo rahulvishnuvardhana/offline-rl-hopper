@@ -1,0 +1,643 @@
+{
+  "generated_utc": "2026-11-16T02:07:00+00:00",
+  "run": {
+    "git_commit": "53a659a9889657f60f4749a3a76789c3fe63b63b",
+    "git_dirty": false,
+    "python": "3.11.18",
+    "packages": {
+      "torch": "2.11.0",
+      "numpy": "2.4.6",
+      "gymnasium": "1.4.0",
+      "mujoco": "3.2.3",
+      "minari": "0.5.4",
+      "pandas": "3.1.1",
+      "matplotlib": "3.11.2"
+    },
+    "hostname": "LAPTOP-R2PPDIPL",
+    "gpu": null,
+    "slurm_job_id": null,
+    "slurm_array_task_id": null,
+    "started_utc": "2026-11-16T02:05:50+00:00"
+  },
+  "inputs_sha256_of_committed_blob": {
+    "report/data_audit.json": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
+    "report/eda_summary.json": "699e59cb451e53fa2e83491f0207d6973caf33f319070b609692ee6269f4c62d"
+  },
+  "p": [
+    0.0,
+    0.05,
+    0.2,
+    0.5,
+    1.0
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "content_sha256": {
+    "mix_p0_s0": "12a021ad298aea24e0383baf13af4afcfef3aac03f81f420d88d09d184c095c6",
+    "mix_p0.05_s0": "58f95b59766341789a918fba71b03576fbefefee70e738e144428fb434e844b7",
+    "mix_p0.2_s0": "b5c0e55c838532578586da7d00e1938f1672d6d6dfd7d7ce2ee1f139109b7445",
+    "mix_p0.5_s0": "7c872874443316708c9214e984ebc8bc11f71cbdbbd2d622a907554946221a1b",
+    "mix_p1_s0": "8e8f0c6cce41ae59b925f82a8f8f25eb0a295e20cd3aca7a5b9d66c02ab09123",
+    "mix_p0_s1": "bb98cb94e134fcc65677cc73ac75463e5999964a5b8c81be60dbf21bc7cfa2fb",
+    "mix_p0.05_s1": "95175a5bd95c0ecb1a719ed068645861c86c0c9a1a4029f3ce51535871fab3de",
+    "mix_p0.2_s1": "f22d02ff424e9aa88cecfb04c81ee759e87dd3d96b9c7ab1cf974557fe04143b",
+    "mix_p0.5_s1": "3f8168c2f5172422f292e0f350041082a4cf42bd6e9777c5e8e066802a30a3b3",
+    "mix_p1_s1": "da638ed675e7e77853b9c406771212b1ac880d528155d689e6ea5fe2dc205061",
+    "mix_p0_s2": "e15e112b468576c28fc1d28e19efad590a1f67c4bd3181ba343abb36125843b6",
+    "mix_p0.05_s2": "4f04c6d85a8d5bc4bd10f7bfb590a75654b3891709ef3ad362b80ddcbe9996a3",
+    "mix_p0.2_s2": "a9b04951ecf2fa02bce9708b8368ae378b3af03b8c76ea99383d788fa06c5df3",
+    "mix_p0.5_s2": "6b00663a21e072e1dd1b0723178da092f1fa1c07273cf630362355311aee72d7",
+    "mix_p1_s2": "fd27fe5c71e5db4cd8634c1fc8485b0b3504eea12532c8cd8f8e8d8fe013db00"
+  },
+  "M9_replay_informational": {
+    "max_abs_error": {
+      "expert": 2.2328972004714842e-10,
+      "simple": 1.7436230237422023e-10
+    },
+    "steps": 100,
+    "episodes_per_source": 3,
+    "mujoco": "3.2.3",
+    "within_1e-9": true
+  },
+  "checks": [
+    {
+      "name": "M1_size_and_p[mix_p0_s0]",
+      "passed": true,
+      "detail": "900000 rows, 0 expert (target 0); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0_s0]",
+      "passed": true,
+      "detail": "p=0: 0 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0_s0]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0_s0]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0_s0]",
+      "passed": true,
+      "detail": "picks match; mean return 1671.364713 vs Phase 2 1671.364713"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0_s0]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0_s0]",
+      "passed": true,
+      "detail": "content 12a021ad298a"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "900000 rows, 45000 expert (target 45000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "p=0.05: 45000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "picks match; mean return 1741.543410 vs Phase 2 1741.543410"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.05_s0]",
+      "passed": true,
+      "detail": "content 58f95b597663"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "900000 rows, 180000 expert (target 180000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "p=0.2: 180000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "picks match; mean return 1944.631275 vs Phase 2 1944.631275"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.2_s0]",
+      "passed": true,
+      "detail": "content b5c0e55c8385"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "900000 rows, 450000 expert (target 450000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "p=0.5: 450000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "picks match; mean return 2430.215469 vs Phase 2 2430.215469"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.5_s0]",
+      "passed": true,
+      "detail": "content 7c8728744433"
+    },
+    {
+      "name": "M1_size_and_p[mix_p1_s0]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s0]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s0]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s0]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s0]",
+      "passed": true,
+      "detail": "picks match; mean return 3862.263146 vs Phase 2 3862.263146"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s0]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s0]",
+      "passed": true,
+      "detail": "content 8e8f0c6cce41"
+    },
+    {
+      "name": "M7_distinct_within_seed[s0]",
+      "passed": true,
+      "detail": "5 mixtures (guard)"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0_s1]",
+      "passed": true,
+      "detail": "900000 rows, 0 expert (target 0); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0_s1]",
+      "passed": true,
+      "detail": "p=0: 0 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0_s1]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0_s1]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0_s1]",
+      "passed": true,
+      "detail": "picks match; mean return 1652.655819 vs Phase 2 1652.655819"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0_s1]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0_s1]",
+      "passed": true,
+      "detail": "content bb98cb94e134"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "900000 rows, 45000 expert (target 45000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "p=0.05: 45000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "picks match; mean return 1707.499065 vs Phase 2 1707.499065"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.05_s1]",
+      "passed": true,
+      "detail": "content 95175a5bd95c"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "900000 rows, 180000 expert (target 180000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "p=0.2: 180000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "picks match; mean return 1914.475654 vs Phase 2 1914.475654"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.2_s1]",
+      "passed": true,
+      "detail": "content f22d02ff424e"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "900000 rows, 450000 expert (target 450000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "p=0.5: 450000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "picks match; mean return 2419.466888 vs Phase 2 2419.466888"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.5_s1]",
+      "passed": true,
+      "detail": "content 3f8168c2f517"
+    },
+    {
+      "name": "M1_size_and_p[mix_p1_s1]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s1]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s1]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s1]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s1]",
+      "passed": true,
+      "detail": "picks match; mean return 3854.773253 vs Phase 2 3854.773253"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s1]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s1]",
+      "passed": true,
+      "detail": "content da638ed675e7"
+    },
+    {
+      "name": "M7_distinct_within_seed[s1]",
+      "passed": true,
+      "detail": "5 mixtures (guard)"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0_s2]",
+      "passed": true,
+      "detail": "900000 rows, 0 expert (target 0); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0_s2]",
+      "passed": true,
+      "detail": "p=0: 0 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0_s2]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0_s2]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0_s2]",
+      "passed": true,
+      "detail": "picks match; mean return 1663.979818 vs Phase 2 1663.979818"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0_s2]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0_s2]",
+      "passed": true,
+      "detail": "content e15e112b4685"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "900000 rows, 45000 expert (target 45000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "p=0.05: 45000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "picks match; mean return 1720.664198 vs Phase 2 1720.664198"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.05_s2]",
+      "passed": true,
+      "detail": "content 4f04c6d85a8d"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "900000 rows, 180000 expert (target 180000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "p=0.2: 180000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "picks match; mean return 1933.230844 vs Phase 2 1933.230844"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.2_s2]",
+      "passed": true,
+      "detail": "content a9b04951ecf2"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "900000 rows, 450000 expert (target 450000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "p=0.5: 450000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "picks match; mean return 2486.848727 vs Phase 2 2486.848727"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.5_s2]",
+      "passed": true,
+      "detail": "content 6b00663a21e0"
+    },
+    {
+      "name": "M1_size_and_p[mix_p1_s2]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s2]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s2]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s2]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s2]",
+      "passed": true,
+      "detail": "picks match; mean return 3863.704396 vs Phase 2 3863.704396"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s2]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s2]",
+      "passed": true,
+      "detail": "content fd27fe5c71e5"
+    },
+    {
+      "name": "M7_distinct_within_seed[s2]",
+      "passed": true,
+      "detail": "5 mixtures (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0.05]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0.2]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0.5]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p1]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M8_clean_tree",
+      "passed": true,
+      "detail": "git_dirty=False at commit 53a659a9889657f60f4749a3a76789c3fe63b63b"
+    },
+    {
+      "name": "M8b_inputs_on_disk_equal_commit",
+      "passed": true,
+      "detail": "byte-identical to HEAD"
+    }
+  ],
+  "all_passed": true
+}
