@@ -1,7 +1,7 @@
 {
-  "generated_utc": "2026-11-16T00:52:17+00:00",
+  "generated_utc": "2026-11-16T01:06:50+00:00",
   "run": {
-    "git_commit": "5051029e3fc388bc4ba1c371fdd6224f09b4d5e1",
+    "git_commit": "1a333f22d439639eb327b385040008061f3eca4f",
     "git_dirty": false,
     "python": "3.11.18",
     "packages": {
@@ -17,11 +17,11 @@
     "gpu": null,
     "slurm_job_id": null,
     "slurm_array_task_id": null,
-    "started_utc": "2026-11-16T00:51:26+00:00"
+    "started_utc": "2026-11-16T01:05:51+00:00"
   },
   "audit": {
     "path": "report/data_audit.json",
-    "sha256": "a01754dc15de291fec6e4c4fa9bb8f1297aa8c645b3fdb2f24057959b262e164",
+    "sha256_of_committed_blob": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
     "git_commit": "19c118c83b94e37ca8c21a100840fead1a2f5060"
   },
   "dataset_ids": {
@@ -897,7 +897,12 @@
     {
       "name": "C8_clean_tree",
       "passed": true,
-      "detail": "git_dirty=False at commit 5051029e3fc388bc4ba1c371fdd6224f09b4d5e1"
+      "detail": "git_dirty=False at commit 1a333f22d439639eb327b385040008061f3eca4f"
+    },
+    {
+      "name": "C8b_audit_on_disk_equals_commit",
+      "passed": true,
+      "detail": "byte-identical to HEAD"
     },
     {
       "name": "figures_under_1MB",

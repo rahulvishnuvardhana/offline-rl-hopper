@@ -1,6 +1,6 @@
 # EDA summary: Hopper expert-v0 and simple-v0
 
-All numbers come from `report/eda_summary.json` (code commit `5051029`, `git_dirty: false`, 19 of 19 checks passed). Figures are in `report/figures/`. Spec: `docs/specs/phase-2b-eda.md`.
+All numbers come from `report/eda_summary.json` (code commit `1a333f2`, `git_dirty: false`, 20 of 20 checks passed). Figures are in `report/figures/`. Spec: `docs/specs/phase-2b-eda.md`.
 
 ## 1. The data is clean and leak-free
 - The counts reconcile across three sources (documentation, metadata, our sums), and the files re-hash to the Phase 2A audit values.
