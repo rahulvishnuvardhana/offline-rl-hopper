@@ -44,7 +44,8 @@ def main() -> int:
 
     audit["all_passed"] = all_passed
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(audit, indent=2) + "\n", encoding="utf-8")
+    # newline="\n": LF on every OS, so the file's hash does not depend on where it was written.
+    OUT.write_text(json.dumps(audit, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"\n{'ALL CHECKS PASSED' if all_passed else 'SOME CHECKS FAILED'}; audit written to {OUT}")
     return 0 if all_passed else 1
 

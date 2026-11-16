@@ -28,7 +28,7 @@ Observation layout (Hopper-v5, x excluded): `obs[0]` torso z, `obs[1]` torso ang
 
 "State statistics" always use `obs[:-1]` (states that have an action). **All dataset-wide state statistics in this phase are descriptive only.** Training normalizers are fit on each mixture (ADR-5) and never on these numbers.
 
-**Subsampling rule (A7, A8, A9):** sample whole episodes uniformly (seeded) and then states within them, so neighbouring states of one episode are not counted as independent. Seeds 0, 1, 2 for each subsampled analysis; report the mean and the min to max range across seeds.
+**Subsampling rule (A8, A9):** draw states uniformly over all transitions (seeded) and keep each state's episode id. Every train/test split is by episode, so states of one episode never sit on both sides. (Implementation note: drawing whole episodes first would give only about 22 expert episodes per 20k states, which is too few for an 80/20 split.) Seeds 0, 1, 2 for each subsampled analysis; report the mean and the min to max range across seeds.
 
 | # | Analysis | Output |
 |---|---|---|
@@ -39,17 +39,18 @@ Observation layout (Hopper-v5, x excluded): `obs[0]` torso z, `obs[1]` torso ang
 | A4 | Per-dimension state mean and std (descriptive only) | numbers + `state_std.png` |
 | A5 | Velocity clipping: fraction of values with `abs == 10` (exact, `np.isclose(atol=1e-9)`) per dimension `obs[5:11]`, per dataset | numbers |
 | A6 | Action mean and std per dimension; fraction at the bound | numbers |
-| A7 | **Reward decomposition:** per step, `healthy = 1.0`, `forward = next_obs[5]`, `ctrl = 1e-3 * ||a||^2`; mean of each term per dataset; residual `rew - (healthy + forward - ctrl)` summary (mean, median and p99 of abs) | numbers + `reward_terms.png` |
+| A7 | **Reward decomposition:** per step, `healthy = 1.0` except 0 on the terminal (fall) step (Hopper-v5 pays it only while healthy), `forward = next_obs[5]`, `ctrl = 1e-3 * ||a||^2`; mean of each term per dataset; residual `rew - (healthy + forward - ctrl)` summary (mean, median and p99 of abs) | numbers + `reward_terms.png` |
 | A8 | State coverage: PCA (2 components) on pooled standardized states, 20k per source per seed; signs fixed so the largest-abs loading of each component is positive | `pca_coverage.png` + explained variance |
 | A9 | **Source separability and action disagreement** (replaces v1's nearest-neighbour threshold), Section 4.1 | numbers + `knn_actions.png` |
 | A10 | Random policy: 100 episodes, seeds 0 to 99, `env.reset(seed=s)` and `env.action_space.seed(s)`; mean, std, SE | numbers |
 | A11 | **Per-`p` dataset reference curve:** the expected normalized score of each mixture's own episodes for `p` in {0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0}, using the Phase 3 sampling rule (Section 4.2) | numbers + `mixture_reference.png` |
-| A12 | **IQL reward-scale preview:** for the same `p` values, `1000 / (max_ret - min_ret)` over the mixture's episodes (Section 4.2) | numbers |
+| A12 | **IQL reward-scale preview:** for the same `p` values, `1000 / (max_ret - min_ret)` over the mixture's untrimmed episodes (Section 4.2) | numbers |
 
 ### 4.1 A9 detail
 Pools per seed: 20k expert and 20k simple states (by the subsampling rule), standardized with the pooled mean and std. Split by **episode**, 80% train and 20% test.
 1. **Separability:** kNN classifier (k = 10, Euclidean) predicting the source from the state alone. Score = fraction of expert neighbours in the train pool. Report held-out ROC AUC.
-2. **Action disagreement:** for each simple test state, `d_mix` = L2 distance between the mean action of its k expert train neighbours and the mean action of its k simple train neighbours. Baseline `d_same`: split the expert train episodes into two halves and compute the same statistic between the halves for each expert test state. Report the medians and the ratio `d_mix / d_same`.
+2. **Action disagreement:** for each simple test state, `d_mix` = L2 distance between the mean action of its k expert train neighbours and the mean action of its k simple train neighbours. Baseline `d_same`: split the expert train episodes into two halves and compute the same statistic between the halves for each expert test state. All four neighbour pools are half of a source's train episodes, so no pool is denser than another. Report the medians and the ratio `d_mix / d_same`.
+3. **Neighbour distances** (added during implementation): median distance from simple test states to their nearest expert and nearest simple train state. If the expert neighbours are much farther away, `d_mix` partly measures distance between states, not between policies.
 
 Pre-registered reading:
 
@@ -61,7 +62,7 @@ Pre-registered reading:
 Memory: distances are computed in blocks of 512 test rows against the train pool (512 x 32k x 8 bytes is about 130 MB), never the full matrix.
 
 ### 4.2 Mixture sampling rule used by A11 and A12
-For each of seeds 0, 1, 2: shuffle each source's episode IDs with the seed and take whole episodes until the source's budget (`p * 900,000` expert, the rest simple) is reached. The last episode is trimmed (it counts as truncated, not fallen). A11 averages episode returns over the mixture, with a trimmed episode counted at its trimmed return. Report the mean and range across seeds.
+For each of seeds 0, 1, 2: permute each source's episode indices (0 to n-1 in load order; equal to the episode ids for both datasets) with one generator seeded by the mixture seed, expert first, then simple, and take whole episodes until the source's budget (`p * 900,000` expert, the rest simple) is reached. The last episode is trimmed (it counts as truncated, not fallen). A11 averages episode returns over the mixture, with a trimmed episode counted at its trimmed return. A12 uses untrimmed episodes only: a trimmed tail can be a few steps long and would otherwise set the minimum, so the scale would depend on where the budget cut fell (found in code review). Report the mean and range across seeds.
 
 This is a preview function in `eda.py`. Phase 3's `mixture.py` must reproduce these numbers for the same seeds, and its test reconciles them against `eda_summary.json`.
 
@@ -89,12 +90,12 @@ v1 used 0 = simple mean and 100 = expert mean. The returns are bimodal, so that 
 |---|---|---|
 | C1 | Step and episode counts equal `report/data_audit.json` | The audit's own computation |
 | C2 | **Re-hash** the dataset files now and compare with the audit's `file_sha256` | The audit's stored hashes |
-| C3 | Reward decomposition (A7): abs(mean residual) < 0.02 and median abs residual < 0.1 per dataset. Measured while writing this spec: mean -0.002 / -0.004, median 0.034 / 0.022. A wrong reward scale or a missing survival bonus would fail it. | The recorded rewards |
-| C4 | Fall split adds up: `n_fell + n_no_fall = n_episodes`, transitions likewise, and the group means weighted by count reproduce the A2 mean (`rtol=1e-12`) | The A2 computation |
+| C3 | Reward decomposition (A7): abs(mean residual) < 0.02 and median abs residual < 0.1 per dataset. Measured while writing this spec: mean -0.002 / -0.004, median 0.034 / 0.022. A wrong reward scale or a missing survival bonus would fail it. Limitation: the control cost (about 0.001 per step) is too small to verify this way, and a regression on `||a||^2` is confounded with speed (fitted weight -0.006 on expert), so that term is taken from the env definition. | The recorded rewards |
+| C4 | Fall split adds up: `n_fell + n_no_fall = n_episodes`, transitions likewise, and the group means weighted by count reproduce the A2 mean (`rtol=1e-12`) | Bookkeeping check of the split only (it reuses the A2 returns) |
 | C5 | `r_expert > r_simple > r_random` | |
 | C6 | A11 at `p = 0` and `p = 1` equals the A2-based scores of simple and expert within the trimming effect (abs diff < 1 point) | A2 |
 | C7 | Determinism: the analysis is computed twice in one process and every number agrees (`rtol=1e-9`). Same-machine guarantee only. | |
-| C8 | Clean tree: refuses to run if `git status --porcelain` shows changes outside `report/` (unless `--allow-dirty`). Records `git_commit`, `git_dirty` and the SHA-256 of `report/data_audit.json` it reconciled against. | |
+| C8 | Clean tree: refuses to run if `git status --porcelain` shows any change, including stale outputs or an edited audit in `report/` (unless `--allow-dirty`); passes only if the recorded `git_dirty` is false. `git` always runs in the repo root. Records `git_commit`, `git_dirty` and the SHA-256 of `report/data_audit.json` it reconciled against. | |
 
 Separately, `tests/test_eda_config.py` asserts that `configs/base.yaml` score values equal `eda_summary.json` (`rtol=1e-9`). It is a pytest, not a script check, so the script never checks its own output.
 

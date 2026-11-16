@@ -34,9 +34,11 @@ eval:
   final_score_last_n: 5
 
 score:
-  # 0 and 100 of the normalized score; filled from the Phase 2 EDA.
-  r_simple: null
+  # ADR-6: score = 100 * (R - r_random) / (r_expert - r_random). Written by
+  # `python scripts/eda.py --write-config`; r_simple is a reference line only.
+  r_random: null
   r_expert: null
+  r_simple: null
 
 algo:
   name: bc
