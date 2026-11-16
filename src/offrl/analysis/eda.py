@@ -12,9 +12,7 @@ from typing import Any
 import numpy as np
 
 from offrl.data.load import Episode
-
-EXPERT, SIMPLE = "expert", "simple"
-SOURCES = (EXPERT, SIMPLE)  # fixed order: the mixture RNG stream depends on it
+from offrl.data.mixture import EXPERT, SIMPLE, SOURCES, sample_mixture_episodes
 
 VEL_DIMS = tuple(range(5, 11))  # obs[5:11] are velocities, clipped by the env
 VEL_CLIP = 10.0
@@ -23,6 +21,7 @@ FORWARD_REWARD_WEIGHT = 1.0
 CTRL_COST_WEIGHT = 1e-3
 
 P_GRID = (0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0)
+PREVIEW_SEEDS = (0, 1, 2)  # seeds of every subsampled analysis and the A11/A12 per_seed lists
 REWARD_SCALE_NUMERATOR = 1000.0  # IQL: r * 1000 / (max_return - min_return)
 
 
@@ -296,34 +295,6 @@ def coverage_pca(
 def normalized_score(ret: float, r_random: float, r_expert: float) -> float:
     """ADR-6 (D4RL convention): 0 = random policy, 100 = expert dataset mean."""
     return 100.0 * (ret - r_random) / (r_expert - r_random)
-
-
-def sample_mixture_episodes(
-    lengths: Mapping[str, np.ndarray], p: float, n_transitions: int, seed: int
-) -> dict[str, list[tuple[int, int]]]:
-    """Phase 3 sampling rule: per source, shuffle episodes with the seed and take whole
-    episodes until its budget is met; the last one is trimmed. Returns (index, steps taken).
-
-    One generator draws the expert permutation first, then the simple one. Phase 3's
-    ``mixture.py`` must use the same order to reproduce these mixtures.
-    """
-    rng = np.random.default_rng(seed)
-    n_expert = int(round(p * n_transitions))
-    budgets = {EXPERT: n_expert, SIMPLE: n_transitions - n_expert}
-    out: dict[str, list[tuple[int, int]]] = {}
-    for source in SOURCES:
-        order = rng.permutation(len(lengths[source]))
-        taken, remaining = [], budgets[source]
-        for i in order:
-            if remaining == 0:
-                break
-            n = min(int(lengths[source][i]), remaining)
-            taken.append((int(i), n))
-            remaining -= n
-        if remaining:
-            raise ValueError(f"{source}: budget {budgets[source]} exceeds the dataset")
-        out[source] = taken
-    return out
 
 
 def mixture_preview(

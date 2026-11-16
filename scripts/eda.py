@@ -14,7 +14,6 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,6 +28,7 @@ from offrl.config import load_config
 from offrl.data import leakage
 from offrl.data.load import Episode, file_hashes, load_episodes
 from offrl.data.validate import Check
+from offrl.provenance import committed_bytes, dirty_paths
 from offrl.rollout import RANDOM_BASELINE_SEEDS, eval_seeds, run_policy
 from offrl.runmeta import collect_metadata
 
@@ -39,7 +39,7 @@ SUMMARY = REPORT / "eda_summary.json"
 FIGURES = REPORT / "figures"
 BASE_CONFIG = ROOT / "configs" / "base.yaml"
 
-SEEDS = (0, 1, 2)
+SEEDS = eda.PREVIEW_SEEDS
 N_STATES = 20_000
 FIGURE_MAX_BYTES = 1_000_000
 
@@ -47,25 +47,6 @@ FIGURE_MAX_BYTES = 1_000_000
 # median abs 0.034 / 0.022 per step.
 RESIDUAL_MEAN_MAX = 0.02
 RESIDUAL_ABS_MEDIAN_MAX = 0.1
-
-
-def dirty_paths() -> list[str]:
-    """Every uncommitted or untracked path. No exemptions: stale outputs or an edited
-    report/data_audit.json would otherwise slip into a run that claims to be clean."""
-    out = subprocess.run(
-        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True, cwd=ROOT
-    )
-    return [line[3:] for line in out.stdout.splitlines() if line.strip()]
-
-
-def committed_bytes(path: Path) -> bytes:
-    """The file exactly as committed at HEAD, i.e. the bytes a fresh clone gets.
-
-    The disk copy can differ while `git status` says clean: .gitattributes normalizes line
-    endings, so a CRLF file on disk matches an LF blob. Provenance must hash the blob.
-    """
-    rel = path.relative_to(ROOT).as_posix()
-    return subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True, check=True, cwd=ROOT).stdout
 
 
 def random_policy(dataset_id: str) -> dict[str, Any]:

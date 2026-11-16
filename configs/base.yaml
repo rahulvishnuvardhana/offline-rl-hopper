@@ -30,7 +30,7 @@ train:
 
 eval:
   episodes: 10
-  seed_offset: 10000
+  seed_offset: 20000  # development seeds (Phases 4-6); the final grid uses 10000 (ROADMAP Phase 4)
   final_score_last_n: 5
 
 score:

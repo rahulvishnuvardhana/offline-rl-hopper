@@ -11,7 +11,7 @@ import numpy as np
 from offrl.config import load_config
 from offrl.data import leakage
 from offrl.data.load import Episode
-from offrl.rollout import RANDOM_BASELINE_SEEDS, eval_seeds
+from offrl.rollout import FINAL_EVAL_SEED_OFFSET, RANDOM_BASELINE_SEEDS, eval_seeds
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -78,4 +78,8 @@ def test_configured_rollout_seeds_never_reuse_collection_seeds():
     cfg = load_config(ROOT / "configs" / "base.yaml")
     collection = leakage.COLLECTION_SEEDS.values()
     assert leakage.check_seeds_disjoint("eval", eval_seeds(cfg["eval"]), collection).passed
+    final = {**cfg["eval"], "seed_offset": FINAL_EVAL_SEED_OFFSET, "episodes": 50}
+    assert leakage.check_seeds_disjoint("final", eval_seeds(final), collection).passed
+    # development and final evaluation seeds never overlap either
+    assert not set(eval_seeds(cfg["eval"])) & set(eval_seeds(final))
     assert leakage.check_seeds_disjoint("random", RANDOM_BASELINE_SEEDS, collection).passed
