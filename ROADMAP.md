@@ -457,6 +457,8 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **References:** [1, 4, 8, 11]
 
+**Status (2026-11-17): DONE.** Official sanity job 11921436 (Tesla T4, commit `6d1c2b6`): all 15 checks pass; BC scores 82.1/81.9 at `p = 0` and 104.4/105.5 at `p = 1`; bitwise resume on real data. Results: `report/phase4/bc_sanity.json`, `report/figures/bc_sanity_curves.png`; compute: `report/compute.md`.
+
 ---
 
 ### Phase 5: IQL implementation and validation

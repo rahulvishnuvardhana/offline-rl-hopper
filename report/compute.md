@@ -1,0 +1,30 @@
+# Compute log (Explorer HPC)
+
+Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source: `sacct -X -u $USER -S 2026-11-16`; earlier jobs are listed under the table. GPU-hours are elapsed time × GPUs allocated.
+
+## Jobs
+
+| Job | Phase | Partition | GPU | CPUs, memory | State | Elapsed | GPU-hours | Notes |
+|---|---|---|---|---|---|---|---|---|
+| 11916105 | 4 | gpu-short | T4 | 4, 16G | Cancelled while pending | 0:00:00 | 0.00 | superseded by review fixes before it started |
+| 11916731 | 4 | gpu-short | T4 | 4, 16G | Cancelled while pending | 0:00:00 | 0.00 | resubmitted after clearing stale runs |
+| 11916966 | 4 | gpu-short | T4 | 4, 16G | Failed | 0:44:50 | 0.75 | the 4 runs finished; the resume demo failed (checkpoint loaded onto the GPU; fixed in `6d1c2b6`, with a CUDA resume test) |
+| 11921436 | 4 | gpu-short | T4 | 4, 16G | Completed | 0:54:10 | 0.90 | official sanity runs, all 15 checks pass (`report/phase4/bc_sanity.json`) |
+
+Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
+
+**Total from 2026-11-16: 1.65 GPU-hours (T4).**
+
+## Measured throughput (Phase 6 input)
+
+From `report/phase4/bc_sanity.json`, Tesla T4, one run at a time, 4 CPUs:
+
+| Quantity | Value |
+|---|---|
+| BC update (batch 256, 2x256 MLP) | 2.58 ms |
+| Evaluation, 10 episodes | 7.4 to 9.6 s |
+| Evaluation, 50 episodes | 46.6 to 48.1 s |
+| One 100k-step BC run (15 evaluations of 10 episodes, 5 of 50, logging, checkpoints) | about 10 minutes |
+| Whole job (tests, mixture build, 4 runs, resume demo of about 1.1 runs, analysis) | 54 minutes |
+
+Per 100k steps, updates take about 4.3 minutes and evaluations about 6 minutes (15 × 10 episodes plus 5 × 50), so evaluation on the CPU, not the GPU, dominates the run time. The GPU is mostly idle at one run per job; packing several runs per GPU (ROADMAP 4.1, Phase 6) is the main lever.
