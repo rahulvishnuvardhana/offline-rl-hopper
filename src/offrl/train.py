@@ -142,8 +142,10 @@ def save_checkpoint(path: Path, step: int, trainer, buffer: ReplayBuffer) -> Non
     os.replace(tmp, path)
 
 
-def load_checkpoint(path: Path, device: torch.device) -> dict[str, Any]:
-    return torch.load(path, map_location=device, weights_only=True)
+def load_checkpoint(path: Path) -> dict[str, Any]:
+    """Loaded on the CPU: RNG and generator states must stay CPU tensors. ``load_state_dict``
+    copies network and optimizer tensors onto their parameters' device."""
+    return torch.load(path, map_location="cpu", weights_only=True)
 
 
 # ---------- run ----------
@@ -234,7 +236,7 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
     (run_dir / "ckpt").mkdir(parents=True, exist_ok=True)
     start = 0
     if resuming:
-        state = load_checkpoint(ckpt_path, device)
+        state = load_checkpoint(ckpt_path)
         start = int(state["step"])
         trainer.load_state_dict(state["trainer"])
         buffer.set_generator_state(state["buffer"])

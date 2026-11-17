@@ -189,3 +189,14 @@ def test_restart_before_first_checkpoint_clears_tensorboard(small_run, env):
     (run_dir / "tb" / "stale").write_text("x", encoding="utf-8")
     train.run(cfg, stop_at=150, env=env, manifest_dir=manifests)
     assert not (run_dir / "tb" / "stale").exists()
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CI and the laptop are CPU-only")
+def test_r1_resume_on_cuda_is_bitwise_identical(small_run, env):
+    make, manifests = small_run
+    full = train.run(make("train.device=cuda", out="a"), env=env, manifest_dir=manifests)
+    cfg = make("train.device=cuda", out="b")
+    train.run(cfg, stop_at=350, env=env, manifest_dir=manifests)
+    resumed = train.run(cfg, env=env, manifest_dir=manifests)
+    for name in COMPARED:
+        assert read(full, name) == read(resumed, name), name
