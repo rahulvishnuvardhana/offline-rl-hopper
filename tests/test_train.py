@@ -8,10 +8,10 @@ import pytest
 import torch
 
 from offrl import train
-from offrl.algos.bc import make_policy
-from offrl.config import unknown_keys
+from offrl.algos.bc import BCTrainer
+from offrl.algos.iql import IQLTrainer
+from offrl.config import load_checked, unknown_keys
 from offrl.data.buffer import ReplayBuffer
-from offrl.nets import TwinQ, ValueNet
 from offrl.runlog import truncate_csv
 from offrl.seeding import derive_seeds, seed_everything
 
@@ -36,10 +36,11 @@ def read(run_dir, name):
     return (run_dir / name).read_bytes()
 
 
-def test_r1_kill_and_resume_is_bitwise_identical(small_run, env):
+@pytest.mark.parametrize("algo", ["bc", "iql"])
+def test_r1_kill_and_resume_is_bitwise_identical(small_run, env, algo):
     make, manifests = small_run
-    full = train.run(make(out="a"), env=env, manifest_dir=manifests)
-    cfg = make(out="b")
+    full = train.run(make(out="a", algo=algo), env=env, manifest_dir=manifests)
+    cfg = make(out="b", algo=algo)
     part = train.run(cfg, stop_at=350, env=env, manifest_dir=manifests)  # last checkpoint: 200
     assert not (part / "final.json").exists()
     assert any(line.startswith(b"300,") for line in read(part, "eval.csv").splitlines())  # to discard
@@ -48,7 +49,8 @@ def test_r1_kill_and_resume_is_bitwise_identical(small_run, env):
         assert read(full, name) == read(resumed, name), name
     a = torch.load(full / "ckpt" / "latest.pt", weights_only=True)
     b = torch.load(resumed / "ckpt" / "latest.pt", weights_only=True)  # R4: safe loading works
-    for key in ("policy", "opt", "sched"):
+    assert a["trainer"].keys() == b["trainer"].keys()
+    for key in a["trainer"]:
         assert repr(a["trainer"][key]) == repr(b["trainer"][key]), key
     assert json.loads(read(full, "final.json")) == json.loads(read(resumed, "final.json"))
     meta = json.loads(read(resumed, "meta.json"))
@@ -84,15 +86,13 @@ def test_r2_same_seed_same_losses_other_seed_differs(small_run, env):
     assert read(a, "metrics.csv") != read(c, "metrics.csv")
 
 
-def test_r2_bc_and_iql_shaped_trainers_start_identically(make_mixture):
-    cfg = {"net": {"hidden": [32, 32], "log_std_min": -20.0, "log_std_max": 2.0}}
+def test_r2_bc_and_iql_start_identically(make_mixture):
+    cfg = load_checked(train.BASE_CONFIG, train.REPO_ROOT / "configs" / "algo" / "iql.yaml")
     init, buf_seed, _ = derive_seeds(7)
     policies = []
-    for extra_nets in (False, True):
+    for cls in (BCTrainer, IQLTrainer):  # IQL builds its value networks after the policy
         seed_everything(init)
-        policies.append(make_policy(cfg, 11, 3, torch.device("cpu")))  # always built first
-        if extra_nets:  # IQL builds its value networks after the policy
-            TwinQ(11, 3, (32, 32)), ValueNet(11, (32, 32))
+        policies.append(cls(cfg, 11, 3, torch.device("cpu")).policy)
     for p, q in zip(policies[0].parameters(), policies[1].parameters(), strict=True):
         assert torch.equal(p, q)
     arrays = make_mixture(n=100)
@@ -200,10 +200,11 @@ def test_restart_before_first_checkpoint_clears_tensorboard(small_run, env):
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CI and the laptop are CPU-only")
-def test_r1_resume_on_cuda_is_bitwise_identical(small_run, env):
+@pytest.mark.parametrize("algo", ["bc", "iql"])
+def test_r1_resume_on_cuda_is_bitwise_identical(small_run, env, algo):
     make, manifests = small_run
-    full = train.run(make("train.device=cuda", out="a"), env=env, manifest_dir=manifests)
-    cfg = make("train.device=cuda", out="b")
+    full = train.run(make("train.device=cuda", out="a", algo=algo), env=env, manifest_dir=manifests)
+    cfg = make("train.device=cuda", out="b", algo=algo)
     train.run(cfg, stop_at=350, env=env, manifest_dir=manifests)
     resumed = train.run(cfg, env=env, manifest_dir=manifests)
     for name in COMPARED:
@@ -233,16 +234,17 @@ def test_resume_refuses_dirty_tree(small_run, env, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    ("extra", "match"),
+    ("algo", "extra", "match"),
     [
-        (("data.scale_rewards=true",), "scale_rewards must be false for bc"),
-        (("algo.name=nope",), "unknown algo.name"),
+        ("bc", ("data.scale_rewards=true",), "scale_rewards must be false for bc"),
+        ("iql", ("data.scale_rewards=false",), "scale_rewards must be true for iql"),
+        ("bc", ("algo.name=nope",), "unknown algo.name"),
     ],
 )
-def test_preflight_reward_scaling_and_algo_name(small_run, env, extra, match):
+def test_preflight_reward_scaling_and_algo_name(small_run, env, algo, extra, match):
     make, manifests = small_run
     with pytest.raises(train.PreflightError, match=match):
-        train.run(make(*extra), env=env, manifest_dir=manifests)
+        train.run(make(*extra, algo=algo), env=env, manifest_dir=manifests)
 
 
 def test_update_timing_excludes_checkpoint_writes(small_run, env, monkeypatch):
