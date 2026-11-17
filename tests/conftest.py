@@ -56,9 +56,10 @@ def make_mixture():
 
 @pytest.fixture
 def small_run(tmp_path):
-    """A fast BC config on a synthetic development mixture (seed 100) with its manifest.
+    """A fast config on a synthetic development mixture (seed 100) with its manifest.
 
-    Returns ``make(**overrides) -> cfg`` and the manifest directory.
+    Returns ``make(*overrides, out=, algo=) -> cfg`` (``algo`` names ``configs/algo/<algo>.yaml``)
+    and the manifest directory.
     """
     mix_dir, manifest_dir = tmp_path / "mixtures", tmp_path / "manifests"
     mix_dir.mkdir()
@@ -71,7 +72,7 @@ def small_run(tmp_path):
         manifest = {"p_target": p, "seed": seed, "content_sha256": mx.content_sha256(arrays)}
         (manifest_dir / f"{name}.json").write_text(json.dumps(manifest), encoding="utf-8")
 
-    def make(*extra: str, out: str = "runs") -> dict:
+    def make(*extra: str, out: str = "runs", algo: str = "bc") -> dict:
         overrides = [
             "seed=100",
             "data.p_expert=1.0",
@@ -90,7 +91,7 @@ def small_run(tmp_path):
             *extra,
         ]
         cfg = load_checked(
-            ROOT / "configs" / "base.yaml", ROOT / "configs" / "algo" / "bc.yaml", overrides=overrides
+            ROOT / "configs" / "base.yaml", ROOT / "configs" / "algo" / f"{algo}.yaml", overrides=overrides
         )
         write_mixture(cfg["data"]["p_expert"], cfg["seed"])
         return cfg

@@ -1,6 +1,7 @@
 """R1 to R4 (spec Section 7) on a synthetic development mixture with the real Hopper-v5 env."""
 
 import json
+import time
 
 import gymnasium as gym
 import pytest
@@ -22,6 +23,13 @@ def env():
     e = gym.make("Hopper-v5")
     yield e
     e.close()
+
+
+@pytest.fixture(autouse=True)
+def clean_tree(monkeypatch):
+    """Resume refuses a dirty tree; tests run on a developer's working copy, so report it clean."""
+    real = train.collect_metadata
+    monkeypatch.setattr(train, "collect_metadata", lambda: {**real(), "git_dirty": False})
 
 
 def read(run_dir, name):
@@ -200,3 +208,53 @@ def test_r1_resume_on_cuda_is_bitwise_identical(small_run, env):
     resumed = train.run(cfg, env=env, manifest_dir=manifests)
     for name in COMPARED:
         assert read(full, name) == read(resumed, name), name
+
+
+def test_finished_run_refuses_changed_config_or_commit(small_run, env, monkeypatch):
+    make, manifests = small_run
+    cfg = make()
+    train.run(cfg, env=env, manifest_dir=manifests)
+    with pytest.raises(train.PreflightError, match="different config"):
+        train.run(make("train.lr=0.001"), env=env, manifest_dir=manifests)
+    real = train.collect_metadata
+    monkeypatch.setattr(train, "collect_metadata", lambda: {**real(), "git_commit": "deadbeef"})
+    with pytest.raises(train.PreflightError, match="code has changed"):
+        train.run(cfg, env=env, manifest_dir=manifests)
+
+
+def test_resume_refuses_dirty_tree(small_run, env, monkeypatch):
+    make, manifests = small_run
+    cfg = make()
+    train.run(cfg, stop_at=200, env=env, manifest_dir=manifests)
+    real = train.collect_metadata
+    monkeypatch.setattr(train, "collect_metadata", lambda: {**real(), "git_dirty": True})
+    with pytest.raises(train.PreflightError, match="dirty tree"):
+        train.run(cfg, env=env, manifest_dir=manifests)
+
+
+@pytest.mark.parametrize(
+    ("extra", "match"),
+    [
+        (("data.scale_rewards=true",), "scale_rewards must be false for bc"),
+        (("algo.name=nope",), "unknown algo.name"),
+    ],
+)
+def test_preflight_reward_scaling_and_algo_name(small_run, env, extra, match):
+    make, manifests = small_run
+    with pytest.raises(train.PreflightError, match=match):
+        train.run(make(*extra), env=env, manifest_dir=manifests)
+
+
+def test_update_timing_excludes_checkpoint_writes(small_run, env, monkeypatch):
+    make, manifests = small_run
+    real = train.save_checkpoint
+
+    def slow(*args):
+        time.sleep(0.5)
+        real(*args)
+
+    monkeypatch.setattr(train, "save_checkpoint", slow)
+    run_dir = train.run(make(), env=env, manifest_dir=manifests)
+    rows = (run_dir / "timing.csv").read_text(encoding="utf-8").splitlines()[1:]
+    train_s = [float(r.split(",")[2]) for r in rows if r.split(",")[1] == "train"]
+    assert len(train_s) == 12 and max(train_s) < 0.5
