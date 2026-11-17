@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 from offrl.data.mixture import load_mixture
-from offrl.data.normalize import StateNormalizer
+from offrl.data.normalize import StateNormalizer, normalizer_from_arrays
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,7 @@ class ReplayBuffer:
         seed: int,
     ) -> None:
         self.device = torch.device(device)
+        self.normalizer = normalizer  # the evaluator transforms environment observations with it
         rew = np.asarray(arrays["rew"], dtype=np.float64)
         if reward_scale is not None:
             rew = rew * reward_scale
@@ -66,12 +67,18 @@ class ReplayBuffer:
         """The only constructor training code should use: the normalizer, eps and reward scale
         come from the mixture itself, so another mixture's statistics cannot leak in (ADR-5)."""
         arrays = load_mixture(mixture) if isinstance(mixture, str | Path) else mixture
-        norm = StateNormalizer(arrays["state_mean"], arrays["state_std"], float(arrays["state_std_eps"]))
+        norm = normalizer_from_arrays(arrays)
         scale = float(arrays["reward_scale"]) if scale_rewards else None
         return cls(arrays, norm, scale, device, seed)
 
     def __len__(self) -> int:
         return self.obs.shape[0]
+
+    def generator_state(self) -> torch.Tensor:
+        return self._generator.get_state()
+
+    def set_generator_state(self, state: torch.Tensor) -> None:
+        self._generator.set_state(state)
 
     def sample(self, batch_size: int) -> Batch:
         idx = torch.randint(len(self), (batch_size,), generator=self._generator).to(self.device)

@@ -11,7 +11,7 @@ import numpy as np
 from offrl.config import load_config
 from offrl.data import leakage
 from offrl.data.load import Episode
-from offrl.rollout import FINAL_EVAL_SEED_OFFSET, RANDOM_BASELINE_SEEDS, eval_seeds
+from offrl.rollout import FINAL_EVAL_RESERVED, FINAL_EVAL_SEED_OFFSET, RANDOM_BASELINE_SEEDS, eval_seeds
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,11 +77,14 @@ def test_collection_ranges_match_documented_counts():
 def test_configured_rollout_seeds_never_reuse_collection_seeds():
     cfg = load_config(ROOT / "configs" / "base.yaml")
     collection = leakage.COLLECTION_SEEDS.values()
-    assert leakage.check_seeds_disjoint("eval", eval_seeds(cfg["eval"]), collection).passed
+    n_final = cfg["eval"]["final_episodes"]
+    dev = set(eval_seeds(cfg["eval"])) | set(eval_seeds(cfg["eval"], n_final))
+    assert leakage.check_seeds_disjoint("eval", dev, collection).passed
     final_cfg = load_config(ROOT / "configs" / "base.yaml", ROOT / "configs" / "final.yaml")
     assert final_cfg["eval"]["seed_offset"] == FINAL_EVAL_SEED_OFFSET  # final runs get reserved seeds
-    final = {**final_cfg["eval"], "episodes": 50}
-    assert leakage.check_seeds_disjoint("final", eval_seeds(final), collection).passed
-    # development and final evaluation seeds never overlap either
-    assert not set(eval_seeds(cfg["eval"])) & set(eval_seeds(final))
+    final = set(eval_seeds(final_cfg["eval"], n_final))
+    assert set(eval_seeds(final_cfg["eval"])) <= final  # the 10 periodic seeds are a subset
+    assert leakage.check_seeds_disjoint("final", final, collection).passed
+    # development seeds never touch the block reserved for the final grid
+    assert final <= set(FINAL_EVAL_RESERVED) and not dev & set(FINAL_EVAL_RESERVED)
     assert leakage.check_seeds_disjoint("random", RANDOM_BASELINE_SEEDS, collection).passed

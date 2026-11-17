@@ -1,0 +1,41 @@
+name, memory.total [MiB]
+Tesla T4, 15360 MiB
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+...                                                                      [100%]
+147 passed in 32.73s
+  built mix_p0_s100: content b73cd50e4f1a, scale 0.3674, score 42.8
+  built mix_p1_s100: content 0713c058cdc2, scale 0.2512, score 100.1
+  built mix_p0_s101: content 97ea8cc12867, scale 0.3671, score 43.1
+  built mix_p1_s101: content 2069e6ea2907, scale 0.2705, score 99.8
+  [PASS] M7_distinct_within_seed[s100]: 2 mixtures (guard)
+  [PASS] M7_distinct_within_seed[s101]: 2 mixtures (guard)
+  [PASS] M7_distinct_across_seeds[p0]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p1]: 2 seeds (guard)
+  [PASS] M8_clean_tree: git_dirty=False at commit 6d1c2b697190b24afd4dd045233fcb5e9fd367a6
+  [PASS] M8b_inputs_on_disk_equal_commit: byte-identical to HEAD
+  34/34 checks passed; M9 (informational): {'max_abs_error': {'expert': 2.2328972004714842e-10, 'simple': 1.7436230237422023e-10}, 'steps': 100, 'episodes_per_source': 3, 'mujoco': '3.2.3', 'within_1e-9': True}
+
+ALL CHECKS PASSED; audit written to /home/vishnuvardhana.r/offline-rl-hopper/report/mixtures/audit_s100_s101.json
+training BC p=0 seed 100 (100000 steps)
+training BC p=1 seed 100 (100000 steps)
+training BC p=0 seed 101 (100000 steps)
+training BC p=1 seed 101 (100000 steps)
+resume demonstration: stopping mid-run, then resuming
+PASS  band[p0_s100]: bc_p0_s100: 82.1 in [22.5, 85.4]
+PASS  R5_provenance[p0_s100]: commit 6d1c2b6, dirty False, mixture b73cd50e4f1a
+PASS  no_fall_match[p0_s100]: bc_p0_s100: 3169 vs dataset 3179 (-0.3%, tolerance 10%, n=250)
+PASS  band[p1_s100]: bc_p1_s100: 104.4 in [80.3, 113.5]
+PASS  R5_provenance[p1_s100]: commit 6d1c2b6, dirty False, mixture 0713c058cdc2
+PASS  no_fall_match[p1_s100]: bc_p1_s100: 4104 vs dataset 4157 (-1.3%, tolerance 10%, n=235)
+PASS  heldout_r2[p1_s100]: R^2 0.888 >= 0.8 (D3)
+PASS  band[p0_s101]: bc_p0_s101: 81.9 in [22.5, 85.4]
+PASS  R5_provenance[p0_s101]: commit 6d1c2b6, dirty False, mixture 97ea8cc12867
+PASS  no_fall_match[p0_s101]: bc_p0_s101: 3164 vs dataset 3179 (-0.5%, tolerance 10%, n=250)
+PASS  band[p1_s101]: bc_p1_s101: 105.5 in [80.3, 113.5]
+PASS  R5_provenance[p1_s101]: commit 6d1c2b6, dirty False, mixture 2069e6ea2907
+PASS  no_fall_match[p1_s101]: bc_p1_s101: 4075 vs dataset 4157 (-2.0%, tolerance 10%, n=249)
+PASS  heldout_r2[p1_s101]: R^2 0.889 >= 0.8 (D3)
+PASS  resume_bitwise: {'metrics.csv': True, 'eval.csv': True, 'eval_episodes.csv': True}; resumed from [25000]
+
+15/15 checks passed; report written to report/phase4/bc_sanity.json

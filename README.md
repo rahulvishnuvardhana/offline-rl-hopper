@@ -22,6 +22,27 @@ exit
 sbatch slurm/smoke.sbatch
 ```
 
+## Training and evaluation
+
+```bash
+python -m offrl.train configs/algo/bc.yaml seed=100 data.p_expert=1.0 train.steps=100000
+python scripts/bc_sanity.py          # Phase 4 sanity runs and checks (on Explorer: sbatch slurm/bc_sanity.sbatch)
+```
+A run writes `config.yaml`, `meta.json` (commit, packages, GPU, mixture hash), CSV logs, TensorBoard events, a resumable checkpoint and `final.json` to `runs/{algo}_p{p}_s{seed}/`. Pre-flight refuses a mixture whose hash differs from its committed manifest and evaluation seeds that overlap data collection or the reserved final-grid seeds.
+
+## Results so far
+
+**Phase 4, BC sanity (development data, 100k steps, Tesla T4):** all 15 plumbing checks pass ([report](report/phase4/bc_sanity.json), [spec](docs/specs/phase-4-bc-eval.md)).
+
+| Expert fraction `p` | Seed 100 | Seed 101 | Expected band |
+|---|---|---|---|
+| 0 (simple data only) | 82.1 | 81.9 | 22.5 to 85.4 |
+| 1 (expert data only) | 104.4 | 105.5 | 80.3 to 113.5 |
+
+![BC sanity curves](report/figures/bc_sanity_curves.png)
+
+Normalized score: 0 = random policy, 100 = expert dataset mean. Deterministic BC on the simple data scores about 82, well above that dataset's 42.7, because the mean action removes most of its falls.
+
 ## Cluster notes (checked 2026-11-13)
 
 - **Login:** `ssh explorer` (alias for `login.explorer.northeastern.edu`, SSH key auth).

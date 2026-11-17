@@ -9,4 +9,3 @@ algo:
   discount: 0.99
   target_update_rate: 0.005
   exp_adv_max: 100.0
-  actor_cosine_lr: true

@@ -25,13 +25,17 @@ train:
   log_every: 1000
   eval_every: 5000
   checkpoint_every: 25000
+  actor_cosine_lr: true  # cosine decay to 0 over `steps`, actor only; BC and IQL alike (Phase 4 D2)
   device: auto
+  num_threads: null  # null = torch default; Phase 6 bundles set cpus_per_task // runs_per_bundle
   out_dir: runs
+  run_suffix: ""  # appended to {algo}_p{p}_s{seed}, e.g. "_tau0.9" for Phase 8 ablations
 
 eval:
   episodes: 10
   seed_offset: 20000  # development seeds (Phases 4-6); the final grid uses 10000 (ROADMAP Phase 4)
   final_score_last_n: 5
+  final_episodes: 50  # the last final_score_last_n evaluations use this many episodes (Phase 4 D1)
 
 score:
   # ADR-6: score = 100 * (R - r_random) / (r_expert - r_random). Written by
