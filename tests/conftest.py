@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 
 from offrl.config import load_checked
 from offrl.data import mixture as mx
@@ -97,3 +98,14 @@ def small_run(tmp_path):
         return cfg
 
     return make, manifest_dir
+
+
+@pytest.fixture
+def f64():
+    """float64 on the CPU with one thread, restored afterwards (Phase 5 exactness tests)."""
+    dtype, threads = torch.get_default_dtype(), torch.get_num_threads()
+    torch.set_default_dtype(torch.float64)
+    torch.set_num_threads(1)
+    yield
+    torch.set_default_dtype(dtype)
+    torch.set_num_threads(threads)

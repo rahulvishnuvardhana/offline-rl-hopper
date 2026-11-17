@@ -22,16 +22,6 @@ OBS, ACT, B = 11, 3, 64
 RTOL, ATOL = 1e-9, 1e-12
 
 
-@pytest.fixture
-def f64():
-    dtype, threads = torch.get_default_dtype(), torch.get_num_threads()
-    torch.set_default_dtype(torch.float64)
-    torch.set_num_threads(1)
-    yield
-    torch.set_default_dtype(dtype)
-    torch.set_num_threads(threads)
-
-
 def config(beta=3.0, steps=1000, lr=3e-4, discount=0.99, hidden=(32, 32), target_update_rate=0.005):
     return {
         "net": {"hidden": list(hidden), "log_std_min": -20.0, "log_std_max": 2.0},

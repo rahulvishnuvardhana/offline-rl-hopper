@@ -23,6 +23,7 @@ import numpy as np
 import torch
 
 from offrl.algos.bc import BCTrainer
+from offrl.algos.corl import CorlTrainer
 from offrl.algos.iql import IQLTrainer
 from offrl.config import Config, load_checked, save_config
 from offrl.data import mixture as mx
@@ -39,10 +40,10 @@ BASE_CONFIG = REPO_ROOT / "configs" / "base.yaml"
 MANIFEST_DIR = REPO_ROOT / "report" / "mixtures"
 DEV_SEED_MIN = 100  # mixture seeds 0 to 99 are final-grid seeds; 100+ are development
 FINAL_EVAL_SEEDS = range(FINAL_EVAL_SEED_OFFSET, FINAL_EVAL_SEED_OFFSET + 50)  # Phase 4 D1
-TRAINERS = {"bc": BCTrainer, "iql": IQLTrainer}
+TRAINERS = {"bc": BCTrainer, "iql": IQLTrainer, "corl_iql": CorlTrainer}
 # data.scale_rewards each algorithm must use (Phase 5 spec Section 3): IQL's 1000 / return range
 # sets its effective temperature; BC's loss ignores rewards, so scaling there signals a wrong config.
-SCALE_REWARDS = {"bc": False, "iql": True}
+SCALE_REWARDS = {"bc": False, "iql": True, "corl_iql": True}
 EVAL_FIELDS = ["step", "n_episodes", "return_mean", "return_std", "score_mean", "fall_rate", "length_mean"]
 EVAL_FIELDS += [f"sub_{k}" for k in EVAL_FIELDS[1:]]
 EPISODE_FIELDS = ["step", "seed", "return", "length", "fell"]

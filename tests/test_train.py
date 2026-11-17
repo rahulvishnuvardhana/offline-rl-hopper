@@ -1,7 +1,7 @@
 """R1 to R4 (spec Section 7) on a synthetic development mixture with the real Hopper-v5 env."""
 
 import json
-import time
+from types import SimpleNamespace
 
 import gymnasium as gym
 import pytest
@@ -36,7 +36,7 @@ def read(run_dir, name):
     return (run_dir / name).read_bytes()
 
 
-@pytest.mark.parametrize("algo", ["bc", "iql"])
+@pytest.mark.parametrize("algo", ["bc", "iql", "corl_iql"])
 def test_r1_kill_and_resume_is_bitwise_identical(small_run, env, algo):
     make, manifests = small_run
     full = train.run(make(out="a", algo=algo), env=env, manifest_dir=manifests)
@@ -200,7 +200,7 @@ def test_restart_before_first_checkpoint_clears_tensorboard(small_run, env):
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CI and the laptop are CPU-only")
-@pytest.mark.parametrize("algo", ["bc", "iql"])
+@pytest.mark.parametrize("algo", ["bc", "iql", "corl_iql"])
 def test_r1_resume_on_cuda_is_bitwise_identical(small_run, env, algo):
     make, manifests = small_run
     full = train.run(make("train.device=cuda", out="a", algo=algo), env=env, manifest_dir=manifests)
@@ -238,6 +238,7 @@ def test_resume_refuses_dirty_tree(small_run, env, monkeypatch):
     [
         ("bc", ("data.scale_rewards=true",), "scale_rewards must be false for bc"),
         ("iql", ("data.scale_rewards=false",), "scale_rewards must be true for iql"),
+        ("corl_iql", ("data.scale_rewards=false",), "scale_rewards must be true for corl_iql"),
         ("bc", ("algo.name=nope",), "unknown algo.name"),
     ],
 )
@@ -248,15 +249,18 @@ def test_preflight_reward_scaling_and_algo_name(small_run, env, algo, extra, mat
 
 
 def test_update_timing_excludes_checkpoint_writes(small_run, env, monkeypatch):
+    """A fake clock that moves only while a checkpoint is written: every timed window is 0."""
     make, manifests = small_run
+    clock = [0.0]
     real = train.save_checkpoint
 
     def slow(*args):
-        time.sleep(0.5)
+        clock[0] += 1000.0
         real(*args)
 
+    monkeypatch.setattr(train, "time", SimpleNamespace(perf_counter=lambda: clock[0]))
     monkeypatch.setattr(train, "save_checkpoint", slow)
     run_dir = train.run(make(), env=env, manifest_dir=manifests)
     rows = (run_dir / "timing.csv").read_text(encoding="utf-8").splitlines()[1:]
-    train_s = [float(r.split(",")[2]) for r in rows if r.split(",")[1] == "train"]
-    assert len(train_s) == 12 and max(train_s) < 0.5
+    assert clock[0] == 3000.0 and len(rows) == 18  # 3 checkpoints; 12 train + 6 eval windows
+    assert {float(r.split(",")[2]) for r in rows} == {0.0}
