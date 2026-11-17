@@ -1,0 +1,112 @@
+# Spec: Phase 5, IQL implementation and validation
+
+**Status:** v2.1 (V1 rebased on BC, 2026-11-16), after review by two fresh reviewers (RL, engineering): 3 blockers, 9 majors and 12 minors addressed (Section 12); user approved D1, D2 and D4 on 2026-11-16; D3 set by the user the same day (V1 relative to BC) | **Branch:** `phase-5-iql`, from `main` after the Phase 4 merge (`15b8ac9`) | **Roadmap:** Phase 5 | **Depends on:** Phase 4 (merged 2026-11-17, PR #3)
+
+## 0. Gating and branch discipline (user decision, 2026-11-16, after two independent reviews)
+**Gate met (2026-11-17):** Phase 4's DoD passed (job 11921436, 15/15 checks) and Phase 4 is merged into `main` with a merge commit (`15b8ac9`; the evidence commit `6d1c2b6` is on `main`). Section 8 may run once the Phase 5 code has passed review. Items 2, 3 and 5 below are historical; items 1 (order of work) and 4 (merge commit) still apply. `main` no longer requires linear history, so merge commits are allowed.
+
+Phase 4's DoD is not met yet: its official sanity runs are queued on Explorer. Merging Phase 4 without them was rejected; starting Phase 5 was accepted under these conditions:
+1. **Now:** this spec, the IQL code, the vendored CORL code, and tests that run in CI on synthetic data (Sections 2 to 7). **No GPU job and no training on real data** (Section 8, including the smoke test) until Phase 4's DoD passes and Phase 4 is merged; otherwise an IQL miss could not be told apart from a plumbing bug (ROADMAP Phase 4 "Why").
+2. **The Explorer clone is not touched** (no checkout, no pull) while the Phase 4 job is pending or running: the job trains the tree checked out when it starts, and R5 records that commit.
+3. **Fixes to Phase 4 behavior go on `phase-4-bc-eval` only.** All of Phase 5's edits to shared files sit in **one small commit at the bottom of the stack** (Section 6), so a rebase conflicts in one place. After every rebase: the full suite, I2, I7 and I8 included, is re-run; if `policy_loss`, `Batch` or the loop changed, Sections 2 and 4 are re-checked before the conflict is resolved, and any CI result from before the rebase is void.
+4. **Merge commits, never squash, for Phase 4 and Phase 5**, so the commits recorded in `report/phase4/` and `report/phase5/` exist on `main`. No rebase of `phase-5-iql` after the V runs start; the V runs start only from the post-merge rebase onto `main`. Before the first merge, check the repository allows merge commits: `gh api repos/rahulvishnuvardhana/offline-rl-hopper --jq .allow_merge_commit`.
+5. **Queue deadline:** if the Phase 4 job has not started by the end of 2026-11-18, it is cancelled and resubmitted with `--gres=gpu:1` (any GPU; ROADMAP 4.2.1). The committed sbatch would still say T4, so the deviation and the actual GPU name (from `nvidia-smi` in the job log) are recorded in the Phase 4 spec Section 8 and in `bc_sanity.json`. GPU type affects only the timing reported to Phase 6.
+
+## 1. Goal
+A correct IQL that matches published behavior before it touches the grid. IQL has several small details (ROADMAP Section 5), each worth 10 to 50 points if wrong. They are pinned down by exact unit tests against a straight-line reference and against CORL's own update code, a synthetic test that IQL's value learning actually changes the policy, and real-data validation at `p = 1`, a mixed `p = 0.2`, and `p = 0`, with CORL run on the same data.
+
+## 2. Reference implementation and update order
+- **Reference:** CORL `algorithms/offline/iql.py` (Apache-2.0), commit `23f8b2e46abf5aef73db268cd1c5a42eb8ef45dc` (2023-08-16), the newest commit touching the file (checked against the source 2026-11-16 by both the author and a reviewer). Phase 4 already follows CORL for networks, init and the policy.
+- **Update order per step (CORL `ImplicitQLearning.train`):**
+  1. `next_v = V(s')` under `no_grad`, with V **before** its update;
+  2. **V step:** `target_q = min(Q1_targ(s, a), Q2_targ(s, a))` under `no_grad` (the **target** twin, min of the heads); `adv = target_q - V(s)`; `v_loss = mean(|tau - 1[adv < 0]| * adv^2)`; Adam step on V;
+  3. **Q step:** `y = r + gamma * (1 - done) * next_v`; `q_loss = (mse(Q1(s, a), y) + mse(Q2(s, a), y)) / 2`; Adam step on Q; then soft update `Q_targ <- (1 - 0.005) Q_targ + 0.005 Q`;
+  4. **Policy step:** `w = exp(beta * adv).clamp(max = 100)` with `adv` from step 2 (pre-update V, detached); `policy_loss(policy, s, a, w)`, the Phase 4 shared loss; Adam step; cosine scheduler step.
+- **Known difference from official IQL (JAX):** official IQL feeds the **updated** V to both the actor and the Q target (a one-step lag in V). CORL is the reference this phase is validated against, so we follow CORL (announced in Phase 4 spec Section 9; D1). ROADMAP Phase 5 task 1 lists the soft update last; CORL does it before the policy step. The orders are equivalent because the policy step does not read `Q_targ`.
+- **Unchanged from Phase 4:** the policy and its loss, the cosine actor schedule (D2 of Phase 4), state normalization, evaluation, logging, checkpoints. `done` is terminations only.
+
+## 3. Rewards and temperature
+- `data.scale_rewards: true` for IQL: `r * reward_scale`, `reward_scale = 1000 / (max_ret - min_ret)` over the mixture's untrimmed **complete** episodes (ADR-9). CORL's `modify_reward` computes the same factor but also closes an episode at its 1000-step counter (ROADMAP ADR-3 is corrected accordingly, Section 9). Every CORL run here receives **our** scaled rewards, so the factor is identical.
+- **Pre-flight additions:** IQL and CORL refuse `data.scale_rewards: false`; BC refuses `true`. `beta_eff` is already logged (ADR-9: about 4.4 at `p = 0`, 3.0 at `p = 1`).
+- **Guard:** the reward-scale computation raises on a zero return range instead of dividing by zero (in the Section 6 commit; real mixtures are far from it).
+
+## 4. `IQLTrainer` (`offrl/algos/iql.py`)
+- **Construction order:** `make_policy` first (Phase 4 R2), then `TwinQ`, its target as a deep copy with `requires_grad` off, then `ValueNet`. Three Adam optimizers at `train.lr` (3e-4), no weight decay; the actor's via `make_actor_optimizer` (cosine, as BC).
+- **Config (`configs/algo/iql.yaml`, unchanged keys):** `expectile 0.7`, `beta 3.0`, `discount 0.99`, `target_update_rate 0.005`, `exp_adv_max 100.0`.
+- **Loss helpers in `algos/losses.py`:** `expectile_loss(u, tau)` and `q_target(rew, done, next_v, gamma)`, both shape-asserted to `(B, 1)` (the broadcast trap of Phase 4's policy loss), and `advantage_weights(adv, beta, max_w) -> (B,)`.
+- **`update` returns device tensors** (no GPU sync per step). `LOG_KEYS`: `v_loss`, `q_loss`, `policy_loss`, `v_mean`, `q_mean` (online `min(Q1, Q2)`), `q_target_mean` (target twin; lags the online Q), `adv_mean`, `adv_std`, `weight_mean`, `frac_clipped`, `log_std_mean`, `actor_lr`.
+- **`state_dict`:** policy, V, Q, Q target, the three optimizers, the scheduler; loads with `weights_only=True`.
+- **`act`:** the policy mean, as BC. `train.TRAINERS` gains `"iql"`.
+
+## 5. Vendored CORL and its trainer adapter
+- **Location:** `src/offrl/_vendor/corl_iql.py`, inside the package, so it imports wherever `offrl` does (CI, the laptop, Explorer with `PYTHONPATH=src`); no `third_party/` path hacks.
+- **Content:** a **selection** of upstream lines at the pinned commit, each block verbatim: the `typing`, `torch`, `nn`, `F`, `Normal`, `CosineAnnealingLR` and `copy` imports; `TensorBatch`, `EXP_ADV_MAX`, `LOG_STD_MIN`, `LOG_STD_MAX`; `asymmetric_l2_loss`, `soft_update`, `Squeeze`, `MLP`, `GaussianPolicy`, `TwinQ`, `ValueFunction`, `ImplicitQLearning`. Nothing that touches `d4rl`, `gym`, `pyrallis` or `wandb` (the `@pyrallis.wrap()` entry point would run at import). `_vendor/README.md` lists the upstream line ranges; the file starts with a one-line Apache-2.0 §4(b) notice ("selected lines of ..., unmodified"); `_vendor/LICENSE` is CORL's license (and its `NOTICE`, if any); the top-level README credits it.
+- **Kept byte-comparable:** `.pre-commit-config.yaml` gets a top-level `exclude: ^src/offrl/_vendor/`; `pyproject.toml` gets ruff `extend-exclude` plus `force-exclude = true` (pre-commit passes file names explicitly). A test (I12) recomputes the sha256 of the file minus its notice line and compares it with the value recorded in `_vendor/README.md`, which was computed from the upstream blocks.
+- **`CorlTrainer` adapter (`offrl/algos/corl.py`, ours):** implements the Phase 4 `Trainer` protocol around the vendored `ImplicitQLearning`, built with the same hyperparameters and `max_steps = train.steps`; registered as `TRAINERS["corl_iql"]` with `configs/algo/corl_iql.yaml` (same keys as `iql.yaml`). Because it runs through `train.run`, CORL runs get the same pre-flight (mixture hash vs. committed manifest), `meta.json`, evaluator, 50-episode final evaluations and `final.json` as ours. `update` passes `[obs, act, rew, next_obs, done]` (`(B, 1)` rewards and dones, as CORL expects) and converts the returned float log dict to tensors; this syncs the GPU every step, which matters only for timing, so CORL timings are not reported to Phase 6. `act` returns `actor(obs).mean` under `eval()` (the tanh mean CORL's network already outputs; not `GaussianPolicy.act`, which multiplies by `max_action`). `state_dict` saves the actor, V, Q, **Q target**, the three optimizers and the scheduler itself, because CORL's own `load_state_dict` resets the target to a copy of Q.
+
+## 6. Changes to shared files (one commit at the bottom of the stack)
+- `src/offrl/train.py`: `TRAINERS["iql"]`, `TRAINERS["corl_iql"]`; the Section 3 pre-flight rule.
+- `src/offrl/algos/losses.py`: the three helpers (Section 4).
+- `src/offrl/data/mixture.py`: the zero-range guard (Section 3).
+- `tests/conftest.py`: `small_run` takes the algo file as a parameter (it hard-codes `bc.yaml` today).
+- `tests/test_train.py`: R1 and R4 parametrized over `bc`, `iql` and `corl_iql`; R2 uses the real `IQLTrainer`; the new pre-flight refusals.
+- `pyproject.toml`, `.pre-commit-config.yaml`: the vendoring exclusions.
+- **Carried over from the Phase 4 PR review (2026-11-17),** kept out of Phase 4 so its evidence commit `6d1c2b6` describes the merged code exactly:
+  - `train.py`: a run with `final.json` is returned before the config and commit checks; move both checks before the early return, so a changed config or commit is refused, not silently reused (matters for Phase 6 resubmission);
+  - `train.py`: refuse to resume when the tree is dirty (today only a different commit is refused, and the dirty flag goes only into the resume record), and make R5-style checks read every resume record;
+  - `scripts/bc_sanity.py`: a finished resume demo from an earlier job is reused without its own commit check; check it;
+  - `train.py`: reset the update timer after a checkpoint write, so `ms_per_update` excludes checkpoint I/O (Phase 6 sizing);
+  - tests for the check assembly in `bc_sanity.py` `main()` (rerun selection, R5 aggregation).
+- Nothing in `nets.py`, `evaluate.py`, `buffer.py` or `runlog.py`.
+
+## 7. Checks (CI unless marked)
+Tests on networks run in float64 through a fixture that sets `torch.set_default_dtype(torch.float64)` before construction (so the target copy and Adam state are float64 too) and restores it after; CPU, `torch.set_num_threads(1)`, fixed seeds.
+
+| ID | Check |
+|---|---|
+| I1 | `expectile_loss` at `tau = 0.7`: `u = 1` gives 0.7, `u = -1` gives 0.3, `u = 0` gives 0; `(B,)` input raises |
+| I2 | With `beta = 0`: the IQL policy loss equals the BC loss on the same batch, and after 50 updates from the same seed IQL's policy parameters equal BC's **bitwise** |
+| I3 | Advantage weights never exceed 100, including `adv = 1e4` (no `inf` or `nan`); `frac_clipped` counts exactly the clipped entries |
+| I4 | `done = 1` gives `y = r`; `done = 0` gives `r + gamma * V(s')`; `next_v` is computed before the V step |
+| I5 | The V loss reads the **target** twin's min (a test makes target and online Q differ); no gradient from `q_loss` reaches V and none from `v_loss` reaches Q |
+| I6 | Soft update exact: `Q_targ' = 0.995 Q_targ + 0.005 Q'` to 1e-12; the target never receives gradients |
+| I7 | **One full step vs. a straight-line reference** written in the test from Section 2, on a batch built so every branch fires: rewards large enough (and the Q output layer scaled) that **the test asserts** `frac_clipped > 0`, `adv` takes both signs, and `done` holds both 0 and 1. Every parameter and logged value matches (`assert_close`, rtol 1e-9, atol 1e-12) |
+| I8 | **1 and 20 steps vs. the vendored CORL `ImplicitQLearning`**, same batches as I7 (same branch assertions): weights are copied into CORL's `qf`, `vf` and `actor` **before** `ImplicitQLearning(...)` is built (its `__init__` deep-copies the target), through an explicit key map (ours `q1.0.weight` to CORL `q1.net.0.weight`, policy `net.N` to `net.net.N`) that asserts every parameter on both sides is mapped; modules `.double()` before the optimizers; CORL's scheduler built with the same `max_steps`. Every parameter matches (rtol 1e-9, atol 1e-12) |
+| I9 | **TD sanity:** a trainer driven directly (not `train.run`, so no reward scaling) on constant reward `r`, no terminations, `discount = 0.5`: mean Q and V within 5% of `2r` after 3,000 steps; prints the observed value; under 10 s |
+| I10 | R1 and R4 for `iql` and `corl_iql` (bitwise kill and resume, `weights_only` load); pre-flight refuses IQL or CORL without reward scaling and BC with it |
+| I11 | **Value learning changes the policy (two-mode data):** one-step episodes (`done = 1`), action dim 0 is +0.8 or -0.8 with equal probability, reward 1 for +0.8 and 0 for -0.8 (no scaling). After 2,000 steps, IQL (`beta = 3`, `tau = 0.7`) puts its mean action dim 0 above +0.5, BC within 0.2 of 0. A broken advantage path leaves IQL at BC's midpoint |
+| I12 | The vendored module imports; its sha256 (minus the notice line) equals the recorded value |
+| V0 to V4 | Section 8, real data, Explorer GPU, **after Phase 4 merges** (Local) |
+
+## 8. Validation runs (Explorer GPU; only after Phase 4 merges)
+- **Mixtures:** development seeds 100 and 101 at `p = 1`, `0.2` and `0`. The `p = 0.2` mixtures are built on the laptop on a clean tree (a data step, about 3 minutes, as in Phase 4) and their manifests committed before any run.
+- **Runs (300k steps, development evaluation seeds 20000+):** IQL at `p` in {1, 0.2, 0} and CORL at `p` in {1, 0.2}, both seeds; BC at `p = 1` and `p = 0.2`, both seeds: `p = 1` is V1's baseline at the same 300k budget and commit (Phase 4's BC ran 100k, with 300k only for a band miss), `p = 0.2` is the IQL vs. BC comparison at a mixed `p`. 14 runs.
+- **Compute:** `slurm/iql_validate.sbatch`, an array of 7 tasks with **2 runs per GPU** on an **A100** (user decision 2026-11-16, a recorded deviation from ROADMAP 4.1's T4/V100) (ROADMAP 4.1 and 4.3), `--array=0-6%4`, `train.num_threads = cpus_per_task / 2`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`, pytest on the node before training. `--time` = (Phase 4's measured GPU time per update × the IQL factor from a 2,000-step smoke test, **plus** evaluation time for 55 × 10 + 5 × 50 = 800 episodes from Phase 4's `timing.csv`) × 1.5. The smoke test is itself a GPU job on `gpu-short`, run **after** Phase 4 merges. A dependent job (`--dependency=afterok`) runs `scripts/iql_validate.py`; outputs go to `logs/phase5_<jobid>/` and are copied to the laptop and committed. CORL runs are resumable through the adapter (Section 5), so a resubmitted array continues them like ours.
+- **`scripts/iql_validate.py`** (modelled on `bc_sanity.py`): refuses a dirty tree; computes V0 to V4 and the reported values; writes `report/phase5/iql_validation.json` and `report/figures/iql_validation_curves.png`; exits 1 on any failure.
+- **Pass/fail (all tolerances fixed here, before any IQL run):**
+  - **V0, provenance and data (R5 analogue):** all 14 runs at one commit, `git_dirty` false, mixture hash equal to the committed manifest; the vendored file's sha256 recorded; for each mixture, the logged `reward_scale` equals `1000 / (max_ret - min_ret)` recomputed from the raw source episodes in its manifest, and the number of `done = 1` rows equals the number of terminated episodes.
+  - **V1, IQL vs. BC at `p = 1` (D3, changed 2026-11-16 before any IQL run; user decision):** the two-seed mean IQL final score >= the two-seed mean BC final score at `p = 1` minus 10 points, same mixtures, seeds, budget and commit. Reason: "IQL >= 90 at `p = 1`" assumed IQL learns the expert well, which is a hypothesis about IQL and the data, not a plumbing check (the same issue as Phase 4's `p = 1` vs. `p = 0` gate, Phase 4 spec Section 8.1). On pure expert data the advantages carry little signal, so IQL should behave about like BC; scoring clearly below BC means the value path harms the policy. BC's result is the measured baseline, not an assumption. 10 points as in D4. The baseline is cross-checked against Phase 4's BC `p = 1` result and both are reported.
+  - **V2, agreement with CORL at `p = 0.2`:** `|mean ours - mean CORL| <= 10` final-score points. `p = 0.2` is where value learning matters; at `p = 1` both sit near the ceiling, where agreement proves little, so `p = 1` agreement is reported, not gated.
+  - **V3, bounded values:** for every logged step after 50k, `q_mean`, `q_target_mean` and `v_mean` are finite and inside `[min(r_min, 0), max(r_max, 0)] / (1 - gamma)`, with `r_min`, `r_max` the mixture's scaled per-step reward extremes (recorded in the JSON); **and** at `p = 1`, the final mean `V(s_0)` over the mixture's initial states is between 0.8 and 1.5 times the mixture's mean discounted scaled return from those states; **and** `q_mean` in the `metrics.csv` row at step 300k differs from the row at 200k by at most 10%.
+  - **V4, no-fall return** at `p = 1`, as Phase 4: within 10% of the expert no-fall mean (4157) on at least 10 no-fall episodes.
+- **Reported, not gated:** IQL at `p = 1` vs. the ROADMAP's 90 target (a hypothesis-level result, carried to the H2 discussion); IQL vs. BC at `p = 0.2` per seed (whether I11's effect shows on real data; H2 itself is judged in Phase 7); IQL at `p = 0` (score, fall rate, `beta_eff`); `frac_clipped` and `adv_std` over time; CORL vs. ours at `p = 1`.
+- **On a V1 miss:** IQL scores more than 10 points below BC on the same data. If CORL at `p = 1` misses the same way, the shared value path (buffer, reward scaling, `done`) is suspect, since CORL shares it: check V0 first. Otherwise it is a bug in our IQL: debug against I7, I8 and I11, fix, rerun. Never tuned away (ROADMAP 1.5).
+
+## 9. ROADMAP and config changes in this PR
+- ROADMAP Phase 5: DoD "IQL at `p = 1` >= 90" becomes V1 (relative to BC) with 90 reported; the update order note (Section 2), the vendored CORL design (Section 5), the run list and DoD tolerances V0 to V4 (replacing "within the seed spread", which two seeds cannot define).
+- ROADMAP ADR-3: CORL's reward-scale range also closes episodes at its 1000-step counter; ours uses complete episodes only (no longer "as in CORL").
+- ROADMAP Section 3.2: `src/offrl/_vendor/`, `src/offrl/algos/{iql,corl}.py`, `scripts/iql_validate.py`, `slurm/iql_validate.sbatch`.
+
+## 10. Definition of Done
+Phase 4 merged with a merge commit; I1 to I12 green in CI; V0 to V4 pass on the official runs; `report/phase5/iql_validation.json` and `report/figures/iql_validation_curves.png` (ours vs. CORL at `p = 1` and `p = 0.2`, a score panel and a Q/V panel, no second axis) committed with `git_dirty: false`; a fresh reviewer has read the PR diff; architecture report written; merged with a merge commit.
+
+## 11. Decisions (approved by the user, 2026-11-16)
+- **D1, update order:** **Approved:** follow CORL (pre-update V for the Q target and the advantage). *Recommended by both reviewers.* Alternative: official IQL (updated V); then I8 cannot compare step for step.
+- **D2, reference comparison:** **Approved:** vendor CORL's update code, test it step for step in CI (I8), and run it on real data through the adapter (V2). *Recommended by both reviewers.* Alternative: the real-data overlay only, as the ROADMAP says; a mismatch would surface only after 300k GPU steps.
+- **D3, V1 basis:** **Set by the user:** IQL at `p = 1` within 10 points below BC at `p = 1` or better (same budget, seeds, commit); the 90 target reported, not gated. *Recommended (user, 2026-11-16).* Alternative: absolute >= 90 as a gate (rejected: tests a hypothesis, not the plumbing).
+- **D4, V2 tolerance and cell:** **Approved:** 10 points between two-seed means, judged at `p = 0.2`. *Recommended.* Scale: on the expert data a fall costs about 27 points (no-fall 107.8 vs. fell mean 80.3), so 10 points is a fall-rate gap of about 37 percentage points at `p = 1`; tighter is not supportable with two seeds per side (BC's two `p = 1` dry-run seeds already differed by 11 points in fall rate). Alternative: 5 points, at a real risk of failing two correct implementations on seed noise.
+
+## 12. Review log (v1 to v2)
+- **Blockers:** (RL) V1 and V2 at `p = 1` could pass with a broken advantage path, because BC alone reaches 80 to 113 there: added I11 and the `p = 0.2` cell, which now carries V2. (Eng) the vendored module was not importable and "verbatim" did not match a selection: moved into the package, line ranges listed, import test. (Eng) lint would rewrite the vendored file: pre-commit and ruff exclusions, sha256 test.
+- **Majors:** V1-miss rule could blame the data for a shared-plumbing bug (now requires BC below 90 too, plus the V0 data audit); I7 and I8 could miss the clip and negative branches (asserted now); V3 bounds were too loose or wrong (fixed bounds, `V(s_0)` check, exact drift rows); I8 setup traps (key map, copy before init, float64, scheduler); Phase 5's own recorded commit (merge commits for both phases, no rebase after V runs); no R5 analogue for Phase 5 and CORL bypassing `train.run` (V0, `iql_validate.py`, adapter); Slurm sizing ignored evaluation and packing (formula, 2 per GPU, throttle, smoke-test timing); incomplete shared-file list (Section 6); rebase procedure after a Phase 4 fix (Section 0.3).
+- **Minors:** CORL actor evaluated as the tanh mean in `eval()`; I9 bypasses reward scaling and the zero-range guard; ADR-3 wording; online Q logged next to the target; CORL target saved by the adapter; deviation recording for a non-T4 GPU; float64 fixture; I9 determinism; Apache-2.0 change notice and credit.
