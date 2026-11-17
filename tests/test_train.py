@@ -264,3 +264,21 @@ def test_update_timing_excludes_checkpoint_writes(small_run, env, monkeypatch):
     rows = (run_dir / "timing.csv").read_text(encoding="utf-8").splitlines()[1:]
     assert clock[0] == 3000.0 and len(rows) == 18  # 3 checkpoints; 12 train + 6 eval windows
     assert {float(r.split(",")[2]) for r in rows} == {0.0}
+
+
+def test_finished_run_reused_on_another_device_or_thread_count(small_run, env):
+    make, manifests = small_run
+    run_dir = train.run(make(), env=env, manifest_dir=manifests)
+    elsewhere = make("train.device=auto", "train.num_threads=1")
+    assert train.run(elsewhere, env=env, manifest_dir=manifests) == run_dir
+
+
+@pytest.mark.parametrize("unknown", [{"git_commit": None}, {"git_dirty": None}])
+def test_unknown_git_state_refuses_resume(small_run, env, monkeypatch, unknown):
+    make, manifests = small_run
+    cfg = make()
+    train.run(cfg, stop_at=200, env=env, manifest_dir=manifests)
+    real = train.collect_metadata
+    monkeypatch.setattr(train, "collect_metadata", lambda: {**real(), **unknown})
+    with pytest.raises(train.PreflightError, match="code has changed|dirty tree"):
+        train.run(cfg, env=env, manifest_dir=manifests)

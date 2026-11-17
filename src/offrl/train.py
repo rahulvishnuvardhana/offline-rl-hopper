@@ -193,6 +193,12 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
     }
 
 
+def _comparable(cfg: Config) -> Config:
+    """The config minus where it runs: device and thread count do not change what a finished run
+    means, and a resume checks them separately against ``meta.json``."""
+    return {**cfg, "train": {k: v for k, v in cfg["train"].items() if k not in ("device", "num_threads")}}
+
+
 def pick_device(name: str) -> torch.device:
     if name == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -215,15 +221,15 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
         import yaml
 
         saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
-        if saved != cfg:
+        if _comparable(saved) != _comparable(cfg):
             raise PreflightError(f"{run_dir} holds a run with a different config; use a new run_suffix")
     if finished or resuming:
         meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
-        if meta["git_commit"] != meta_now["git_commit"]:
+        if meta_now["git_commit"] is None or meta["git_commit"] != meta_now["git_commit"]:
             raise PreflightError(f"{run_dir} was started at commit {meta['git_commit']}; code has changed")
     if finished:
         return run_dir
-    if resuming and meta_now["git_dirty"]:
+    if resuming and meta_now["git_dirty"] is not False:  # None: git failed, so cleanliness is unknown
         raise PreflightError(f"{run_dir}: refusing to resume on a dirty tree; uncommitted code would mix in")
 
     name = mx.mixture_name(cfg["data"]["p_expert"], cfg["seed"])

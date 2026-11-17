@@ -11,64 +11,24 @@ import time
 import pytest
 import torch
 
+from iql_helpers import (
+    ACT,
+    ATOL,
+    OBS,
+    RTOL,
+    branch_coverage,
+    config,
+    make_batch,
+    make_trainer,
+    spread_targets,
+    two_mode_batch,
+)
 from offrl.algos import iql as iql_mod
 from offrl.algos.bc import BCTrainer
 from offrl.algos.iql import IQLTrainer
 from offrl.algos.losses import advantage_weights, expectile_loss, q_target
 from offrl.data.buffer import Batch
 from offrl.seeding import seed_everything
-
-OBS, ACT, B = 11, 3, 64
-RTOL, ATOL = 1e-9, 1e-12
-
-
-def config(beta=3.0, steps=1000, lr=3e-4, discount=0.99, hidden=(32, 32), target_update_rate=0.005):
-    return {
-        "net": {"hidden": list(hidden), "log_std_min": -20.0, "log_std_max": 2.0},
-        "train": {"lr": lr, "steps": steps, "actor_cosine_lr": True},
-        "algo": {
-            "name": "iql",
-            "expectile": 0.7,
-            "beta": beta,
-            "discount": discount,
-            "target_update_rate": target_update_rate,
-            "exp_adv_max": 100.0,
-        },
-    }
-
-
-def make_batch(gen, n=B, rew_scale=50.0):
-    """Done takes both values; large rewards give large Q targets after a few steps."""
-    done = torch.zeros(n, 1)
-    done[: n // 4] = 1.0
-    return Batch(
-        obs=torch.randn(n, OBS, generator=gen),
-        act=torch.rand(n, ACT, generator=gen) * 2 - 1,
-        rew=(torch.rand(n, 1, generator=gen) * 2 - 1) * rew_scale,
-        next_obs=torch.randn(n, OBS, generator=gen),
-        done=done,
-    )
-
-
-def make_trainer(seed=0, **kw):
-    seed_everything(seed)
-    return IQLTrainer(config(**kw), OBS, ACT, torch.device("cpu"))
-
-
-def spread_targets(t: IQLTrainer, scale=200.0):
-    """Scale the target twin's output layers so adv takes both signs and some weights clip."""
-    with torch.no_grad():
-        for head in (t.q_target.q1, t.q_target.q2):
-            head[-1].weight.mul_(scale)
-
-
-def branch_coverage(t: IQLTrainer, batch: Batch) -> None:
-    with torch.no_grad():
-        adv = torch.min(*t.q_target(batch.obs, batch.act)) - t.v(batch.obs)
-    assert (adv > 0).any() and (adv < 0).any()
-    assert (torch.exp(t.beta * adv) > t.exp_adv_max).any()
-    assert set(batch.done.flatten().tolist()) == {0.0, 1.0}
-
 
 # ---------- I1, I3, I4: the helpers ----------
 
@@ -270,7 +230,7 @@ def test_i2_beta_zero_is_bc_bitwise():
 # ---------- I9, I11: learning behaviour ----------
 
 
-def test_i9_td_fixed_point_on_constant_reward():
+def test_i9_td_fixed_point_on_constant_reward(f64):
     """Constant r, no terminations, discount 0.5: Q = V = r / (1 - 0.5) = 2r.
 
     A faster target update (0.05) reaches the fixed point in 800 steps instead of 3,000, which
@@ -290,21 +250,7 @@ def test_i9_td_fixed_point_on_constant_reward():
     assert q == pytest.approx(2 * r, rel=0.05) and v == pytest.approx(2 * r, rel=0.05)
 
 
-def two_mode_batch(gen, n=256):
-    """One-step episodes: action dim 0 is +0.8 (reward 1) or -0.8 (reward 0), equally often."""
-    good = torch.rand(n, 1, generator=gen) < 0.5
-    act = torch.zeros(n, ACT)
-    act[:, :1] = torch.where(good, 0.8, -0.8)
-    return Batch(
-        obs=torch.randn(n, OBS, generator=gen),
-        act=act,
-        rew=good.float(),
-        next_obs=torch.randn(n, OBS, generator=gen),
-        done=torch.ones(n, 1),
-    )
-
-
-def test_i11_value_learning_moves_the_policy_bc_does_not():
+def test_i11_value_learning_moves_the_policy_bc_does_not(f64):
     steps = 1000  # IQL reaches about 0.72 by 1,000 steps (0.72 at 2,000 too)
     means = {}
     for name, cls in (("iql", IQLTrainer), ("bc", BCTrainer)):

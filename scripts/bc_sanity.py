@@ -180,7 +180,11 @@ def main() -> int:
     parser.add_argument("--steps", type=int, default=100_000)
     parser.add_argument("--seeds", type=int, nargs="+", default=[100, 101])
     parser.add_argument("--rerun-misses", action="store_true", help="D4: train a 300k rerun of a band miss")
-    parser.add_argument("--allow-dirty", action="store_true", help="development only; the report records it")
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="development only; the report records it, and the resume demo still needs a clean tree",
+    )
     parser.add_argument("--set", nargs="*", default=[], help="overrides for every run: device and paths")
     args = parser.parse_args()
     allowed = ("train.device=", "data.mixture_dir=", "train.out_dir=", "train.num_threads=")

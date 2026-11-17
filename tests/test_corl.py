@@ -36,49 +36,35 @@ def assert_same(ours: torch.nn.Module, theirs: torch.nn.Module) -> None:
         torch.testing.assert_close(p, dst[corl_name(k)], rtol=RTOL, atol=ATOL, msg=k)
 
 
-def build_corl(t, steps):
-    width, depth = 32, 2
-    q = corl.TwinQ(OBS, ACT, width, depth).double()
-    v = corl.ValueFunction(OBS, width, depth).double()
-    actor = corl.GaussianPolicy(OBS, ACT, 1.0, width, depth).double()  # its log_std is float32
-    for theirs, ours in ((q, t.q), (v, t.v), (actor, t.policy)):
-        copy_into(theirs, ours)  # before ImplicitQLearning, whose __init__ deep-copies the target
-    lr = 3e-4
-    iql = corl.ImplicitQLearning(
-        max_action=1.0,
-        actor=actor,
-        actor_optimizer=torch.optim.Adam(actor.parameters(), lr=lr),
-        q_network=q,
-        q_optimizer=torch.optim.Adam(q.parameters(), lr=lr),
-        v_network=v,
-        v_optimizer=torch.optim.Adam(v.parameters(), lr=lr),
-        iql_tau=0.7,
-        beta=3.0,
-        max_steps=steps,
-        discount=0.99,
-        tau=0.005,
-    )
-    copy_into(iql.q_target, t.q_target)  # ours was spread for branch coverage
-    return iql
+def build_corl(t):
+    """The adapter as train.run builds it, then our weights copied in, all in float64."""
+    adapter = CorlTrainer(config(), OBS, ACT, torch.device("cpu"))
+    iql = adapter.iql
+    for net in (iql.qf, iql.q_target, iql.vf, iql.actor):
+        net.double()  # in place, so the optimizers still hold these parameters; log_std was float32
+    for theirs, ours in ((iql.qf, t.q), (iql.q_target, t.q_target), (iql.vf, t.v), (iql.actor, t.policy)):
+        copy_into(theirs, ours)  # the target too: ours was spread for branch coverage
+    return adapter
 
 
 @pytest.mark.parametrize("n_steps", [1, 20])
 def test_i8_matches_corl_implicit_q_learning(f64, n_steps):
-    steps = 1000
+    """Through ``CorlTrainer.update``, so the adapter's wiring (tau, discount, beta, max_steps,
+    the log names) is under test too, not only CORL's ``train``."""
     t = make_trainer()
     spread_targets(t)
     gen = torch.Generator().manual_seed(5)
     batches = [make_batch(gen) for _ in range(n_steps)]
     branch_coverage(t, batches[0])
-    iql = build_corl(t, steps)
+    adapter = build_corl(t)
+    iql = adapter.iql
     for b in batches:
         ours = t.update(b)
-        theirs = iql.train([b.obs, b.act, b.rew, b.next_obs, b.done])
+        theirs = adapter.update(b)
     for net, other in ((t.policy, iql.actor), (t.q, iql.qf), (t.q_target, iql.q_target), (t.v, iql.vf)):
         assert_same(net, other)
-    keys = {"v_loss": "value_loss", "q_loss": "q_loss", "policy_loss": "actor_loss"}
-    for ours_key, theirs_key in keys.items():
-        assert ours[ours_key].item() == pytest.approx(theirs[theirs_key], rel=RTOL, abs=ATOL)
+    for key in CorlTrainer.LOG_KEYS:
+        torch.testing.assert_close(theirs[key], ours[key], rtol=RTOL, atol=ATOL, msg=key)
     assert t.opt.param_groups[0]["lr"] == iql.actor_optimizer.param_groups[0]["lr"]
 
 

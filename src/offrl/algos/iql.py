@@ -81,6 +81,7 @@ class IQLTrainer:
         if self.sched is not None:
             self.sched.step()
 
+        # Logging only: adv_std is nan at batch size 1; a weight exactly at the cap is not counted.
         adv = adv.detach()
         clipped = torch.exp(self.beta * adv) > self.exp_adv_max
         return {
