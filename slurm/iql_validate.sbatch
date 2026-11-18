@@ -1,7 +1,8 @@
 #!/bin/bash
 # Phase 5 validation runs (spec Section 8): 14 runs at 300k steps, 7 array tasks of 2 runs that
 # share one A100 (ROADMAP 4.1 and 4.3; A100 is the user's choice). At most 4 tasks at once.
-# --time from the smoke test (slurm/iql_smoke.sbatch); see report/compute.md.
+# --time from the smoke test (job 11958589, A100): 300k x 14.1 ms per update with two runs packed,
+# plus 55 x 9.6 s + 5 x 48 s of evaluation (Phase 4), = 84 min, x 1.5, plus pytest: 2.5 h.
 # Submit from the repo root on a clean checkout, then the analysis with a dependency:
 #   jid=$(sbatch --parsable slurm/iql_validate.sbatch)
 #   sbatch --dependency=afterok:$jid slurm/iql_analyze.sbatch
@@ -10,7 +11,7 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --time=08:00:00
+#SBATCH --time=02:30:00
 #SBATCH --array=0-6%4
 #SBATCH --output=logs/%x_%A_%a.out
 #SBATCH --error=logs/%x_%A_%a.err

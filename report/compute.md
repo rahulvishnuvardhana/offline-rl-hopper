@@ -10,10 +10,15 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 11916731 | 4 | gpu-short | T4 | 4, 16G | Cancelled while pending | 0:00:00 | 0.00 | resubmitted after clearing stale runs |
 | 11916966 | 4 | gpu-short | T4 | 4, 16G | Failed | 0:44:50 | 0.75 | the 4 runs finished; the resume demo failed (checkpoint loaded onto the GPU; fixed in `6d1c2b6`, with a CUDA resume test) |
 | 11921436 | 4 | gpu-short | T4 | 4, 16G | Completed | 0:54:10 | 0.90 | official sanity runs, all 15 checks pass (`report/phase4/bc_sanity.json`) |
+| 11958505 | 5 | short | none | 2, 8G | Failed | 0:01:21 | 0.00 | p = 0.2 dev mixtures built, 49/49 builder checks; failed by an over-strict manifest byte check (data hashes matched; check fixed) |
+| 11958506 | 5 | gpu-short | A100 | 8, 32G | Cancelled (dependency) | 0:00:00 | 0.00 | smoke test, cancelled because 11958505 failed |
+| 11958589 | 5 | gpu-short | A100 | 8, 32G | Completed | 0:04:50 | 0.08 | smoke test: BC 6.39, CORL 10.83, IQL 12.05 ms/update alone; two IQL runs packed 14.1 each |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
-**Total from 2026-11-16: 1.65 GPU-hours (T4).**
+**Total from 2026-11-16: 1.65 GPU-hours (T4) and 0.08 GPU-hours (A100).**
+
+The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
 
 ## Measured throughput (Phase 6 input)
 
