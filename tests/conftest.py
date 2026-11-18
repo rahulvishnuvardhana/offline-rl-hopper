@@ -43,6 +43,7 @@ def synthetic_mixture(n: int = 2_000, seed: int = 0) -> dict[str, np.ndarray]:
         "rew": rng.uniform(0, 4, n).astype(np.float32),
         "next_obs": rng.normal(size=(n, 11)).astype(np.float32),
         "done": (rng.random(n) < 0.01).astype(np.float32),
+        "t": np.arange(n, dtype=np.int32) % 100,  # 100-step episodes, as mixture rows are laid out
         "state_mean": o64.mean(0),
         "state_std": o64.std(0),
         "state_std_eps": np.array(1e-3),
