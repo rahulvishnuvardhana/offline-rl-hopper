@@ -2,8 +2,10 @@
 # Phase 5 data step: build the development mixtures p in {0, 0.2, 1} x seeds {100, 101} into
 # scratch. p = 0 and 1 must reproduce the committed Phase 4 manifests exactly; the new p = 0.2
 # manifests and the refreshed summary and audit are copied to logs/phase5_mix_<jobid>/ for the
-# laptop to commit (spec Section 8). CPU only, `short` partition (ROADMAP 4.2.1).
-# Submit from the repo root, on a clean checkout, after `mkdir -p logs`.
+# laptop to commit (spec Section 8). CPU only, `short` partition (ROADMAP 4.2.1). Builds in a
+# throwaway worktree of the pinned commit, so the shared clone is never written to.
+# Submit from the repo root, clean, pinned, after `mkdir -p logs`:
+#   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/dev_mixtures.sbatch
 #SBATCH --job-name=offrl-dev-mixtures
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=2
@@ -16,8 +18,11 @@ set -euo pipefail
 module load miniconda3/24.11.1
 source activate /scratch/$USER/envs/offrl
 export MINARI_DATASETS_PATH=/scratch/$USER/minari
-export PYTHONPATH="$SLURM_SUBMIT_DIR/src"
 cd "$SLURM_SUBMIT_DIR"
+source slurm/lib/common.sh
+pin_commit
+out="$SLURM_SUBMIT_DIR/logs/phase5_mix_${SLURM_JOB_ID}"
+enter_worktree
 
 status=0
 python scripts/build_mixtures.py --p 0 0.2 1 --seeds 100 101 --out-dir /scratch/$USER/mixtures || status=$?
@@ -35,12 +40,8 @@ print(f"{'SAME DATA' if same else 'CHANGED  '} {sys.argv[1]} content {new['conte
 raise SystemExit(0 if same else 1)
 PY
 done
-git status --short
 
-out="logs/phase5_mix_${SLURM_JOB_ID}"
 mkdir -p "$out"
 cp report/mixtures/mix_p0.2_s100.json report/mixtures/mix_p0.2_s101.json \
    report/mixtures/summary_s100_s101.json report/mixtures/audit_s100_s101.json "$out"/ || status=1
-git restore report/mixtures/
-git clean -fq report/mixtures/
 exit "$status"

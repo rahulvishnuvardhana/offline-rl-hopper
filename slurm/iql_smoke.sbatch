@@ -3,7 +3,8 @@
 # development mixture, then two IQL runs at once on the same GPU (the packing the array uses).
 # Prints ms per update and seconds per evaluation, to size iql_validate.sbatch's --time.
 # One A100 on gpu-short for at most 30 minutes (ROADMAP 4.2.1; A100 is the user's choice).
-# Needs /scratch/$USER/mixtures (slurm/dev_mixtures.sbatch). Submit from the repo root.
+# Needs /scratch/$USER/mixtures (slurm/dev_mixtures.sbatch). Submit from the repo root, pinned:
+#   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/iql_smoke.sbatch
 #SBATCH --job-name=offrl-iql-smoke
 #SBATCH --partition=gpu-short
 #SBATCH --gres=gpu:a100:1
@@ -20,6 +21,8 @@ export MINARI_DATASETS_PATH=/scratch/$USER/minari
 export PYTHONPATH="$SLURM_SUBMIT_DIR/src"
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 cd "$SLURM_SUBMIT_DIR"
+source slurm/lib/common.sh
+pin_commit
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
 out=/scratch/$USER/runs_smoke5
@@ -32,9 +35,12 @@ common=(seed=100 data.p_expert=1.0 train.device=cuda train.num_threads=4 train.s
 for algo in bc iql corl_iql; do
     python -m offrl.train configs/algo/$algo.yaml "${common[@]}" train.run_suffix=_single > /dev/null
 done
-python -m offrl.train configs/algo/iql.yaml "${common[@]}" train.run_suffix=_packedA > /dev/null &
-python -m offrl.train configs/algo/iql.yaml "${common[@]}" train.run_suffix=_packedB > /dev/null &
-wait
+pids=()
+for run in _packedA _packedB; do
+    python -m offrl.train configs/algo/iql.yaml "${common[@]}" train.run_suffix=$run > /dev/null &
+    pids+=($!)
+done
+for pid in "${pids[@]}"; do wait "$pid"; done  # set -e: a failed packed run fails the job
 
 python - "$out" <<'PY'
 import csv, pathlib, statistics, sys
