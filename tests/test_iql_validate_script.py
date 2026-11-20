@@ -143,7 +143,7 @@ def test_main_wires_runs_checks_and_report(script, monkeypatch, tmp_path):
     monkeypatch.setattr(script.bs, "no_fall_match", lambda no_fall, _ref: (no_fall["ok"], "stub"))
     monkeypatch.setattr(script, "save", lambda fig, path: None)
     monkeypatch.setattr(script, "figure", lambda results: None)
-    monkeypatch.setattr(script, "vendored_sha256", lambda commit: f"sha-at-{commit[:7]}")
+    monkeypatch.setattr(script, "vendored_sha256", lambda commit: (f"sha-at-{commit[:7]}", None))
     monkeypatch.setattr(sys, "argv", ["iql_validate.py"])
 
     assert script.main() == 0
@@ -151,7 +151,7 @@ def test_main_wires_runs_checks_and_report(script, monkeypatch, tmp_path):
     report = json.loads((tmp_path / "out" / "iql_validation.json").read_text(encoding="utf-8"))
     assert len(report["checks"]) == 38 and report["all_passed"]
     assert report["training_commit"] == "c" * 40 and report["run"]["git_commit"] == "a" * 40
-    assert report["vendored_corl_sha256"] == "sha-at-ccccccc"
+    assert report["vendored_corl_sha256"] == "sha-at-ccccccc" and report["vendored_corl_error"] is None
     assert report["reported_not_gated"]["ours_vs_corl_p1"]["s100"] == {"ours": 90.0, "corl": 90.0}
 
 
@@ -159,9 +159,10 @@ def test_vendored_hash_at_a_commit_matches_the_readme(script):
     if subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, cwd=train.REPO_ROOT).returncode:
         pytest.skip("no git history here")
     readme = (train.REPO_ROOT / "src" / "offrl" / "_vendor" / "README.md").read_text(encoding="utf-8")
-    recorded = re.findall(r"\b[0-9a-f]{64}\b", readme)
-    assert script.vendored_sha256("HEAD") in recorded
-    assert script.vendored_sha256("0" * 40).startswith("unreadable at 0000000")  # reported, not a crash
+    [recorded] = re.findall(r"\(I12\):\s*`?([0-9a-f]{64})", readme)
+    assert script.vendored_sha256("HEAD") == (recorded, None)
+    sha, error = script.vendored_sha256("0" * 40)  # not in this clone: reported, not a crash
+    assert sha is None and error.startswith("unreadable at 0000000")
 
 
 def test_validation_view_ignores_paths_not_budget(small_run, script):

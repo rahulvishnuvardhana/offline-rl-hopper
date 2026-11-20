@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import zipfile
 from pathlib import Path
 
 from offrl.data import mixture as mx
@@ -22,25 +23,30 @@ def check(manifest_dir: Path, mixture_dir: Path) -> list[tuple[bool, str]]:
     manifests = sorted(manifest_dir.glob("mix_*.json"))
     if not manifests:
         return [(False, f"no mix_*.json in {manifest_dir}")]
+    unreadable = (OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile)
     for path in manifests:
-        try:
+        try:  # a missing or broken file, or a missing key, is a FAIL line, not a traceback
             m = json.loads(path.read_text(encoding="utf-8"))
             arrays = mx.load_mixture(mixture_dir / f"{path.stem}.npz")
             content, data = mx.content_sha256(arrays), mx.data_sha256(arrays)
-        except (OSError, ValueError, KeyError) as e:  # a missing file or column is a FAIL line
-            results.append((False, f"{path.stem}: {type(e).__name__}: {e}"))
-            continue
-        ok = (
-            content == m["content_sha256"]
-            and data == m["data_sha256"]
-            and path.stem == mx.mixture_name(m["p_target"], m["seed"])
-        )
-        results.append((ok, f"{path.stem}: file {content[:12]} vs manifest {m['content_sha256'][:12]}"))
+            ok = (
+                content == m["content_sha256"]
+                and data == m["data_sha256"]
+                and path.stem == mx.mixture_name(m["p_target"], m["seed"])
+            )
+            detail = f"{path.stem}: file {content[:12]} vs manifest {m['content_sha256'][:12]}"
+        except unreadable as e:
+            ok, detail = False, f"{path.stem}: {type(e).__name__}: {e}"
+        results.append((ok, detail))
     for path in sorted(manifest_dir.glob("audit_*.json")):
-        a = json.loads(path.read_text(encoding="utf-8"))
-        n = sum(c["passed"] for c in a["checks"])
-        detail = f"{path.name}: {n}/{len(a['checks'])} checks, dirty {a['run']['git_dirty']}"
-        results.append((a["all_passed"] is True and a["run"]["git_dirty"] is False, detail))
+        try:
+            a = json.loads(path.read_text(encoding="utf-8"))
+            n = sum(c["passed"] for c in a["checks"])
+            detail = f"{path.name}: {n}/{len(a['checks'])} checks, dirty {a['run']['git_dirty']}"
+            ok = a["all_passed"] is True and a["run"]["git_dirty"] is False
+        except unreadable as e:
+            ok, detail = False, f"{path.name}: {type(e).__name__}: {e}"
+        results.append((ok, detail))
     return results
 
 

@@ -12,6 +12,9 @@
 # enter_worktree: for jobs that write into the repo (mixture manifests, analysis reports), work in
 # a throwaway worktree of the pinned commit, so the shared clone is never written to and runs
 # starting meanwhile do not see a dirty tree. Removed on exit, keeping the job's exit status.
+# Locked, never pruned: worktrees sit in node-local $TMPDIR, invisible to jobs on other nodes,
+# so a `git worktree prune` there would delete a live job's entry. A job killed before its trap
+# leaves a locked entry under a unique path; list with `git worktree list`, clear by hand.
 
 GATE_DIR="/scratch/$USER/gates"
 
@@ -39,14 +42,13 @@ require_gate() {
 
 _remove_worktree() {
     local rc=$?
-    git -C "$SLURM_SUBMIT_DIR" worktree remove --force "$WORKTREE" || echo "worktree remove failed" >&2
+    git -C "$SLURM_SUBMIT_DIR" worktree remove --force --force "$WORKTREE" || echo "worktree remove failed" >&2
     exit "$rc"
 }
 
 enter_worktree() {
-    git worktree prune  # entries left by a job that was killed before its trap ran
     WORKTREE=$(mktemp -d "${TMPDIR:-/tmp}/offrl_wt_${SLURM_JOB_ID}_XXXX")
-    git worktree add --detach -q "$WORKTREE" "$EXPECTED_COMMIT"
+    git worktree add --detach --lock -q "$WORKTREE" "$EXPECTED_COMMIT"
     trap _remove_worktree EXIT
     cd "$WORKTREE"
     export PYTHONPATH="$WORKTREE/src"

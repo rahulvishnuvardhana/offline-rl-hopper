@@ -64,18 +64,18 @@ def config(algo: str, p: float, seed: int) -> Config:
 VENDORED = "src/offrl/_vendor/corl_iql.py"
 
 
-def vendored_sha256(commit: str | None) -> str | None:
-    """The vendored CORL file at the training commit, hashed without its first line (our notice),
-    as `_vendor/README.md` and test I12 record it. If git cannot read it there (e.g. a shallow
-    clone), the reason is returned in place of the hash, so the report says why."""
+def vendored_sha256(commit: str | None) -> tuple[str | None, str | None]:
+    """``(hash, error)``: the vendored CORL file at the training commit, hashed without its first
+    line (our notice), as `_vendor/README.md` and test I12 record it; or ``(None, reason)`` if
+    there is no single training commit or git cannot read the file there (e.g. a shallow clone)."""
     if commit is None:
-        return None
+        return None, "no single training commit"
     got = subprocess.run(["git", "show", f"{commit}:{VENDORED}"], capture_output=True, cwd=ROOT)
-    if got.returncode != 0:  # e.g. a shallow clone: report it, do not lose the analysis
+    if got.returncode != 0:  # report it, do not lose the analysis
         reason = f"unreadable at {commit[:7]}: {got.stderr.decode().strip()}"
         print(f"vendored CORL file {reason}")
-        return reason
-    return hashlib.sha256(got.stdout.split(b"\n", 1)[1]).hexdigest()
+        return None, reason
+    return hashlib.sha256(got.stdout.split(b"\n", 1)[1]).hexdigest(), None
 
 
 def validation_view(cfg: Config) -> Config:
@@ -287,7 +287,7 @@ def main() -> int:
         "training_commit": commit,
         "note": "run: this analysis run (its commit may be later); training_commit: the one commit "
         "all runs were trained at (V0)",
-        "vendored_corl_sha256": vendored_sha256(commit),
+        **dict(zip(("vendored_corl_sha256", "vendored_corl_error"), vendored_sha256(commit), strict=True)),
         "dataset_reference": {"expert_no_fall_return": no_fall_ref},
         "mixtures": mixtures,
         "results": results,

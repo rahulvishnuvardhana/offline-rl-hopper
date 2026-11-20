@@ -53,7 +53,16 @@ def test_hashes_names_and_audit(make_mixture, tmp_path):
     assert not script.check(tmp_path / "missing", mix_dir)[0][0]
 
 
-def test_a_missing_file_is_a_fail_line_not_a_crash(tmp_path):
+def test_missing_files_and_keys_are_fail_lines_not_crashes(make_mixture, tmp_path):
+    script = load_script()
     (tmp_path / "mix_p1_s102.json").write_text("{}", encoding="utf-8")
-    [(ok, detail)] = load_script().check(tmp_path, tmp_path / "nowhere")
+    [(ok, detail)] = script.check(tmp_path, tmp_path / "nowhere")  # no npz
     assert not ok and "mix_p1_s102" in detail
+    a = make_mixture(seed=1)
+    n = len(a["rew"])
+    a["source"], a["episode_id"] = np.zeros(n, dtype=np.int8), np.zeros(n, dtype=np.int32)
+    mx.save_mixture(tmp_path / "mix_p1_s102.npz", a)
+    [(ok, detail)] = script.check(tmp_path, tmp_path)  # npz present, manifest without keys
+    assert not ok and "KeyError" in detail
+    (tmp_path / "audit_s102.json").write_text("{}", encoding="utf-8")
+    assert [ok for ok, _ in script.check(tmp_path, tmp_path)] == [False, False]

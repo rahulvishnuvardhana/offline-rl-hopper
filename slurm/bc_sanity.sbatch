@@ -27,6 +27,7 @@ out="$SLURM_SUBMIT_DIR/logs/phase4_${SLURM_JOB_ID}"
 enter_worktree
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
+python -c "import torch; assert torch.cuda.is_available(), 'no CUDA: the CUDA tests would skip'"
 python -m pytest -o addopts="" -q -rs  # a failing test stops the job before any GPU training
 status=0
 
@@ -40,6 +41,6 @@ python scripts/bc_sanity.py --rerun-misses --set train.device=cuda \
 
 if [ -f report/phase4/bc_sanity.json ]; then
     mkdir -p "$out"
-    cp report/phase4/bc_sanity.json report/figures/bc_sanity_curves.png "$out"/
+    cp report/phase4/bc_sanity.json report/figures/bc_sanity_curves.png "$out"/ || status=1
 fi
 exit "$status"
