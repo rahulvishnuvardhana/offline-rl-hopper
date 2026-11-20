@@ -3,10 +3,17 @@
 # pin_commit: refuse to run unless the shared clone is at the commit pinned at submission and
 # clean, so a `git pull` between submission and start cannot change what a task runs. Submit with
 #   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/<job>.sbatch
+# The clone is checked when a task starts; do not pull while an array is queued or running
+# (each run's meta.json records the commit it started at, and V0 checks it).
 #
-# enter_worktree: for jobs that write into the repo (mixture manifests, the analysis report),
-# work in a throwaway worktree of the pinned commit under $TMPDIR, so the shared clone is never
-# written to and runs starting meanwhile do not see a dirty tree. Removed on exit.
+# require_gate: refuse to train unless slurm/tests_gate.sbatch passed at the pinned commit (it
+# leaves a marker in scratch), so an array submitted without --dependency cannot skip the tests.
+#
+# enter_worktree: for jobs that write into the repo (mixture manifests, analysis reports), work in
+# a throwaway worktree of the pinned commit, so the shared clone is never written to and runs
+# starting meanwhile do not see a dirty tree. Removed on exit, keeping the job's exit status.
+
+GATE_DIR="/scratch/$USER/gates"
 
 pin_commit() {
     : "${EXPECTED_COMMIT:?submit with --export=ALL,EXPECTED_COMMIT=\$(git rev-parse HEAD)}"
@@ -23,10 +30,24 @@ pin_commit() {
     fi
 }
 
+require_gate() {
+    if [ ! -f "$GATE_DIR/$EXPECTED_COMMIT.ok" ]; then
+        echo "REFUSING: no passed test gate at $EXPECTED_COMMIT (submit slurm/tests_gate.sbatch first)" >&2
+        exit 1
+    fi
+}
+
+_remove_worktree() {
+    local rc=$?
+    git -C "$SLURM_SUBMIT_DIR" worktree remove --force "$WORKTREE" || echo "worktree remove failed" >&2
+    exit "$rc"
+}
+
 enter_worktree() {
-    WORKTREE="${TMPDIR:-/tmp}/offrl_wt_${SLURM_JOB_ID}"
+    git worktree prune  # entries left by a job that was killed before its trap ran
+    WORKTREE=$(mktemp -d "${TMPDIR:-/tmp}/offrl_wt_${SLURM_JOB_ID}_XXXX")
     git worktree add --detach -q "$WORKTREE" "$EXPECTED_COMMIT"
-    trap 'git -C "$SLURM_SUBMIT_DIR" worktree remove --force "$WORKTREE"' EXIT
+    trap _remove_worktree EXIT
     cd "$WORKTREE"
     export PYTHONPATH="$WORKTREE/src"
 }

@@ -28,6 +28,7 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8  # deterministic cuBLAS: a preempted task
 cd "$SLURM_SUBMIT_DIR"
 source slurm/lib/common.sh
 pin_commit
+require_gate
 
 tasks=("iql 1" "iql 0.2" "iql 0" "corl_iql 1" "corl_iql 0.2" "bc 1" "bc 0.2")
 read -r algo p <<< "${tasks[$SLURM_ARRAY_TASK_ID]}"

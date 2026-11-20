@@ -5,6 +5,7 @@
 # One A100 on gpu-short for at most 30 minutes (ROADMAP 4.2.1; A100 is the user's choice).
 # Needs /scratch/$USER/mixtures (slurm/dev_mixtures.sbatch). Submit from the repo root, pinned:
 #   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/iql_smoke.sbatch
+# after slurm/tests_gate.sbatch passed at that commit.
 #SBATCH --job-name=offrl-iql-smoke
 #SBATCH --partition=gpu-short
 #SBATCH --gres=gpu:a100:1
@@ -23,6 +24,7 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8
 cd "$SLURM_SUBMIT_DIR"
 source slurm/lib/common.sh
 pin_commit
+require_gate
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
 out=/scratch/$USER/runs_smoke5

@@ -25,6 +25,9 @@ status=0
 python scripts/iql_validate.py --set data.mixture_dir=/scratch/$USER/mixtures \
     train.out_dir=/scratch/$USER/runs_phase5 || status=$?
 
-mkdir -p "$out"
-cp report/phase5/iql_validation.json report/figures/iql_validation_curves.png "$out"/ || status=1
+# The report is written whether checks pass (exit 0) or fail (exit 1); a refusal writes none.
+if [ -f report/phase5/iql_validation.json ]; then
+    mkdir -p "$out"
+    cp report/phase5/iql_validation.json report/figures/iql_validation_curves.png "$out"/
+fi
 exit "$status"

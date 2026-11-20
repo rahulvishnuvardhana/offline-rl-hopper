@@ -27,6 +27,7 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8  # deterministic cuBLAS: a preempted task
 cd "$SLURM_SUBMIT_DIR"
 source slurm/lib/common.sh
 pin_commit
+require_gate
 
 seed=$((102 + SLURM_ARRAY_TASK_ID))
 nvidia-smi --query-gpu=name,memory.total --format=csv

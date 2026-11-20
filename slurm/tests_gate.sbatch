@@ -24,5 +24,8 @@ source slurm/lib/common.sh
 pin_commit
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
+python -c "import torch; assert torch.cuda.is_available(), 'no CUDA: the CUDA tests would skip'"
 python -m pytest -o addopts="" -q -rs
 pin_commit  # the tests left the clone clean
+mkdir -p "$GATE_DIR"
+echo "job $SLURM_JOB_ID $(date -Is)" > "$GATE_DIR/$EXPECTED_COMMIT.ok"  # require_gate reads this
