@@ -151,3 +151,20 @@ def test_main_wires_runs_checks_and_report(script, monkeypatch, tmp_path):
     assert report["training_commit"] == "c" * 40 and report["run"]["git_commit"] == "a" * 40
     assert report["vendored_corl_sha256"] == "sha-at-ccccccc"
     assert report["reported_not_gated"]["ours_vs_corl_p1"]["s100"] == {"ours": 90.0, "corl": 90.0}
+
+
+def test_vendored_hash_at_a_commit_matches_the_readme(script):
+    readme = (train.REPO_ROOT / "src" / "offrl" / "_vendor" / "README.md").read_text(encoding="utf-8")
+    recorded = readme.split("checked by `tests/test_corl.py` (I12):")[1].split()[0].strip("`")
+    assert script.vendored_sha256("HEAD") == recorded
+    assert script.vendored_sha256("0" * 40) is None  # not in this clone: reported, not a crash
+
+
+def test_validation_view_ignores_paths_not_budget(small_run, script):
+    make, _ = small_run
+    cfg = make(algo="iql")
+    moved = {**cfg, "data": {**cfg["data"], "mixture_dir": "/elsewhere"}}
+    moved["train"] = {**cfg["train"], "out_dir": "/elsewhere/runs", "device": "cuda"}
+    assert script.validation_view(moved) == script.validation_view(cfg)
+    longer = {**cfg, "train": {**cfg["train"], "steps": 300_000}}
+    assert script.validation_view(longer) != script.validation_view(cfg)

@@ -209,10 +209,9 @@ def assemble_checks(
     for r in runs:
         if r["algo"] != "iql":
             continue
-        for key in ("bounded", "drift", "v_s0"):
-            if key in r["v3"]:
-                ok, detail = r["v3"][key]
-                check(f"V3_{key}[{r['run']}]", ok, detail)
+        for key in ("bounded", "drift", "v_s0") if r["p"] == 1.0 else ("bounded", "drift"):
+            ok, detail = r["v3"].get(key, (False, "missing: not computed for this run"))
+            check(f"V3_{key}[{r['run']}]", ok, detail)
         if r["p"] == 1.0:
             ok, detail = no_fall_check(r["no_fall_return"])
             check(f"V4_no_fall[{r['run']}]", ok, detail)

@@ -203,3 +203,10 @@ def test_v3_and_v4_are_reported_per_iql_run():
         "V3_drift[iql_p0.2_s100]",
         "V4_no_fall[iql_p1_s101]",
     }
+
+
+def test_a_missing_v3_check_fails_instead_of_vanishing():
+    runs = grid()
+    del runs[0]["v3"]["v_s0"]  # iql p1 s100
+    checks = iv.assemble_checks(runs, MIXTURES, nf)
+    assert len(checks) == 38 and failed(checks) == {"V3_v_s0[iql_p1_s100]"}

@@ -69,10 +69,22 @@ def vendored_sha256(commit: str | None) -> str | None:
     as `_vendor/README.md` and test I12 record it."""
     if commit is None:
         return None
-    blob = subprocess.run(
-        ["git", "show", f"{commit}:{VENDORED}"], capture_output=True, check=True, cwd=ROOT
-    ).stdout
-    return hashlib.sha256(blob.split(b"\n", 1)[1]).hexdigest()
+    got = subprocess.run(["git", "show", f"{commit}:{VENDORED}"], capture_output=True, cwd=ROOT)
+    if got.returncode != 0:  # e.g. a shallow clone: report it, do not lose the analysis
+        print(f"vendored CORL file not readable at {commit[:7]}: {got.stderr.decode().strip()}")
+        return None
+    return hashlib.sha256(got.stdout.split(b"\n", 1)[1]).hexdigest()
+
+
+def validation_view(cfg: Config) -> Config:
+    """What makes a run the validation run: the config minus where it ran (device, threads) and
+    where its files live (the mixture is identified by its content hash, checked in V0)."""
+    view = train._comparable(cfg)
+    return {
+        **view,
+        "data": {k: v for k, v in view["data"].items() if k != "mixture_dir"},
+        "train": {k: v for k, v in view["train"].items() if k != "out_dir"},
+    }
 
 
 def mixture_facts(
@@ -131,7 +143,7 @@ def analyze(algo: str, p: float, seed: int, mix: dict[str, Any], arrays, manifes
             "manifest_content_sha256": manifest["content_sha256"],
             # The trained config must be the validation config (300k steps etc.): run names
             # carry no step count, so a stray Phase 4 run in out_dir would otherwise be read.
-            "config_matches": train._comparable(cfg) == train._comparable(located),
+            "config_matches": validation_view(cfg) == validation_view(located),
             "steps": cfg["train"]["steps"],
             "resume_records": [
                 {k: r[k] for k in ("from_step", "git_commit", "git_dirty")} for r in meta["resumes"]
@@ -269,8 +281,10 @@ def main() -> int:
     report = {
         "generated_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "spec": "docs/specs/phase-5-iql.md",
-        "run": {**meta, "dirty_paths": dirty},  # the analysis run
+        "run": {**meta, "dirty_paths": dirty},
         "training_commit": commit,
+        "note": "run: this analysis run (its commit may be later); training_commit: the one commit "
+        "all runs were trained at (V0)",
         "vendored_corl_sha256": vendored_sha256(commit),
         "dataset_reference": {"expert_no_fall_return": no_fall_ref},
         "mixtures": mixtures,
