@@ -15,6 +15,9 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 11958589 | 5 | gpu-short | A100 | 8, 32G | Completed | 0:04:50 | 0.08 | smoke test: BC 6.39, CORL 10.83, IQL 12.05 ms/update alone; two IQL runs packed 14.1 each |
 | 11981886 | 5 | gpu | A100 | 8, 32G | Completed (7 tasks) | 0:36:59 to 1:25:21 | 7.09 | validation, 14 runs at 300k, two per A100 |
 | 11981887 | 5 | short | none | 2, 16G | Failed (exit 1) | 0:00:52 | 0.00 | validation analysis: 37/38 checks, V1 failed (IQL 85.3 vs. BC 105.1 at p = 1) |
+| 12014197 | 5 | short | none | 2, 8G | Failed (copy step) | 0:06:39 | 0.00 | p = 1 dev mixtures s102-s104, 27/27 builder checks; outputs removed by 12014258's cleanup before its own copy (submitted by an SSH command thought killed) |
+| 12014258 | 5 | short | none | 2, 8G | Failed (refused) | 0:00:29 | 0.00 | duplicate submission; refused on 12014197's untracked manifests, but its copy holds 12014197's complete outputs |
+| 12014512 | 5 | short | none | 1, 4G | Completed | 0:00:33 | 0.00 | check: copied manifests and audit match the s102-s104 mixtures in scratch (content and data hashes) |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
