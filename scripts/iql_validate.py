@@ -244,6 +244,7 @@ def main() -> int:
 
     checks = iv.assemble_checks(results, mixtures, lambda nf: bs.no_fall_match(nf, no_fall_ref), SEEDS)
     commit = iv.training_commit(results)
+    vendored_sha, vendored_error = vendored_sha256(commit)
 
     def score(algo: str, p: float, seed: int) -> float:
         return next(r["final"]["score"] for r in results if (r["algo"], r["p"], r["seed"]) == (algo, p, seed))
@@ -287,7 +288,8 @@ def main() -> int:
         "training_commit": commit,
         "note": "run: this analysis run (its commit may be later); training_commit: the one commit "
         "all runs were trained at (V0)",
-        **dict(zip(("vendored_corl_sha256", "vendored_corl_error"), vendored_sha256(commit), strict=True)),
+        "vendored_corl_sha256": vendored_sha,
+        "vendored_corl_error": vendored_error,
         "dataset_reference": {"expert_no_fall_return": no_fall_ref},
         "mixtures": mixtures,
         "results": results,

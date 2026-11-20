@@ -41,6 +41,6 @@ python scripts/bc_sanity.py --rerun-misses --set train.device=cuda \
 
 if [ -f report/phase4/bc_sanity.json ]; then
     mkdir -p "$out"
-    cp report/phase4/bc_sanity.json report/figures/bc_sanity_curves.png "$out"/ || status=1
+    cp report/phase4/bc_sanity.json report/figures/bc_sanity_curves.png "$out"/ || { [ "$status" -ne 0 ] || status=1; }  # keep a non-zero status
 fi
 exit "$status"

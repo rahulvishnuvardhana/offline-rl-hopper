@@ -14,7 +14,8 @@
 # starting meanwhile do not see a dirty tree. Removed on exit, keeping the job's exit status.
 # Locked, never pruned: worktrees sit in node-local $TMPDIR, invisible to jobs on other nodes,
 # so a `git worktree prune` there would delete a live job's entry. A job killed before its trap
-# leaves a locked entry under a unique path; list with `git worktree list`, clear by hand.
+# leaves a locked entry (its reason names the job and node); list with `git worktree list -v`,
+# check the job is gone (`squeue -j <id>`), then `git worktree remove --force --force <path>`.
 
 GATE_DIR="/scratch/$USER/gates"
 
@@ -42,14 +43,15 @@ require_gate() {
 
 _remove_worktree() {
     local rc=$?
-    git -C "$SLURM_SUBMIT_DIR" worktree remove --force --force "$WORKTREE" || echo "worktree remove failed" >&2
+    git -C "$SLURM_SUBMIT_DIR" worktree remove --force --force "$WORKTREE" 2>/dev/null \
+        || rmdir "$WORKTREE" 2>/dev/null || echo "worktree remove failed: $WORKTREE" >&2
     exit "$rc"
 }
 
 enter_worktree() {
     WORKTREE=$(mktemp -d "${TMPDIR:-/tmp}/offrl_wt_${SLURM_JOB_ID}_XXXX")
-    git worktree add --detach --lock -q "$WORKTREE" "$EXPECTED_COMMIT"
-    trap _remove_worktree EXIT
+    trap _remove_worktree EXIT  # before the add: a failed add then leaves no empty directory
+    git worktree add --detach --lock --reason "job $SLURM_JOB_ID on $(hostname)" -q "$WORKTREE" "$EXPECTED_COMMIT"
     cd "$WORKTREE"
     export PYTHONPATH="$WORKTREE/src"
 }
