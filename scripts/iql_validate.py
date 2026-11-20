@@ -1,7 +1,8 @@
 """Phase 5 validation: check the 14 runs (V0 to V4), write report/phase5/iql_validation.json + figure.
 
 Spec: docs/specs/phase-5-iql.md Section 8. Runs on Explorer after the training array
-(slurm/iql_validate.sbatch), on the same commit and a clean tree:
+(slurm/iql_validate.sbatch), on a clean tree; V0 checks that all runs share one training commit,
+so the analysis may run at a later commit (both are recorded):
     python scripts/iql_validate.py --set data.mixture_dir=... train.out_dir=...
 ``--set`` takes paths only. The runs are read, never trained here: a missing ``final.json`` fails.
 Exits 1 if any check fails.
@@ -12,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,7 +25,6 @@ import yaml
 from matplotlib.figure import Figure
 
 from offrl import train
-from offrl._vendor import corl_iql
 from offrl.algos.iql import IQLTrainer
 from offrl.analysis import bc_sanity as bs
 from offrl.analysis import iql_validation as iv
@@ -60,8 +61,18 @@ def config(algo: str, p: float, seed: int) -> Config:
     )
 
 
-def vendored_sha256() -> str:
-    return hashlib.sha256(Path(corl_iql.__file__).read_bytes().split(b"\n", 1)[1]).hexdigest()
+VENDORED = "src/offrl/_vendor/corl_iql.py"
+
+
+def vendored_sha256(commit: str | None) -> str | None:
+    """The vendored CORL file at the training commit, hashed without its first line (our notice),
+    as `_vendor/README.md` and test I12 record it."""
+    if commit is None:
+        return None
+    blob = subprocess.run(
+        ["git", "show", f"{commit}:{VENDORED}"], capture_output=True, check=True, cwd=ROOT
+    ).stdout
+    return hashlib.sha256(blob.split(b"\n", 1)[1]).hexdigest()
 
 
 def mixture_facts(
@@ -74,9 +85,11 @@ def mixture_facts(
         "reward_scale_recomputed": iv.reward_scale_from_episodes(episodes, manifest["picks"]),
         "done_rows": int(np.asarray(arrays["done"]).sum()),
         "terminated_episodes": iv.terminated_count(episodes, manifest["picks"]),
+        "timeout_mixups": iv.timeout_mixups(episodes, manifest["picks"]),
         "scaled_reward_min": float(scaled.min()),
         "scaled_reward_max": float(scaled.max()),
         "content_sha256": manifest["content_sha256"],
+        "content_sha256_file": mx.content_sha256(arrays),  # the copy this analysis read
     }
 
 
@@ -116,6 +129,10 @@ def analyze(algo: str, p: float, seed: int, mix: dict[str, Any], arrays, manifes
             "gpu": meta["gpu"],
             "content_sha256": meta["preflight"]["content_sha256"],
             "manifest_content_sha256": manifest["content_sha256"],
+            # The trained config must be the validation config (300k steps etc.): run names
+            # carry no step count, so a stray Phase 4 run in out_dir would otherwise be read.
+            "config_matches": train._comparable(cfg) == train._comparable(located),
+            "steps": cfg["train"]["steps"],
             "resume_records": [
                 {k: r[k] for k in ("from_step", "git_commit", "git_dirty")} for r in meta["resumes"]
             ],
@@ -124,7 +141,7 @@ def analyze(algo: str, p: float, seed: int, mix: dict[str, Any], arrays, manifes
     }
     timing = read_csv(run_dir / "timing.csv")
     train_s = [float(r["seconds"]) for r in timing if r["kind"] == "train"]
-    out["ms_per_update"] = 1000 * float(np.mean(train_s)) / cfg["train"]["log_every"]
+    out["ms_per_update_two_per_gpu"] = 1000 * float(np.mean(train_s)) / cfg["train"]["log_every"]
     if algo == "iql":
         rows = read_csv(run_dir / "metrics.csv")
         lo, hi = iv.value_bounds(
@@ -160,7 +177,11 @@ def figure(results: list[dict[str, Any]]) -> Figure:
         for key, style in (("q_mean", "-"), ("v_mean", ":")):
             x, y = seed_mean("iql", p, key, "metrics.csv")
             ax_v.plot(x, y, style, color=color, lw=1.6, label=f"{key.split('_')[0].upper()}, p={p:g}")
-    ax_s.set(xlabel="gradient steps (thousands)", ylabel="normalized score", title="Score, ours vs. CORL")
+    ax_s.set(
+        xlabel="gradient steps (thousands)",
+        ylabel="normalized score (10-episode subset)",
+        title="Score, ours vs. CORL",
+    )
     ax_v.set(xlabel="gradient steps (thousands)", ylabel="value (scaled reward units)", title="Our Q and V")
     for ax in (ax_s, ax_v):
         ax.legend(frameon=False, fontsize=8)
@@ -207,9 +228,8 @@ def main() -> int:
                     print(f"analyzing {algo} p={p:g} seed {seed}", flush=True)
                     results.append(analyze(algo, p, seed, mixtures[name], arrays, manifest))
 
-    checks = iv.assemble_checks(
-        results, mixtures, meta["git_commit"], lambda nf: bs.no_fall_match(nf, no_fall_ref)
-    )
+    checks = iv.assemble_checks(results, mixtures, lambda nf: bs.no_fall_match(nf, no_fall_ref), SEEDS)
+    commit = iv.training_commit(results)
 
     def score(algo: str, p: float, seed: int) -> float:
         return next(r["final"]["score"] for r in results if (r["algo"], r["p"], r["seed"]) == (algo, p, seed))
@@ -249,8 +269,9 @@ def main() -> int:
     report = {
         "generated_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "spec": "docs/specs/phase-5-iql.md",
-        "run": {**meta, "dirty_paths": dirty},
-        "vendored_corl_sha256": vendored_sha256(),
+        "run": {**meta, "dirty_paths": dirty},  # the analysis run
+        "training_commit": commit,
+        "vendored_corl_sha256": vendored_sha256(commit),
         "dataset_reference": {"expert_no_fall_return": no_fall_ref},
         "mixtures": mixtures,
         "results": results,
@@ -265,7 +286,7 @@ def main() -> int:
     for c in checks:
         print(f"{'PASS' if c['passed'] else 'FAIL'}  {c['name']}: {c['detail']}")
     verdict = f"{sum(c['passed'] for c in checks)}/{len(checks)} checks passed"
-    print(f"\n{verdict}; report written to {(OUT / 'iql_validation.json').relative_to(ROOT).as_posix()}")
+    print(f"\n{verdict}; report written to {(OUT / 'iql_validation.json').as_posix()}")
     return 0 if passed else 1
 
 
