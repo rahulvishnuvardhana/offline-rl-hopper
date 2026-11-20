@@ -51,3 +51,9 @@ def test_hashes_names_and_audit(make_mixture, tmp_path):
     (man_dir / "audit_s102.json").write_text(json.dumps(audit), encoding="utf-8")
     assert [ok for ok, _ in script.check(man_dir, mix_dir)] == [False, False]
     assert not script.check(tmp_path / "missing", mix_dir)[0][0]
+
+
+def test_a_missing_file_is_a_fail_line_not_a_crash(tmp_path):
+    (tmp_path / "mix_p1_s102.json").write_text("{}", encoding="utf-8")
+    [(ok, detail)] = load_script().check(tmp_path, tmp_path / "nowhere")
+    assert not ok and "mix_p1_s102" in detail

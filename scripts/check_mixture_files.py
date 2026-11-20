@@ -23,9 +23,13 @@ def check(manifest_dir: Path, mixture_dir: Path) -> list[tuple[bool, str]]:
     if not manifests:
         return [(False, f"no mix_*.json in {manifest_dir}")]
     for path in manifests:
-        m = json.loads(path.read_text(encoding="utf-8"))
-        arrays = mx.load_mixture(mixture_dir / f"{path.stem}.npz")
-        content, data = mx.content_sha256(arrays), mx.data_sha256(arrays)
+        try:
+            m = json.loads(path.read_text(encoding="utf-8"))
+            arrays = mx.load_mixture(mixture_dir / f"{path.stem}.npz")
+            content, data = mx.content_sha256(arrays), mx.data_sha256(arrays)
+        except (OSError, ValueError, KeyError) as e:  # a missing file or column is a FAIL line
+            results.append((False, f"{path.stem}: {type(e).__name__}: {e}"))
+            continue
         ok = (
             content == m["content_sha256"]
             and data == m["data_sha256"]

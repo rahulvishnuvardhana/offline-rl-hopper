@@ -66,13 +66,15 @@ VENDORED = "src/offrl/_vendor/corl_iql.py"
 
 def vendored_sha256(commit: str | None) -> str | None:
     """The vendored CORL file at the training commit, hashed without its first line (our notice),
-    as `_vendor/README.md` and test I12 record it."""
+    as `_vendor/README.md` and test I12 record it. If git cannot read it there (e.g. a shallow
+    clone), the reason is returned in place of the hash, so the report says why."""
     if commit is None:
         return None
     got = subprocess.run(["git", "show", f"{commit}:{VENDORED}"], capture_output=True, cwd=ROOT)
     if got.returncode != 0:  # e.g. a shallow clone: report it, do not lose the analysis
-        print(f"vendored CORL file not readable at {commit[:7]}: {got.stderr.decode().strip()}")
-        return None
+        reason = f"unreadable at {commit[:7]}: {got.stderr.decode().strip()}"
+        print(f"vendored CORL file {reason}")
+        return reason
     return hashlib.sha256(got.stdout.split(b"\n", 1)[1]).hexdigest()
 
 
