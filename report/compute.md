@@ -13,10 +13,12 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 11958505 | 5 | short | none | 2, 8G | Failed | 0:01:21 | 0.00 | p = 0.2 dev mixtures built, 49/49 builder checks; failed by an over-strict manifest byte check (data hashes matched; check fixed) |
 | 11958506 | 5 | gpu-short | A100 | 8, 32G | Cancelled (dependency) | 0:00:00 | 0.00 | smoke test, cancelled because 11958505 failed |
 | 11958589 | 5 | gpu-short | A100 | 8, 32G | Completed | 0:04:50 | 0.08 | smoke test: BC 6.39, CORL 10.83, IQL 12.05 ms/update alone; two IQL runs packed 14.1 each |
+| 11981886 | 5 | gpu | A100 | 8, 32G | Completed (7 tasks) | 0:36:59 to 1:25:21 | 7.09 | validation, 14 runs at 300k, two per A100 |
+| 11981887 | 5 | short | none | 2, 16G | Failed (exit 1) | 0:00:52 | 0.00 | validation analysis: 37/38 checks, V1 failed (IQL 85.3 vs. BC 105.1 at p = 1) |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
-**Total from 2026-11-16: 1.65 GPU-hours (T4) and 0.08 GPU-hours (A100).**
+**Total from 2026-11-16: 1.65 GPU-hours (T4) and 7.17 GPU-hours (A100).**
 
 The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
 
