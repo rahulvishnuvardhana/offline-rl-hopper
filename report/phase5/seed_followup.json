@@ -1,0 +1,427 @@
+{
+  "generated_utc": "2026-11-21T21:58:46+00:00",
+  "spec": "docs/specs/phase-5-iql.md Section 8 (D5 to D7)",
+  "run": {
+    "git_commit": "a389b60ff15d24e21a3bb86f1c61960c0bf6602f",
+    "git_dirty": false,
+    "python": "3.11.18",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "numpy": "2.4.6",
+      "gymnasium": "1.4.0",
+      "mujoco": "3.2.3",
+      "minari": "0.5.4",
+      "pandas": "3.1.1",
+      "matplotlib": "3.11.2"
+    },
+    "hostname": "c0599",
+    "gpu": null,
+    "slurm_job_id": "12048550",
+    "slurm_array_task_id": null,
+    "started_utc": "2026-11-21T21:58:46+00:00",
+    "dirty_paths": []
+  },
+  "runs": {
+    "iql_s102": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/iql_p1_s102",
+        "final": {
+          "run": "iql_p1_s102",
+          "score": 103.55073554449436,
+          "return_mean": 3994.1793582831515,
+          "fall_rate": 0.0,
+          "sub_score": 103.81635356546772,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 103.44454623135745,
+              "return_mean": 3990.1008659256336,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.43265161112272,
+              "return_mean": 3989.644020351537,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.70246973108287,
+              "return_mean": 4000.007126653567,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.62459461321879,
+              "return_mean": 3997.0161187671147,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.54941553569003,
+              "return_mean": 3994.128659717907,
+              "fall_rate": 0.0
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "5006f04a9373dc70a75cc4b0ef8261d0178ae8cd314235a54ac0f9308ccd2917",
+          "manifest_content_sha256": "5006f04a9373dc70a75cc4b0ef8261d0178ae8cd314235a54ac0f9308ccd2917",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    },
+    "corl_iql_s102": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/corl_iql_p1_s102",
+        "final": {
+          "run": "corl_iql_p1_s102",
+          "score": 104.36944582260153,
+          "return_mean": 4025.6241761621072,
+          "fall_rate": 0.004,
+          "sub_score": 104.69804053002397,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 103.13230476694599,
+              "return_mean": 3978.1083745092847,
+              "fall_rate": 0.02
+            },
+            {
+              "score_mean": 104.79234307801607,
+              "return_mean": 4041.8667072913913,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.5846073712525,
+              "return_mean": 4033.888046657939,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.67510588818101,
+              "return_mean": 4037.3638908719777,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.6628680086121,
+              "return_mean": 4036.8938614799454,
+              "fall_rate": 0.0
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "5006f04a9373dc70a75cc4b0ef8261d0178ae8cd314235a54ac0f9308ccd2917",
+          "manifest_content_sha256": "5006f04a9373dc70a75cc4b0ef8261d0178ae8cd314235a54ac0f9308ccd2917",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    },
+    "iql_s103": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/iql_p1_s103",
+        "final": {
+          "run": "iql_p1_s103",
+          "score": 83.85424219276051,
+          "return_mean": 3237.681409178056,
+          "fall_rate": 0.42000000000000004,
+          "sub_score": 90.66367660776561,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 82.95195115305418,
+              "return_mean": 3203.0264424870616,
+              "fall_rate": 0.44
+            },
+            {
+              "score_mean": 84.42445326456597,
+              "return_mean": 3259.5819322140455,
+              "fall_rate": 0.38
+            },
+            {
+              "score_mean": 83.068235773454,
+              "return_mean": 3207.492672859849,
+              "fall_rate": 0.44
+            },
+            {
+              "score_mean": 84.40702451655606,
+              "return_mean": 3258.912533256093,
+              "fall_rate": 0.44
+            },
+            {
+              "score_mean": 84.41954625617231,
+              "return_mean": 3259.393465073232,
+              "fall_rate": 0.4
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "73273691f9f1be1dd6418dc58251df08ae46e6cd52fa67792ba09a8eddc11646",
+          "manifest_content_sha256": "73273691f9f1be1dd6418dc58251df08ae46e6cd52fa67792ba09a8eddc11646",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    },
+    "corl_iql_s103": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/corl_iql_p1_s103",
+        "final": {
+          "run": "corl_iql_p1_s103",
+          "score": 103.7993807339536,
+          "return_mean": 4003.7292600104147,
+          "fall_rate": 0.028000000000000004,
+          "sub_score": 103.81643680158591,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 101.97548749016781,
+              "return_mean": 3933.6776282975484,
+              "fall_rate": 0.06
+            },
+            {
+              "score_mean": 105.09982186817028,
+              "return_mean": 4053.6762751160363,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 102.14185441565961,
+              "return_mean": 3940.067407213316,
+              "fall_rate": 0.08
+            },
+            {
+              "score_mean": 104.79801851803124,
+              "return_mean": 4042.084688160122,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.981721377739,
+              "return_mean": 4049.140301265051,
+              "fall_rate": 0.0
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "73273691f9f1be1dd6418dc58251df08ae46e6cd52fa67792ba09a8eddc11646",
+          "manifest_content_sha256": "73273691f9f1be1dd6418dc58251df08ae46e6cd52fa67792ba09a8eddc11646",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    },
+    "iql_s104": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/iql_p1_s104",
+        "final": {
+          "run": "iql_p1_s104",
+          "score": 104.52890164596018,
+          "return_mean": 4031.7485152101567,
+          "fall_rate": 0.008,
+          "sub_score": 104.22977231950627,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 104.33416817886706,
+              "return_mean": 4024.2692413187415,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.67080256433057,
+              "return_mean": 4037.1986098948482,
+              "fall_rate": 0.02
+            },
+            {
+              "score_mean": 104.15763192564279,
+              "return_mean": 4017.4888814281776,
+              "fall_rate": 0.02
+            },
+            {
+              "score_mean": 104.77502635822957,
+              "return_mean": 4041.2016110851896,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 104.70687920273085,
+              "return_mean": 4038.5842323238285,
+              "fall_rate": 0.0
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "ae9770ed3811de86f6a599923a0a1e1dbf9128d0003d1a434602898599432127",
+          "manifest_content_sha256": "ae9770ed3811de86f6a599923a0a1e1dbf9128d0003d1a434602898599432127",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    },
+    "corl_iql_s104": {
+      "first": {
+        "run_dir": "/scratch/vishnuvardhana.r/runs_phase5_seeds/corl_iql_p1_s104",
+        "final": {
+          "run": "corl_iql_p1_s104",
+          "score": 103.31560282810528,
+          "return_mean": 3985.148440213657,
+          "fall_rate": 0.0,
+          "sub_score": 103.91540637916133,
+          "steps": [
+            280000,
+            285000,
+            290000,
+            295000,
+            300000
+          ],
+          "per_eval": [
+            {
+              "score_mean": 103.38919644188832,
+              "return_mean": 3987.9750051711803,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.29030596210465,
+              "return_mean": 3984.1768445642933,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.27198126378289,
+              "return_mean": 3983.4730341727263,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.19623801595337,
+              "return_mean": 3980.5639066128933,
+              "fall_rate": 0.0
+            },
+            {
+              "score_mean": 103.43029245679718,
+              "return_mean": 3989.5534105471916,
+              "fall_rate": 0.0
+            }
+          ],
+          "episodes_per_eval": 50,
+          "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+        },
+        "provenance": {
+          "git_commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+          "git_dirty": false,
+          "gpu": "Tesla T4",
+          "device": "cuda",
+          "content_sha256": "ae9770ed3811de86f6a599923a0a1e1dbf9128d0003d1a434602898599432127",
+          "manifest_content_sha256": "ae9770ed3811de86f6a599923a0a1e1dbf9128d0003d1a434602898599432127",
+          "config_matches": true,
+          "resume_records": []
+        }
+      },
+      "rerun": null
+    }
+  },
+  "decision": {
+    "v1_bar": 95.08619608725604,
+    "gap": 5.0,
+    "commit": "db9c4c5efab0d177703e2414d8a80108d5eb4861",
+    "failures": {},
+    "scores_reported": {
+      "iql_s102_first": 103.55073554449436,
+      "corl_iql_s102_first": 104.36944582260153,
+      "iql_s103_first": 83.85424219276051,
+      "corl_iql_s103_first": 103.7993807339536,
+      "iql_s104_first": 104.52890164596018,
+      "corl_iql_s104_first": 103.31560282810528
+    },
+    "per_seed": {
+      "s102": {
+        "ours": 103.55073554449436,
+        "corl": 104.36944582260153,
+        "corl_minus_ours": 0.8187102781071758,
+        "corl_falls_short": false,
+        "ours_falls_short": false,
+        "ours_below_corl": false,
+        "from_rerun": false
+      },
+      "s103": {
+        "ours": 83.85424219276051,
+        "corl": 103.7993807339536,
+        "corl_minus_ours": 19.94513854119309,
+        "corl_falls_short": false,
+        "ours_falls_short": true,
+        "ours_below_corl": true,
+        "from_rerun": false
+      },
+      "s104": {
+        "ours": 104.52890164596018,
+        "corl": 103.31560282810528,
+        "corl_minus_ours": -1.2132988178548914,
+        "corl_falls_short": false,
+        "ours_falls_short": false,
+        "ours_below_corl": false,
+        "from_rerun": false
+      }
+    },
+    "A": false,
+    "B": false,
+    "action": "proceed",
+    "reason": "V1's failure is recorded as seed variance; Phase 5 proceeds"
+  }
+}

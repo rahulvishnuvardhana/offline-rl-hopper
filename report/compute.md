@@ -23,10 +23,13 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12031088 | 5 | gpu-short | T4 | 8, 8G | Cancelled (dependency) | 0:00:00 | 0.00 | T4 timing test for the follow-up, cancelled because 12031087 failed |
 | 12031926 | 5 | gpu-short | T4 | 4, 8G | Completed | 0:02:28 | 0.04 | test gate at `22af6c9`: 240 passed (CUDA tests included) |
 | 12031927 | 5 | gpu-short | T4 | 8, 8G | Completed | 0:03:21 | 0.06 | T4 timing test, ours and CORL packed, 10k steps: ours 16.26, CORL 12.97 ms/update; eval 1.41 and 1.67 ms per env step; sizes `iql_seeds.sbatch` at 2:40 |
+| 12034720 | 5 | gpu-short | T4 | 4, 8G | Completed | 0:01:59 | 0.03 | test gate at `db9c4c5`: 240 passed |
+| 12034721 | 5 | gpu | T4 | 8, 8G | Completed (3 tasks) | 1:10:19 to 1:10:51 | 3.53 | V1 follow-up, seeds 102-104, ours and CORL packed per task, 300k steps; all six runs complete |
+| 12048550 | 5 | short | none | 1, 4G | Completed | 0:00:23 | 0.00 | seed follow-up scoring at `a389b60`: proceed (B false, 1 of 3 seeds) |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
-**Total from 2026-11-16: 1.80 GPU-hours (T4) and 11.99 GPU-hours (A100).**
+**Total from 2026-11-16: 5.36 GPU-hours (T4) and 11.99 GPU-hours (A100).**
 
 The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
 
