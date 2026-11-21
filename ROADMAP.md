@@ -311,7 +311,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 | 2 | Data acquisition, validation, EDA | Nov 15 to 16 | EDA report written |
 | 3 | Mixture builder and data pipeline | Nov 17 | Pipeline tests green |
 | 4 | BC + evaluation harness | Nov 18 to 19 | BC sanity checks pass |
-| 5 | IQL implementation and validation | Nov 20 to 22 | IQL at p = 1 >= 90 |
+| 5 | IQL implementation and validation | Nov 20 to 22 | Phase 5 spec DoD met (V1 recorded, follow-up rule applied) |
 | 6 | Compute benchmark + Slurm pipeline | Nov 23 | Cost model + dry run |
 | 7 | Main grid (30 runs) | Nov 24 to 27 | All runs complete |
 | 8 | Ablations (+ optional CQL / reweighting) | Nov 27 to 29 | Ablation complete |
@@ -479,7 +479,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **Deliverables:** `iql.py`, extended `test_losses.py`, validation plot (ours vs. CORL).
 
-**DoD:** IQL at `p = 1` normalized score >= 90; curves within the seed spread of CORL's; Q and V do not diverge.
+**DoD:** ~~IQL at `p = 1` normalized score >= 90; curves within the seed spread of CORL's; Q and V do not diverge.~~ (replaced 2026-11-20) As set in the Phase 5 spec (`docs/specs/phase-5-iql.md` Sections 8 and 10; user decisions D3 and D6): V1, IQL at `p = 1` within 10 points below BC at `p = 1` (two-seed means), evaluated and recorded (pass or fail), with the spec's seed 102 to 104 follow-up rule carried out; 90 at `p = 1` reported, not gated; V0, V2 (within 10 points of CORL at `p = 0.2`), V3 (Q and V bounded) and V4 pass.
 
 **Pitfalls:** using the online Q (not target) in the V loss; bootstrapping on truncations; forgetting the reward scaling, so `beta = 3` means something very different.
 
