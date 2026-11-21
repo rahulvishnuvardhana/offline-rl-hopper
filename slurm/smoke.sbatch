@@ -1,6 +1,7 @@
 #!/bin/bash
 # Phase 0 smoke test: 1 small GPU for 10 minutes. See ROADMAP 4.2.1 (responsible use).
-# Submit from the repo root after `mkdir -p logs` (gitignored; Slurm cannot create it).
+# Submit from the repo root after `mkdir -p logs` (gitignored; Slurm cannot create it), clean and pinned:
+#   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/smoke.sbatch
 #SBATCH --job-name=offrl-smoke
 #SBATCH --partition=gpu-short
 #SBATCH --gres=gpu:t4:1
@@ -15,6 +16,8 @@ module load miniconda3/24.11.1
 source activate /scratch/$USER/envs/offrl
 export MINARI_DATASETS_PATH=/scratch/$USER/minari
 cd "$SLURM_SUBMIT_DIR"
+source slurm/lib/common.sh
+pin_commit
 
 nvidia-smi --query-gpu=name,memory.total --format=csv
 python scripts/smoke.py --datasets --require-gpu

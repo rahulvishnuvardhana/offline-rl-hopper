@@ -2,7 +2,8 @@
 # Phase 3 cross-machine reconciliation: rebuild the 15 final mixtures on Explorer and compare
 # their content hashes with the manifests committed from the laptop. CPU only, so it runs on
 # the `short` CPU partition, never a GPU (ROADMAP 4.2.1, responsible use).
-# Submit from the repo root after `mkdir -p logs` (gitignored; Slurm cannot create it).
+# Submit from the repo root after `mkdir -p logs` (gitignored; Slurm cannot create it), clean and pinned:
+#   sbatch --export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD) slurm/build_mixtures.sbatch
 #SBATCH --job-name=offrl-mixtures
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=2
@@ -17,6 +18,10 @@ source activate /scratch/$USER/envs/offrl
 export MINARI_DATASETS_PATH=/scratch/$USER/minari
 export PYTHONPATH="$SLURM_SUBMIT_DIR/src"
 cd "$SLURM_SUBMIT_DIR"
+source slurm/lib/common.sh  # pinned, and run in a worktree: this job writes into the repo
+pin_commit
+logs="$SLURM_SUBMIT_DIR/logs"
+enter_worktree
 
 status=0
 python scripts/build_mixtures.py --out-dir /scratch/$USER/mixtures || status=$?
@@ -36,7 +41,6 @@ print("CROSS-MACHINE RECONCILIATION:", "PASS" if mismatch == 0 else f"FAIL ({mis
 raise SystemExit(1 if mismatch else 0)
 EOF
 
-# Keep Explorer's audit as evidence (logs/ is gitignored), then restore the clone to HEAD.
-cp report/mixtures/audit_s0_s1_s2.json "logs/explorer_mixture_audit_${SLURM_JOB_ID}.json" || true
-git restore report/mixtures/
+# Keep Explorer's audit as evidence (logs/ is gitignored); the worktree is removed on exit.
+cp report/mixtures/audit_s0_s1_s2.json "$logs/explorer_mixture_audit_${SLURM_JOB_ID}.json" || true
 exit "$status"

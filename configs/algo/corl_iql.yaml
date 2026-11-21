@@ -1,0 +1,12 @@
+# CORL's own ImplicitQLearning (vendored, src/offrl/_vendor/), run through offrl's pipeline as the
+# Phase 5 reference. Same keys and values as iql.yaml; the adapter refuses settings CORL hard-codes.
+data:
+  scale_rewards: true   # our 1000 / (max_return - min_return), so both get the same factor
+
+algo:
+  name: corl_iql
+  expectile: 0.7
+  beta: 3.0
+  discount: 0.99
+  target_update_rate: 0.005
+  exp_adv_max: 100.0

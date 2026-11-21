@@ -26,6 +26,7 @@ sbatch slurm/smoke.sbatch
 
 ```bash
 python -m offrl.train configs/algo/bc.yaml seed=100 data.p_expert=1.0 train.steps=100000
+python -m offrl.train configs/algo/iql.yaml seed=100 data.p_expert=1.0       # IQL (Phase 5)
 python scripts/bc_sanity.py          # Phase 4 sanity runs and checks (on Explorer: sbatch slurm/bc_sanity.sbatch)
 ```
 A run writes `config.yaml`, `meta.json` (commit, packages, GPU, mixture hash), CSV logs, TensorBoard events, a resumable checkpoint and `final.json` to `runs/{algo}_p{p}_s{seed}/`. Pre-flight refuses a mixture whose hash differs from its committed manifest and evaluation seeds that overlap data collection or the reserved final-grid seeds.
@@ -64,3 +65,7 @@ Normalized score: 0 = random policy, 100 = expert dataset mean. Deterministic BC
 | mujoco | 3.2.3 |
 
 Datasets verified: `mujoco/hopper/expert-v0` 999,164 steps / 1,086 episodes; `mujoco/hopper/simple-v0` 999,206 steps / 1,952 episodes; both recover `Hopper-v5` with a 1,000-step limit.
+
+## Credits
+
+`src/offrl/_vendor/corl_iql.py` holds selected, unmodified lines of [CORL](https://github.com/corl-team/CORL)'s IQL (Apache-2.0; license and line ranges in `src/offrl/_vendor/`). It is the reference our IQL is tested against (`tests/test_corl.py`) and is run as `configs/algo/corl_iql.yaml`.

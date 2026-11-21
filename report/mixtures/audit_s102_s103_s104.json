@@ -1,0 +1,187 @@
+{
+  "generated_utc": "2026-11-20T16:51:34+00:00",
+  "run": {
+    "git_commit": "0a8c5e49b890aa2c77e76faa85102e4e5481dc60",
+    "git_dirty": false,
+    "python": "3.11.18",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "numpy": "2.4.6",
+      "gymnasium": "1.4.0",
+      "mujoco": "3.2.3",
+      "minari": "0.5.4",
+      "pandas": "3.1.1",
+      "matplotlib": "3.11.2"
+    },
+    "hostname": "c0586",
+    "gpu": null,
+    "slurm_job_id": "12014197",
+    "slurm_array_task_id": null,
+    "started_utc": "2026-11-20T16:48:47+00:00"
+  },
+  "inputs_sha256_of_committed_blob": {
+    "report/data_audit.json": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
+    "report/eda_summary.json": "699e59cb451e53fa2e83491f0207d6973caf33f319070b609692ee6269f4c62d"
+  },
+  "p": [
+    1.0
+  ],
+  "seeds": [
+    102,
+    103,
+    104
+  ],
+  "content_sha256": {
+    "mix_p1_s102": "5006f04a9373dc70a75cc4b0ef8261d0178ae8cd314235a54ac0f9308ccd2917",
+    "mix_p1_s103": "73273691f9f1be1dd6418dc58251df08ae46e6cd52fa67792ba09a8eddc11646",
+    "mix_p1_s104": "ae9770ed3811de86f6a599923a0a1e1dbf9128d0003d1a434602898599432127"
+  },
+  "M9_replay_informational": {
+    "max_abs_error": {
+      "expert": 2.2328972004714842e-10,
+      "simple": 1.7436230237422023e-10
+    },
+    "steps": 100,
+    "episodes_per_source": 3,
+    "mujoco": "3.2.3",
+    "within_1e-9": true
+  },
+  "checks": [
+    {
+      "name": "M1_size_and_p[mix_p1_s102]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s102]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s102]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s102]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s102]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s102]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s102]",
+      "passed": true,
+      "detail": "content 5006f04a9373"
+    },
+    {
+      "name": "M7_distinct_within_seed[s102]",
+      "passed": true,
+      "detail": "1 mixtures (guard)"
+    },
+    {
+      "name": "M1_size_and_p[mix_p1_s103]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s103]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s103]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s103]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s103]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s103]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s103]",
+      "passed": true,
+      "detail": "content 73273691f9f1"
+    },
+    {
+      "name": "M7_distinct_within_seed[s103]",
+      "passed": true,
+      "detail": "1 mixtures (guard)"
+    },
+    {
+      "name": "M1_size_and_p[mix_p1_s104]",
+      "passed": true,
+      "detail": "900000 rows, 900000 expert (target 900000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p1_s104]",
+      "passed": true,
+      "detail": "p=1: 900000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p1_s104]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p1_s104]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p1_s104]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p1_s104]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p1_s104]",
+      "passed": true,
+      "detail": "content ae9770ed3811"
+    },
+    {
+      "name": "M7_distinct_within_seed[s104]",
+      "passed": true,
+      "detail": "1 mixtures (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p1]",
+      "passed": true,
+      "detail": "3 seeds (guard)"
+    },
+    {
+      "name": "M8_clean_tree",
+      "passed": true,
+      "detail": "git_dirty=False at commit 0a8c5e49b890aa2c77e76faa85102e4e5481dc60"
+    },
+    {
+      "name": "M8b_inputs_on_disk_equal_commit",
+      "passed": true,
+      "detail": "byte-identical to HEAD"
+    }
+  ],
+  "all_passed": true
+}

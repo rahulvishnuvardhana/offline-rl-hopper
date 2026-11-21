@@ -1,11 +1,11 @@
 {
-  "generated_utc": "2026-11-16T21:41:51+00:00",
+  "generated_utc": "2026-11-18T00:37:54+00:00",
   "run": {
-    "git_commit": "51eb19104c218546f3056d8e4e9aa6174af6a0f2",
+    "git_commit": "cdf30a62e33297ff7ce0a8fe51e76c02c8a28808",
     "git_dirty": false,
     "python": "3.11.18",
     "packages": {
-      "torch": "2.11.0",
+      "torch": "2.11.0+cu128",
       "numpy": "2.4.6",
       "gymnasium": "1.4.0",
       "mujoco": "3.2.3",
@@ -13,11 +13,11 @@
       "pandas": "3.1.1",
       "matplotlib": "3.11.2"
     },
-    "hostname": "LAPTOP-R2PPDIPL",
+    "hostname": "c0637",
     "gpu": null,
-    "slurm_job_id": null,
+    "slurm_job_id": "11958505",
     "slurm_array_task_id": null,
-    "started_utc": "2026-11-16T21:41:03+00:00"
+    "started_utc": "2026-11-18T00:36:59+00:00"
   },
   "inputs_sha256_of_committed_blob": {
     "report/data_audit.json": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
@@ -25,6 +25,7 @@
   },
   "p": [
     0.0,
+    0.2,
     1.0
   ],
   "seeds": [
@@ -33,8 +34,10 @@
   ],
   "content_sha256": {
     "mix_p0_s100": "b73cd50e4f1a9f8982f92a232ebae28c487eb52dd8e865ea85c40cfac548326d",
+    "mix_p0.2_s100": "099eca23dfe52f8aeba739a8e788123b04f432eb1744425ee9eca29bbf3c81e4",
     "mix_p1_s100": "0713c058cdc2ce46f63dd1b967d33735cc1eabcf2d50ce312f4a7bee19a43361",
     "mix_p0_s101": "97ea8cc128677a4a28d49be00ab303af5e6ab04b94394d05e5908aa33b129f58",
+    "mix_p0.2_s101": "f8fea4bddda7983a512ea2bc930258ddfcf469021ec34ee50c68b0be9322ed10",
     "mix_p1_s101": "2069e6ea29075800ef0a9f35da7d9d39b5dfa1f62614cd2204b13d75c26c4d63"
   },
   "M9_replay_informational": {
@@ -84,6 +87,41 @@
       "detail": "content b73cd50e4f1a"
     },
     {
+      "name": "M1_size_and_p[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "900000 rows, 180000 expert (target 180000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "p=0.2: 180000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.2_s100]",
+      "passed": true,
+      "detail": "content 099eca23dfe5"
+    },
+    {
       "name": "M1_size_and_p[mix_p1_s100]",
       "passed": true,
       "detail": "900000 rows, 900000 expert (target 900000); guard"
@@ -121,7 +159,7 @@
     {
       "name": "M7_distinct_within_seed[s100]",
       "passed": true,
-      "detail": "2 mixtures (guard)"
+      "detail": "3 mixtures (guard)"
     },
     {
       "name": "M1_size_and_p[mix_p0_s101]",
@@ -157,6 +195,41 @@
       "name": "M7_rebuild_identical[mix_p0_s101]",
       "passed": true,
       "detail": "content 97ea8cc12867"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "900000 rows, 180000 expert (target 180000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "p=0.2: 180000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.2_s101]",
+      "passed": true,
+      "detail": "content f8fea4bddda7"
     },
     {
       "name": "M1_size_and_p[mix_p1_s101]",
@@ -196,10 +269,15 @@
     {
       "name": "M7_distinct_within_seed[s101]",
       "passed": true,
-      "detail": "2 mixtures (guard)"
+      "detail": "3 mixtures (guard)"
     },
     {
       "name": "M7_distinct_across_seeds[p0]",
+      "passed": true,
+      "detail": "2 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0.2]",
       "passed": true,
       "detail": "2 seeds (guard)"
     },
@@ -211,7 +289,7 @@
     {
       "name": "M8_clean_tree",
       "passed": true,
-      "detail": "git_dirty=False at commit 51eb19104c218546f3056d8e4e9aa6174af6a0f2"
+      "detail": "git_dirty=False at commit cdf30a62e33297ff7ce0a8fe51e76c02c8a28808"
     },
     {
       "name": "M8b_inputs_on_disk_equal_commit",
