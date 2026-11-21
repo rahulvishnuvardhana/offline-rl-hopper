@@ -203,8 +203,10 @@ def test_main_refuses_a_dirty_tree(monkeypatch):
 
 def test_script_reads_a_real_tiny_run(small_run, monkeypatch):
     """scripts/seed_followup.py on a real 600-step CPU run: the fields the rule needs are read,
-    the config matches with the run's own settings, and the CPU run fails the T4 check."""
+    the config matches with the run's own settings, the recorded GPU is the machine's, and only an
+    exact Tesla T4 passes the GPU check."""
     import gymnasium as gym
+    import torch
 
     from test_iql_validate_script import SMALL
 
@@ -222,7 +224,12 @@ def test_script_reads_a_real_tiny_run(small_run, monkeypatch):
     assert prov["config_matches"] is True and prov["content_sha256"] == prov["manifest_content_sha256"]
     assert math.isfinite(got["final"]["score"]) and prov["resume_records"] == []
     assert script.run_path("iql", 102, [*paths, *SMALL]).name == "iql_p1_s102"
+    # meta.json records the machine's GPU, whatever train.device is: None on the laptop, the
+    # node's GPU on Explorer (the test gate runs on a T4)
+    assert prov["gpu"] == (torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)
     clean = {**got, "provenance": {**prov, "git_dirty": False}}  # the laptop tree may be dirty
-    assert sf.failure(clean, prov["git_commit"]) == "GPU None, not a Tesla T4"  # CPU run
+    for gpu, expected in ((None, "GPU None, not a Tesla T4"), ("Tesla T4", None)):
+        on = {**clean, "provenance": {**clean["provenance"], "gpu": gpu}}
+        assert sf.failure(on, prov["git_commit"]) == expected
     assert script.read_run("iql", 102, paths)["provenance"]["config_matches"] is False  # 300k asked
     assert script.read_run("corl_iql", 102, [*paths, *SMALL]) is None  # never ran
