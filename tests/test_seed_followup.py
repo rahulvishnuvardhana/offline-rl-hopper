@@ -16,6 +16,7 @@ def run(score, **prov):
         "git_commit": C,
         "git_dirty": False,
         "gpu": "Tesla T4",
+        "device": "cuda",
         "content_sha256": "h",
         "manifest_content_sha256": "h",
         "config_matches": True,
@@ -88,6 +89,7 @@ def load_script():
         (run(100, gpu="NVIDIA A100-SXM4-40GB"), "GPU"),
         (run(100, gpu="NVIDIA T400"), "GPU"),  # exact name, not a substring
         (run(100, gpu=None), "GPU"),
+        (run(100, device="cpu"), "trained on cpu"),  # a CPU run on a T4 node
         (run(100, config_matches=False), "config"),
         (run(100, content_sha256="x"), "mixture hash"),
         (run(100, resume_records=[{**T4, "gpu": "NVIDIA A100"}]), "GPU"),
@@ -204,7 +206,7 @@ def test_main_refuses_a_dirty_tree(monkeypatch):
 def test_script_reads_a_real_tiny_run(small_run, monkeypatch):
     """scripts/seed_followup.py on a real 600-step CPU run: the fields the rule needs are read,
     the config matches with the run's own settings, the recorded GPU is the machine's, and only an
-    exact Tesla T4 passes the GPU check."""
+    exact Tesla T4 with training device cuda passes."""
     import gymnasium as gym
     import torch
 
@@ -228,8 +230,16 @@ def test_script_reads_a_real_tiny_run(small_run, monkeypatch):
     # node's GPU on Explorer (the test gate runs on a T4)
     assert prov["gpu"] == (torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)
     clean = {**got, "provenance": {**prov, "git_dirty": False}}  # the laptop tree may be dirty
-    for gpu, expected in ((None, "GPU None, not a Tesla T4"), ("Tesla T4", None)):
-        on = {**clean, "provenance": {**clean["provenance"], "gpu": gpu}}
+    assert prov["device"] == "cpu"  # where it trained, not what the machine has
+    if prov["gpu"] == "Tesla T4":  # on the T4 test gate: the real CPU-on-T4 case, nothing overridden
+        assert sf.failure(clean, prov["git_commit"]) == "trained on cpu, not the GPU"
+    cases = [
+        (None, "cuda", "GPU None, not a Tesla T4"),
+        ("Tesla T4", "cpu", "trained on cpu, not the GPU"),  # this run, had it run on a T4 node
+        ("Tesla T4", "cuda", None),
+    ]
+    for gpu, device, expected in cases:
+        on = {**clean, "provenance": {**clean["provenance"], "gpu": gpu, "device": device}}
         assert sf.failure(on, prov["git_commit"]) == expected
     assert script.read_run("iql", 102, paths)["provenance"]["config_matches"] is False  # 300k asked
     assert script.read_run("corl_iql", 102, [*paths, *SMALL]) is None  # never ran

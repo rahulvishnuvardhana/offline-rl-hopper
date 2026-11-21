@@ -195,7 +195,8 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
 
 def _comparable(cfg: Config) -> Config:
     """The config minus where it runs: device and thread count do not change what a finished run
-    means, and a resume checks them separately against ``meta.json``."""
+    means, and a resume checks them separately against ``meta.json`` (the Phase 5 seed follow-up
+    also requires ``meta.json``'s device to be the GPU, D7)."""
     return {**cfg, "train": {k: v for k, v in cfg["train"].items() if k not in ("device", "num_threads")}}
 
 

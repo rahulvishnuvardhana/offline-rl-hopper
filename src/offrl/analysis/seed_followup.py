@@ -33,6 +33,10 @@ def failure(run: Mapping[str, Any] | None, commit: str) -> str | None:
             return "dirty tree"
         if rec["gpu"] != GPU:
             return f"GPU {rec['gpu']}, not a {GPU}"
+    # meta.json's "gpu" names the machine's GPU even for a CPU run; "device" is where it trained
+    # (a resume must keep it). The config check leaves the device out, so it is checked here.
+    if prov["device"] != "cuda":
+        return f"trained on {prov['device']}, not the GPU"
     if prov["config_matches"] is not True:
         return "config is not the validation config"
     if prov["content_sha256"] != prov["manifest_content_sha256"]:

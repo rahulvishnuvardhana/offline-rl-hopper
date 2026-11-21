@@ -91,6 +91,7 @@ def read_run(algo: str, seed: int, paths: list[str]) -> dict[str, Any] | None:
             "git_commit": meta["git_commit"],
             "git_dirty": meta["git_dirty"],
             "gpu": meta["gpu"],
+            "device": meta["device"],
             "content_sha256": meta["preflight"]["content_sha256"],
             "manifest_content_sha256": manifest["content_sha256"],
             "config_matches": comparable(cfg) == comparable(located),
