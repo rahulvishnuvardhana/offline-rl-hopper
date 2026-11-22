@@ -21,7 +21,10 @@ if [ "${1:-}" = --remove-checkout ]; then
         echo "REFUSING: jobs of yours are still queued or running" >&2
         exit 1
     fi
-    common=$(git -C "$wt" rev-parse --path-format=absolute --git-common-dir)  # the owning clone
+    if ! common=$(git -C "$wt" rev-parse --path-format=absolute --git-common-dir); then  # the owning clone
+        echo "REFUSING: $wt is not a git checkout" >&2
+        exit 1
+    fi
     git -C "$(dirname "$common")" worktree remove --force --force "$wt"
     echo "removed checkout $sha"
     exit 0

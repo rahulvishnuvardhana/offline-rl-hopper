@@ -338,6 +338,18 @@ def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeyp
     assert any("pin" in e for e in sweep.check_run(r, g, record)[0])
 
 
+def test_throttle_and_cpu_count(monkeypatch):
+    assert sweep.parse_throttle(["bc:7", "iql:10"]) == {"bc": 7, "iql": 10}
+    for bad in ("iql", "iql:x", "iql:0", ":3"):
+        with pytest.raises(sweep.SweepError, match="algo:n"):
+            sweep.parse_throttle([bad])
+    monkeypatch.setenv("SLURM_CPUS_PER_TASK", "2")
+    assert sweep.allocated_cpus() == 2
+    monkeypatch.delenv("SLURM_CPUS_PER_TASK")
+    if hasattr(os, "sched_getaffinity"):
+        assert sweep.allocated_cpus() == len(os.sched_getaffinity(0))
+
+
 def test_set_accepts_only_the_mixture_dir(tmp_path):
     argv = ["--grid", "configs/grid_x.yaml", "--root", str(tmp_path), "--set", "train.steps=10", "--list"]
     assert sweep.main(argv) == sweep.EXIT_CONFLICT

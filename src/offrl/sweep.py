@@ -169,6 +169,28 @@ def setup_record(
     }
 
 
+def parse_throttle(items: list[str]) -> dict[str, int]:
+    """``algo:n`` items, n concurrent tasks of that algorithm's array."""
+    throttle = {}
+    for t in items:
+        algo, _, n = t.partition(":")
+        if not algo or not n.isdigit() or int(n) < 1:
+            raise SweepError(f"--throttle takes algo:n with n >= 1, got {t!r}")
+        throttle[algo] = int(n)
+    return throttle
+
+
+def allocated_cpus() -> int | None:
+    """CPUs of this job: Slurm's count when --cpus-per-task was given, else the CPUs this process
+    may run on (Linux), else unknown."""
+    cpus = os.environ.get("SLURM_CPUS_PER_TASK")
+    if cpus is not None:
+        return int(cpus)
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return None
+
+
 def init(out: Path, record: dict[str, Any], log_root: Path) -> bool:
     """Create ``sweep.json`` once (``O_EXCL``) and the log directory. An existing record equal to
     this one is accepted (a rerun of a gate that stopped after it), so the call returns False;
@@ -694,8 +716,8 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
         if a.algo not in groups or not 0 <= a.bundle < len(groups[a.algo]):
             raise SweepError(f"no bundle {a.algo}/{a.bundle}")
         require_clean()
-        cpus = os.environ.get("SLURM_CPUS_PER_TASK")
-        if cpus is not None and int(cpus) != record["algos"][a.algo]["cpus"]:
+        cpus = allocated_cpus()
+        if cpus is not None and cpus != record["algos"][a.algo]["cpus"]:
             raise SweepError(
                 f"allocated {cpus} CPUs, the grid records {record['algos'][a.algo]['cpus']}: "
                 "submit with the arguments of --sbatch-args"
@@ -744,7 +766,7 @@ def _init(a: argparse.Namespace, grid: dict[str, Any], commit: str, out: Path, l
         raise SweepError("--init needs --gres for a GPU grid or --constraint for a CPU grid, not both")
     algos = set(grid["axes"]["algo"])
     setup = parse_algo_setup(a.algo_setup)  # one setup may serve several grids: keep this grid's
-    throttle = {k: int(n) for k, n in (t.split(":") for t in a.throttle)}
+    throttle = parse_throttle(a.throttle or [])
     for name, given in (("--algo-setup", setup), ("--throttle", throttle)):
         if not algos <= set(given):
             raise SweepError(f"{name} covers {sorted(given)}, the grid has {sorted(algos)}")
