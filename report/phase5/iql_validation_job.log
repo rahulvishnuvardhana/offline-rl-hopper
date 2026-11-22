@@ -1,0 +1,54 @@
+analyzing iql p=1 seed 100
+analyzing corl_iql p=1 seed 100
+analyzing bc p=1 seed 100
+analyzing iql p=1 seed 101
+analyzing corl_iql p=1 seed 101
+analyzing bc p=1 seed 101
+analyzing iql p=0.2 seed 100
+analyzing corl_iql p=0.2 seed 100
+analyzing bc p=0.2 seed 100
+analyzing iql p=0.2 seed 101
+analyzing corl_iql p=0.2 seed 101
+analyzing bc p=0.2 seed 101
+analyzing iql p=0 seed 100
+analyzing iql p=0 seed 101
+PASS  V0_provenance[iql_p1_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 0713c058cdc2
+PASS  V0_provenance[corl_iql_p1_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 0713c058cdc2
+PASS  V0_provenance[bc_p1_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 0713c058cdc2
+PASS  V0_provenance[iql_p1_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture 2069e6ea2907
+PASS  V0_provenance[corl_iql_p1_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture 2069e6ea2907
+PASS  V0_provenance[bc_p1_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture 2069e6ea2907
+PASS  V0_provenance[iql_p0.2_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 099eca23dfe5
+PASS  V0_provenance[corl_iql_p0.2_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 099eca23dfe5
+PASS  V0_provenance[bc_p0.2_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture 099eca23dfe5
+PASS  V0_provenance[iql_p0.2_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture f8fea4bddda7
+PASS  V0_provenance[corl_iql_p0.2_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture f8fea4bddda7
+PASS  V0_provenance[bc_p0.2_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture f8fea4bddda7
+PASS  V0_provenance[iql_p0_s100]: commit 1b0ccbe, dirty False, resumes 0, mixture b73cd50e4f1a
+PASS  V0_provenance[iql_p0_s101]: commit 1b0ccbe, dirty False, resumes 0, mixture 97ea8cc12867
+PASS  V0_data[mix_p1_s100]: reward_scale 0.251213 vs logged [0.2512128702267578]; done rows 276 vs terminated episodes 276
+PASS  V0_data[mix_p1_s101]: reward_scale 0.270504 vs logged [0.27050401908007543]; done rows 284 vs terminated episodes 284
+PASS  V0_data[mix_p0.2_s100]: reward_scale 0.264806 vs logged [0.2648057854150321]; done rows 977 vs terminated episodes 977
+PASS  V0_data[mix_p0.2_s101]: reward_scale 0.263489 vs logged [0.26348920707124107]; done rows 949 vs terminated episodes 949
+PASS  V0_data[mix_p0_s100]: reward_scale 0.367369 vs logged [0.3673694114449996]; done rows 1162 vs terminated episodes 1162
+PASS  V0_data[mix_p0_s101]: reward_scale 0.367067 vs logged [0.3670667786266002]; done rows 1143 vs terminated episodes 1143
+FAIL  V1_iql_vs_bc_p1: IQL 85.3 >= BC 105.1 - 10 (D3)
+PASS  V2_ours_vs_corl_p0.2: |16.7 - 17.6| = 0.9 <= 10
+PASS  V3_bounded[iql_p1_s100]: 250 rows in [0.0, 202.6]
+PASS  V3_drift[iql_p1_s100]: q_mean 105.70 -> 105.70 (0.0%, tolerance 10%)
+PASS  V3_v_s0[iql_p1_s100]: V(s0) 78.21 / discounted return 76.98 = 1.016 in [0.8, 1.5]
+PASS  V4_no_fall[iql_p1_s100]: 3955 vs dataset 4157 (-4.9%, tolerance 10%, n=164)
+PASS  V3_bounded[iql_p1_s101]: 250 rows in [0.0, 218.2]
+PASS  V3_drift[iql_p1_s101]: q_mean 113.73 -> 113.63 (0.1%, tolerance 10%)
+PASS  V3_v_s0[iql_p1_s101]: V(s0) 84.44 / discounted return 82.90 = 1.019 in [0.8, 1.5]
+PASS  V4_no_fall[iql_p1_s101]: 3946 vs dataset 4157 (-5.1%, tolerance 10%, n=210)
+PASS  V3_bounded[iql_p0.2_s100]: 250 rows in [0.0, 211.9]
+PASS  V3_drift[iql_p0.2_s100]: q_mean 85.85 -> 85.91 (0.1%, tolerance 10%)
+PASS  V3_bounded[iql_p0.2_s101]: 250 rows in [0.0, 211.5]
+PASS  V3_drift[iql_p0.2_s101]: q_mean 85.92 -> 85.88 (0.0%, tolerance 10%)
+PASS  V3_bounded[iql_p0_s100]: 250 rows in [0.0, 228.7]
+PASS  V3_drift[iql_p0_s100]: q_mean 109.65 -> 109.88 (0.2%, tolerance 10%)
+PASS  V3_bounded[iql_p0_s101]: 250 rows in [0.0, 228.5]
+PASS  V3_drift[iql_p0_s101]: q_mean 110.03 -> 110.23 (0.2%, tolerance 10%)
+
+37/38 checks passed; report written to report/phase5/iql_validation.json
