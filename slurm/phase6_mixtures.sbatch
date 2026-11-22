@@ -9,7 +9,8 @@
 #   2. seeds 3 and 4, all five p, into scratch;
 #   3. seeds 100 and 101, all five p, into scratch: p 0, 0.2 and 1 already exist there and must
 #      come out with their committed hashes (same bytes rewritten); one build for all five p keeps
-#      summary_s100_s101.json and audit_s100_s101.json complete (a superset of Phase 5's).
+#      summary_s100_s101.json and audit_s100_s101.json complete (a superset of Phase 5's, superseding
+#      them; the six rebuilt manifests are copied out with them).
 # No other job may read /scratch/$USER/mixtures meanwhile (files are rewritten in place): submit
 # the benchmark with --dependency=afterok:<this job>. New manifests, summaries and audits are
 # copied to logs/phase6_mix_<jobid>/ for the laptop to commit. CPU only, `short` (ROADMAP 4.2.1).
@@ -76,7 +77,10 @@ python scripts/build_mixtures.py --p 0 0.05 0.2 0.5 1 --seeds 100 101 --out-dir 
 for f in mix_p0_s100 mix_p0_s101 mix_p0.2_s100 mix_p0.2_s101 mix_p1_s100 mix_p1_s101; do
     same_data "$f" || status=1
 done
-cp report/mixtures/mix_p0.05_s100.json report/mixtures/mix_p0.05_s101.json \
-   report/mixtures/mix_p0.5_s100.json report/mixtures/mix_p0.5_s101.json \
-   report/mixtures/summary_s100_s101.json report/mixtures/audit_s100_s101.json "$out"/ || status=1
+# All ten s100/s101 manifests go out, the six rebuilt ones too (same data, new commit), so the
+# manifests and the superseding audit name one build.
+for seed in 100 101; do
+    for p in 0 0.05 0.2 0.5 1; do cp "report/mixtures/mix_p${p}_s${seed}.json" "$out"/ || status=1; done
+done
+cp report/mixtures/summary_s100_s101.json report/mixtures/audit_s100_s101.json "$out"/ || status=1
 exit "$status"

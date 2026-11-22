@@ -47,12 +47,14 @@ else
         exit 1
     fi
 fi
-if [ -z "${SLURM_MEM_PER_NODE:-}" ]; then
-    echo "REFUSING: give --mem on the submit line (4G per run plus 4G)" >&2
+want_mb=$(( (4 * K + 4) * 1024 ))  # a partition default can set SLURM_MEM_PER_NODE too: check the size
+if [ "${SLURM_MEM_PER_NODE:-0}" -ne "$want_mb" ]; then
+    echo "REFUSING: --mem must be $(( 4 * K + 4 ))G (4G per run plus 4G), got ${SLURM_MEM_PER_NODE:-none} MB" >&2
     exit 1
 fi
-submit=$(field SubmitTime) start=$(field StartTime)
-echo "QUEUE_WAIT_S=$(( $(date -d "$start" +%s) - $(date -d "$submit" +%s) )) (submit $submit, start $start)"
+# Eligible, not Submit: a job waiting on --dependency is not queuing for nodes (cost model, spec 5).
+submit=$(field SubmitTime) eligible=$(field EligibleTime) start=$(field StartTime)
+echo "QUEUE_WAIT_S=$(( $(date -d "$start" +%s) - $(date -d "$eligible" +%s) )) (submit $submit, eligible $eligible, start $start)"
 threads=$((SLURM_CPUS_PER_TASK / K))
 export OMP_NUM_THREADS=$threads MKL_NUM_THREADS=$threads
 echo "config: algo=$ALGO k=$K device=$DEVICE cpus=$SLURM_CPUS_PER_TASK mem=${SLURM_MEM_PER_NODE}M threads/run=$threads"
