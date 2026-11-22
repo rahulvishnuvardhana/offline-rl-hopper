@@ -5,10 +5,12 @@
 # over the middle 80% of the update windows, evaluation seconds per environment step with the
 # summed episode lengths, the node's CPU and GPU model, peak memory, and the partition limits.
 # Partition, device and resources come from the submit line, one job per configuration, e.g.
-#   G2:  sbatch -p gpu-short --gres=gpu:t4:1 -c 8 --mem=12G $pin,ALGO=iql,K=2,DEVICE=cuda slurm/benchmark.sbatch
+#   G2:  sbatch -p gpu-short --gres=gpu:t4:1 -c 8 --mem=12G $pin,ALGO=iql,K=2,DEVICE=cuda,GPU="Tesla T4" slurm/benchmark.sbatch
 #   C1:  sbatch -p short --constraint=cascadelake -c 4 --mem=8G $pin,ALGO=iql,K=1,DEVICE=cpu slurm/benchmark.sbatch
 # with pin="--export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD)", after slurm/tests_gate.sbatch
-# passed at that commit. 4 CPUs and 4G per run, plus 4G. At most 30 minutes (ROADMAP 4.2.1).
+# passed at that commit, and after the mixture job (--dependency=afterok:<it>). 4 CPUs and 4G per
+# run, plus 4G. At most 30 minutes (ROADMAP 4.2.1). The job refuses an allocation other than the
+# one its configuration names (a forgotten -p or --constraint would give plausible numbers).
 #SBATCH --job-name=offrl-bench
 #SBATCH --time=00:30:00
 #SBATCH --output=logs/%x_%j.out
@@ -30,10 +32,33 @@ if [ $((SLURM_CPUS_PER_TASK % K)) -ne 0 ]; then
     echo "REFUSING: $SLURM_CPUS_PER_TASK CPUs do not divide into $K runs" >&2
     exit 1
 fi
+job=$(scontrol show job "$SLURM_JOB_ID")
+field() { grep -oE "(^| )$1=[^ ]*" <<<"$job" | head -1 | cut -d= -f2-; }
+if [ "$DEVICE" = cpu ]; then
+    if [ "$(field Partition)" != short ] || [ "$(field Features)" != cascadelake ]; then
+        echo "REFUSING: a CPU configuration needs -p short --constraint=cascadelake (spec 5, D1)" >&2
+        exit 1
+    fi
+else
+    : "${GPU:?export GPU=<expected model, e.g. Tesla T4>}"
+    got=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)
+    if [ "$got" != "$GPU" ]; then
+        echo "REFUSING: allocated '$got', configuration names '$GPU'" >&2
+        exit 1
+    fi
+fi
+if [ -z "${SLURM_MEM_PER_NODE:-}" ]; then
+    echo "REFUSING: give --mem on the submit line (4G per run plus 4G)" >&2
+    exit 1
+fi
+submit=$(field SubmitTime) start=$(field StartTime)
+echo "QUEUE_WAIT_S=$(( $(date -d "$start" +%s) - $(date -d "$submit" +%s) )) (submit $submit, start $start)"
 threads=$((SLURM_CPUS_PER_TASK / K))
 export OMP_NUM_THREADS=$threads MKL_NUM_THREADS=$threads
-echo "config: algo=$ALGO k=$K device=$DEVICE cpus=$SLURM_CPUS_PER_TASK threads/run=$threads node=$(hostname)"
+echo "config: algo=$ALGO k=$K device=$DEVICE cpus=$SLURM_CPUS_PER_TASK mem=${SLURM_MEM_PER_NODE}M threads/run=$threads"
+scontrol show node "${SLURMD_NODENAME:-$(hostname -s)}" || true
 lscpu | grep -E "^Model name|^Socket|^Core|^Thread" || true
+echo "CPU_MODEL=$(awk -F': ' '/^model name/ {print $2; exit}' /proc/cpuinfo)"
 [ "$DEVICE" = cpu ] || nvidia-smi --query-gpu=name,memory.total --format=csv
 if [ "$DEVICE" = cpu ]; then  # free capacity on the constrained nodes: J_eff and queue waits (spec 5)
     echo "cascadelake nodes now (node, features, cores alloc/idle/other/total, free MB):"
@@ -83,7 +108,7 @@ print(f"model inputs (slowest run): u = {1000 * u:.2f} ms, e = {1000 * e:.3f} ms
       f"--time = {1.5 * h:.2f} h")
 PY
 
-echo "queue wait: sacct -j $SLURM_JOB_ID -X -o Submit,Start (after the job)"
+
 # Peak memory of this job's cgroup (cgroup v2), if the node exposes it; seff gives it after the job.
 cg=$(awk -F: '$1 == "0" {print $3}' /proc/self/cgroup 2>/dev/null || true)
 [ -n "$cg" ] && [ -r "/sys/fs/cgroup$cg/memory.peak" ] \
