@@ -41,9 +41,9 @@ if [ "$DEVICE" = cpu ]; then
         exit 1
     fi
 else
-    : "${GPU:?export GPU=<expected model, e.g. Tesla T4>}"
+    : "${GPU:?export GPU=<expected model or its prefix, e.g. Tesla T4 or Tesla V100-PCIE>}"
     got=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)
-    if [ "$got" != "$GPU" ]; then
+    if [[ "$got" != "$GPU"* ]]; then  # a prefix: "Tesla V100-PCIE" matches its -16GB and -32GB names
         echo "REFUSING: allocated '$got', configuration names '$GPU'" >&2
         exit 1
     fi
