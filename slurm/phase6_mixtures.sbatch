@@ -45,7 +45,7 @@ for f in "${new[@]}"; do  # refuse before building anything: an install never re
         exit 1
     fi
 done
-if [ "$(stat -c %d "$mixtures")" != "$(stat -c %d "/scratch/$USER")" ]; then
+if [ "$(stat -L -c %d "$mixtures")" != "$(stat -L -c %d "/scratch/$USER")" ]; then  # -L: a symlink's target
     echo "REFUSING: $mixtures is not on the staging filesystem; mv would not be an atomic rename" >&2
     exit 1
 fi
