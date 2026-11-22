@@ -537,9 +537,11 @@ def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path):
 
 
 def test_grid_setup_pins_the_approved_limits():
-    """slurm/grid_setup.sh holds the D1 setup the gate passes to --init (IQL 2:00, user 2026-11-22)."""
+    """slurm/grid_setup.sh holds the D1 setup the gate passes to --init.
+
+    IQL 2:00 and BC 0:30 (user, 2026-11-22)."""
     text = Path("slurm/grid_setup.sh").read_text(encoding="utf-8")
     items = re.search(r"--algo-setup ((?:\S+:\S+ ?)+)", text).group(1).split()
     setup = sweep.parse_algo_setup(items)
-    assert setup["iql"]["time"] == "2:00:00" and setup["bc"]["time"] == "0:20:00"
+    assert setup["iql"]["time"] == "2:00:00" and setup["bc"]["time"] == "0:30:00"
     assert {v["cpus"] for v in setup.values()} == {4} and {v["k"] for v in setup.values()} == {1}
