@@ -419,7 +419,7 @@ def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeyp
     assert any("gpu" in e for e in errors) and any("device" in e for e in errors)
     (run_dir / "meta.json").write_text(json.dumps({**meta, "gpu": "Tesla T4"}))
     errors, _ = sweep.check_run(r, g, t4)
-    assert errors and all("device" in e for e in errors)
+    assert len(errors) == 1 and "device" in errors[0]  # exactly the device error
     (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "cpu_model"}))
     assert any("cpu_model" in e for e in sweep.check_run(r, g, record)[0])  # a missing key refuses
     (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "repo_root"}))
