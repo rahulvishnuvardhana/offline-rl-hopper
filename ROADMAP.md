@@ -119,6 +119,7 @@ offline-rl-hopper/
     base.yaml             # shared defaults (network, optimizer, eval)
     algo/bc.yaml
     algo/iql.yaml
+    algo/corl_iql.yaml    # CORL's IQL as the Phase 5 reference (same keys as iql.yaml)
     grid_main.yaml        # 2 algos x 5 p x 3 seeds
     grid_ablation.yaml    # IQL tau in {0.5, 0.9} x p in {0.05, 0.5} x 3 seeds
   src/offrl/
@@ -133,7 +134,9 @@ offline-rl-hopper/
       base.py             # Trainer interface: update(batch) -> dict of losses
       losses.py           # the one policy loss (BC: unit weights; IQL: exp(beta * A))
       bc.py               # BC = IQL policy loss with beta = 0
-      iql.py              # expectile V, TD Q, AWR policy
+      iql.py              # expectile V, TD Q, AWR policy (CORL's update order, Phase 5 spec Section 2)
+      corl.py             # Trainer adapter around the vendored CORL IQL, so it runs through train.py
+    _vendor/              # selected lines of CORL's iql.py, unmodified (Apache-2.0; hash-checked by a test)
     rollout.py            # run a policy for seeded episodes (random baseline + eval)
     evaluate.py           # rollouts, normalized score
     runmeta.py            # run metadata (git commit, dirty flag, versions, Slurm ids)
@@ -143,16 +146,25 @@ offline-rl-hopper/
     analysis/
       eda.py              # Phase 2 EDA: pure functions (stats, PCA, kNN, AUC, mixture preview)
       eda_plots.py        # Phase 2 EDA figures
+      iql_validation.py   # Phase 5 V0 to V4 checks: pure functions
+      seed_followup.py    # Phase 5 seed 102 to 104 follow-up rule: pure functions
       aggregate.py        # collect runs -> tidy DataFrame
       plots.py            # main figure, curves, ablation
       stats.py            # rliable IQM + bootstrap CIs
   slurm/
     grid.sbatch
     smoke.sbatch
+    lib/common.sh         # pin the commit, require the test gate, throwaway worktree (Phase 5)
+    tests_gate.sbatch     # pytest on a T4 once per commit; training jobs refuse without its marker
+    iql_validate.sbatch   # Phase 5 validation runs; iql_analyze.sbatch scores them
+    iql_seeds.sbatch      # Phase 5 seed follow-up runs; seed_followup.sbatch applies the rule
   scripts/
     smoke.py              # env + GPU + dataset smoke test
     validate_data.py      # Phase 2A audit -> report/data_audit.json
     eda.py                # Phase 2B EDA -> report/eda_summary.json + figures
+    iql_validate.py       # Phase 5 V0 to V4 -> report/phase5/iql_validation.json + figure
+    seed_followup.py      # Phase 5 follow-up rule -> report/phase5/seed_followup.json
+    same_weights.py       # Phase 5 exploratory same-weights CPU check, ours vs. CORL
   docs/specs/             # one reviewed spec per phase
   notebooks/
     02_results.ipynb
@@ -162,6 +174,9 @@ offline-rl-hopper/
     test_buffer.py
     test_normalize.py
     test_reproducibility.py
+    test_iql.py           # Phase 5: IQL math on synthetic data (iql_helpers.py holds the shared setup)
+    test_corl.py          # Phase 5: our update matches CORL's in float64; vendored file unmodified
+    test_iql_validation.py, test_iql_validate_script.py, test_seed_followup.py
   report/                 # LaTeX report, figures copied here
   runs/                   # gitignored
   data/                   # gitignored
@@ -173,7 +188,7 @@ offline-rl-hopper/
 |---|---|---|---|
 | ADR-1 | Self-written BC and IQL in PyTorch; CQL (optional) uses CORL unchanged with a Minari loader | Learning goal + full control of the "one design choice differs" comparison | Using CORL for everything (less learning, harder to guarantee identical BC/IQL setup) |
 | ADR-2 | BC = IQL policy loss with `beta = 0`, same Gaussian policy | Any gap is attributable to value learning only [1] | CORL's deterministic MSE BC (different network and loss, confounds the comparison) |
-| ADR-3 | Follow the **IQL paper's** MuJoCo settings, not CORL's per-dataset configs. Two deviations, both as in CORL: the reward-scale min/max uses complete episodes only, and states are normalized (the original IQL code does neither) | One published setting for all `p`; CORL's hopper configs differ between datasets | Tuning per `p` (biases the comparison) |
+| ADR-3 | Follow the **IQL paper's** MuJoCo settings, not CORL's per-dataset configs. ~~Two deviations, both as in CORL: the reward-scale min/max uses complete episodes only, and states are normalized (the original IQL code does neither)~~ (corrected 2026-11-21, at Phase 5 close) Two deviations from the original IQL code, which does neither: the reward-scale min/max uses complete episodes only, and states are normalized as in CORL. CORL's reward-scale range also closes an episode at its 1000-step counter; ours uses complete episodes only (ADR-9; Phase 5 spec Section 3) | One published setting for all `p`; CORL's hopper configs differ between datasets | Tuning per `p` (biases the comparison) |
 | ADR-4 | Mixture defined by **transitions**, sampled by whole episodes, trimmed to exactly 900k | Simple episodes are about half as long as expert ones | Mixing by episode count (would make `p` misleading) |
 | ADR-5 | Normalizers are fit on **each mixture**, never on the full expert data | Fitting on expert data leaks information into low-`p` runs | Global normalizer |
 | ADR-6 | Own score normalization, D4RL convention: 0 = random-policy mean return, 100 = expert dataset mean return; raw return and fall rate always reported too. Revised 2026-11-15, before any training result, because the returns are bimodal (spec `docs/specs/phase-2b-eda.md` Section 5) | Minari has no reference scores for these datasets; a simple-mean zero point sits in the gap between falling and non-falling episodes | D4RL constants (wrong env version); 0 = simple dataset mean (the original proposal) |
@@ -467,19 +482,19 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Why:** IQL has several small details (Section 5) that each cost 10 to 50 points if wrong. Validation on the easiest setting (`p = 1`) and a comparison against a reference implementation catches them.
 
 **Tasks**
-1. `iql.py`, update order per step: V (expectile loss vs. `min(Q1_target, Q2_target)`), then Q (MSE to `r + gamma * (1 - done) * V(s')`), then policy (clipped advantage-weighted log-likelihood), then soft target update.
+1. `iql.py`, update order per step: V (expectile loss vs. `min(Q1_target, Q2_target)`), then Q (MSE to `r + gamma * (1 - done) * V(s')`), then policy (clipped advantage-weighted log-likelihood), then soft target update. **As built (Phase 5 spec Section 2):** CORL's order: `V(s')` read before the V step, then V, Q, the soft target update, the policy (with the advantage from the pre-update V) and the actor schedule. Doing the soft update before the policy step is equivalent, since the policy step does not read the target. Official IQL feeds the updated V instead; CORL is the reference.
 2. Unit tests for the math:
    - expectile loss with `tau = 0.7`: `u = 1` gives 0.7, `u = -1` gives 0.3;
    - with `beta = 0`, IQL policy loss equals BC loss on the same batch;
    - advantage weights never exceed 100;
    - with `done = 1`, the Q target equals `r`.
-3. Validation runs, 2 seeds, 300k steps: IQL at `p = 1` and `p = 0`.
-4. Reference comparison: run CORL's `iql.py` with a small Minari loader on the `p = 1` mixture (same seed and steps) and overlay learning curves.
+3. Validation runs, 2 seeds, 300k steps: IQL at `p = 1` and `p = 0`. **As built (Phase 5 spec Section 8):** 14 runs on development seeds 100 and 101: IQL at `p` in {1, 0.2, 0}, CORL and BC at `p` in {1, 0.2}; then, after the V1 miss, ours and CORL at `p = 1` on seeds 102 to 104 under a follow-up rule fixed in advance.
+4. Reference comparison: run CORL's `iql.py` with a small Minari loader on the `p = 1` mixture (same seed and steps) and overlay learning curves. **As built (Phase 5 spec Section 5):** selected lines of CORL's `iql.py` are vendored unmodified in `src/offrl/_vendor/` and wrapped by `algos/corl.py`, so CORL runs through the same `train.py`, data, pre-flight and evaluator as ours instead of a separate loader; a test checks the vendored file's hash, and another matches our update to CORL's in float64.
 5. Log diagnostics: mean V, mean Q, mean advantage, fraction of clipped weights. Q values should be stable, not growing without bound.
 
 **Deliverables:** `iql.py`, extended `test_losses.py`, validation plot (ours vs. CORL).
 
-**DoD:** ~~IQL at `p = 1` normalized score >= 90; curves within the seed spread of CORL's; Q and V do not diverge.~~ (replaced 2026-11-20) As set in the Phase 5 spec (`docs/specs/phase-5-iql.md` Sections 8 and 10; user decisions D3 and D6): V1, IQL at `p = 1` within 10 points below BC at `p = 1` (two-seed means), evaluated and recorded (pass or fail), with the spec's seed 102 to 104 follow-up rule carried out; 90 at `p = 1` reported, not gated; V0, V2 (within 10 points of CORL at `p = 0.2`), V3 (Q and V bounded) and V4 pass.
+**DoD:** ~~IQL at `p = 1` normalized score >= 90; curves within the seed spread of CORL's; Q and V do not diverge.~~ (replaced 2026-11-20) As set in the Phase 5 spec (`docs/specs/phase-5-iql.md` Sections 8 and 10; user decisions D3 and D6): V1, IQL at `p = 1` within 10 points below BC at `p = 1` (two-seed means), evaluated and recorded (pass or fail), with the spec's seed 102 to 104 follow-up rule carried out; 90 at `p = 1` reported, not gated; V0 (one commit, clean tree, mixture hashes, reward scales and `done` counts checked), V2 (two-seed means of ours and CORL within 10 points at `p = 0.2`), V3 (after 50k steps Q and V finite and inside `[min(r_min, 0), max(r_max, 0)] / (1 - gamma)`, `V(s_0)` within 0.8 to 1.5 times the discounted return at `p = 1`, `q_mean` drifting at most 10% from 200k to 300k) and V4 (at `p = 1`, no-fall return within 10% of the expert's 4157 on at least 10 no-fall episodes) pass. **Result (2026-11-21):** V0, V2, V3 and V4 pass; V1 fails and is recorded (IQL 85.3 vs. BC 105.1); the follow-up rule says proceed (`report/phase5/`, README).
 
 **Pitfalls:** using the online Q (not target) in the V loss; bootstrapping on truncations; forgetting the reward scaling, so `beta = 3` means something very different.
 
