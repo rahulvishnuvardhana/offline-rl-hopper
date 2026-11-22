@@ -335,9 +335,9 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 | 7 | Main grid (50 runs) and the `tau` ablation (20 runs), one commit | Nov 26 to 27 (Nov 28 contingency) | `sweep --check` passes on all 70 runs; archived by Nov 29 |
 | 8 | Optional extras (the tau ablation moved into Phase 7's window) | Nov 28 | Each extra done or listed as not done |
 | 9 | Analysis and figures (from the archive; /scratch purged Dec 1) | Nov 28 to Dec 1 | Figures final |
+| 10 | Report + portfolio packaging | Dec 1 to 4 | Submitted |
 
 (2026-11-21, Phase 6 D2, D5, D6) Rows 6 to 9 replaced; they were: 6, Nov 23, "Cost model + dry run"; 7, "Main grid (30 runs)", Nov 24 to 27, "All runs complete"; 8, "Ablations (+ optional CQL / reweighting)", Nov 27 to 29, "Ablation complete"; 9, Nov 30 to Dec 1, "Figures final".
-| 10 | Report + portfolio packaging | Dec 1 to 4 | Submitted |
 
 ---
 
