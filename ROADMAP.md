@@ -333,7 +333,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 | 5 | IQL implementation and validation | Nov 20 to 22 | Phase 5 spec DoD met (V1 recorded, follow-up rule applied) |
 | 6 | Compute benchmark + Slurm pipeline | Nov 22 to 25 | Phase 6 spec DoD (cost model, D1, dry run, pre-registration) |
 | 7 | Main grid (50 runs) and the `tau` ablation (20 runs), one commit | Nov 26 to 27 (Nov 28 contingency) | `sweep --check` passes on all 70 runs; archived by Nov 29 |
-| 8 | Optional extras (the tau ablation moved into Phase 7's window) | Nov 28 | Each extra done or listed as not done |
+| 8 | Optional extras (the `tau` ablation moved into Phase 7's window) | Nov 28 | Each extra done or listed as not done |
 | 9 | Analysis and figures (from the archive; /scratch purged Dec 1) | Nov 28 to Dec 1 | Figures final |
 | 10 | Report + portfolio packaging | Dec 1 to 4 | Submitted |
 
