@@ -158,8 +158,10 @@ offline-rl-hopper/
     tests_gate.sbatch     # pytest on a T4 once per commit; training jobs refuse without its marker
     iql_validate.sbatch   # Phase 5 validation runs; iql_analyze.sbatch scores them
     iql_seeds.sbatch      # Phase 5 seed follow-up runs; seed_followup.sbatch applies the rule
+    iql_smoke.sbatch, iql_seeds_smoke.sbatch, dev_mixtures.sbatch, seed_mixtures.sbatch  # Phase 5 timing tests, mixture builds
   scripts/
     smoke.py              # env + GPU + dataset smoke test
+    check_mixture_files.py  # Phase 5: mixture files on /scratch vs. their committed manifests
     validate_data.py      # Phase 2A audit -> report/data_audit.json
     eda.py                # Phase 2B EDA -> report/eda_summary.json + figures
     iql_validate.py       # Phase 5 V0 to V4 -> report/phase5/iql_validation.json + figure
@@ -492,7 +494,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 4. Reference comparison: run CORL's `iql.py` with a small Minari loader on the `p = 1` mixture (same seed and steps) and overlay learning curves. **As built (Phase 5 spec Section 5):** selected lines of CORL's `iql.py` are vendored unmodified in `src/offrl/_vendor/` and wrapped by `algos/corl.py`, so CORL runs through the same `train.py`, data, pre-flight and evaluator as ours instead of a separate loader; a test checks the vendored file's hash, and another matches our update to CORL's in float64.
 5. Log diagnostics: mean V, mean Q, mean advantage, fraction of clipped weights. Q values should be stable, not growing without bound.
 
-**Deliverables:** `iql.py`, extended `test_losses.py`, validation plot (ours vs. CORL).
+**Deliverables:** `iql.py`, extended `test_losses.py`, validation plot (ours vs. CORL). **As built:** the IQL tests are in `tests/test_iql.py` and `tests/test_corl.py` (I1 to I12), the losses in `algos/losses.py`; `report/phase5/` and `report/figures/iql_validation_curves.png`.
 
 **DoD:** ~~IQL at `p = 1` normalized score >= 90; curves within the seed spread of CORL's; Q and V do not diverge.~~ (replaced 2026-11-20) As set in the Phase 5 spec (`docs/specs/phase-5-iql.md` Sections 8 and 10; user decisions D3 and D6): V1, IQL at `p = 1` within 10 points below BC at `p = 1` (two-seed means), evaluated and recorded (pass or fail), with the spec's seed 102 to 104 follow-up rule carried out; 90 at `p = 1` reported, not gated; V0 (one commit, clean tree, mixture hashes, reward scales and `done` counts checked), V2 (two-seed means of ours and CORL within 10 points at `p = 0.2`), V3 (after 50k steps Q and V finite and inside `[min(r_min, 0), max(r_max, 0)] / (1 - gamma)`, `V(s_0)` within 0.8 to 1.5 times the discounted return at `p = 1`, `q_mean` drifting at most 10% from 200k to 300k) and V4 (at `p = 1`, no-fall return within 10% of the expert's 4157 on at least 10 no-fall episodes) pass. **Result (2026-11-21):** V0, V2, V3 and V4 pass; V1 fails and is recorded (IQL 85.3 vs. BC 105.1); the follow-up rule says proceed (`report/phase5/`, README).
 

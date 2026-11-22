@@ -26,6 +26,7 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12034720 | 5 | gpu-short | T4 | 4, 8G | Completed | 0:01:59 | 0.03 | test gate at `db9c4c5`: 240 passed |
 | 12034721 | 5 | gpu | T4 | 8, 8G | Completed (3 tasks) | 1:10:19 to 1:10:51 | 3.53 | V1 follow-up, seeds 102-104, ours and CORL packed per task, 300k steps; all six runs complete |
 | 12048550 | 5 | short | none | 1, 4G | Completed | 0:00:23 | 0.00 | seed follow-up scoring at `a389b60`: proceed (B false, 1 of 3 seeds) |
+| 12053724 | 5 | short | none | 2, 16G | Failed (exit 1, V1 miss, as expected) | 0:00:40 | 0.00 | validation reanalysis at `1939b0d` with the checks added in review: same 38 outcomes, no numeric difference from 11981887 |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 

@@ -44,7 +44,7 @@ A run writes `config.yaml`, `meta.json` (commit, packages, GPU, mixture hash), C
 
 Normalized score: 0 = random policy, 100 = expert dataset mean. Deterministic BC on the simple data scores about 82, well above that dataset's 42.7, because the mean action removes most of its falls.
 
-**Phase 5, IQL validation (development data, 300k steps):** V0, V2, V3 and V4 pass; V1 (IQL within 10 points of BC at `p = 1`) fails and is recorded, 37 of 38 checks ([report](report/phase5/iql_validation.json), [job log](report/phase5/iql_validation_job.log), [spec](docs/specs/phase-5-iql.md) Section 8). "Ours" is this repository's IQL; "CORL" is CORL's IQL, vendored and run through the same pipeline as the reference.
+**Phase 5, IQL validation (development data, 300k steps):** V0, V2, V3 and V4 pass; V1 (IQL within 10 points of BC at `p = 1`) fails and is recorded, 37 of 38 checks ([report](report/phase5/iql_validation.json), [job log](report/phase5/iql_validation_job.log), [spec](docs/specs/phase-5-iql.md) Section 8). The 14 runs trained at `1b0ccbe` and were first analysed with that commit's code; a reanalysis with the checks added in later review (job 12053724, [report](report/phase5/iql_validation_reanalysis.json)) gives the same outcomes and identical numbers. "Ours" is this repository's IQL; "CORL" is CORL's IQL, vendored and run through the same pipeline as the reference.
 
 | `p = 1`, final score | Seed 100 | Seed 101 | Seed 102 | Seed 103 | Seed 104 |
 |---|---|---|---|---|---|
