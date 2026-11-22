@@ -4,6 +4,8 @@ runs, trained in-process by an injected launcher (the real one starts ``python -
 import json
 import math
 import os
+import re
+from pathlib import Path
 from types import SimpleNamespace
 
 import gymnasium as gym
@@ -361,7 +363,6 @@ def test_sbatch_args_refuses_a_running_locked_bundle(grid, env, monkeypatch, tmp
     assert sweep.main(argv) == 0
     root = str(tmp_path / "root")
     base = ["--grid", str(tmp_path / "grid.yaml"), "--root", root, "--algo", "bc", "--sbatch-args"]
-    monkeypatch.setattr(sweep, "squeue_alive", lambda token, run=None: True)
     out_dir = next((tmp_path / "root").glob("t/*"))
     every = sweep.expand(sweep.load_grid(str(tmp_path / "grid.yaml")), out_dir, [])
     bc0 = sweep.bundles(every, {"bc": 1, "iql": 1})["bc"][0]
@@ -369,14 +370,16 @@ def test_sbatch_args_refuses_a_running_locked_bundle(grid, env, monkeypatch, tmp
     for r in bc0:
         sweep.lock_path(out_dir, r).write_text(json.dumps({"token": "123_0", "host": "h"}))
     monkeypatch.setattr(sweep, "queued_bundles", lambda name: {0})
-    assert sweep.main([*base, "--indices", "0"]) == sweep.EXIT_CONFLICT  # not 5
+    assert sweep.main([*base, "--indices", "0"], alive=lambda token: True) == sweep.EXIT_CONFLICT  # not 5
     assert "[0]" in capsys.readouterr().err
 
     def no_squeue(name):
         raise sweep.SweepError("squeue failed (test)")
 
     monkeypatch.setattr(sweep, "queued_bundles", no_squeue)
-    assert sweep.main([*base, "--indices", "0"]) == sweep.EXIT_CONFLICT  # refuses when squeue cannot answer
+    assert (
+        sweep.main([*base, "--indices", "0"], alive=lambda token: True) == sweep.EXIT_CONFLICT
+    )  # refuses when squeue cannot answer
 
 
 def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeypatch):
@@ -531,3 +534,12 @@ def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path):
     assert logs == sorted(f"{sweep.job_token()}_{r.name}.log" for r in bundle)
     for r in bundle:
         assert (train.resolve_path(r.cfg["train"]["out_dir"]) / r.name / "final.json").exists()
+
+
+def test_grid_setup_pins_the_approved_limits():
+    """slurm/grid_setup.sh holds the D1 setup the gate passes to --init (IQL 2:00, user 2026-11-22)."""
+    text = Path("slurm/grid_setup.sh").read_text(encoding="utf-8")
+    items = re.search(r"--algo-setup ((?:\S+:\S+ ?)+)", text).group(1).split()
+    setup = sweep.parse_algo_setup(items)
+    assert setup["iql"]["time"] == "2:00:00" and setup["bc"]["time"] == "0:20:00"
+    assert {v["cpus"] for v in setup.values()} == {4} and {v["k"] for v in setup.values()} == {1}
