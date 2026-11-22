@@ -38,8 +38,10 @@ nvidia-smi --query-gpu=name,memory.total --format=csv
 python -c "import torch; assert torch.cuda.is_available(), 'no CUDA: the CUDA tests would skip'"
 # Verbose, so a killed job's log names the running test; faulthandler dumps every thread's stack
 # for any test that runs over 5 minutes, and `timeout` aborts pytest (SIGABRT, which faulthandler
-# also dumps) 3 minutes before the Slurm limit, so a hang shows where it is.
-timeout --signal=ABRT 1620 python -X faulthandler -m pytest -o addopts="" -o faulthandler_timeout=300 -v -rs
+# also dumps) 3 minutes before the Slurm limit (counted from the job's start), so a hang shows
+# where it is. No core file: it would leave the checkout dirty for the next gate.
+ulimit -c 0
+timeout --signal=ABRT $((1800 - SECONDS - 180)) python -X faulthandler -m pytest -o addopts="" -o faulthandler_timeout=300 -v -rs
 pin_commit  # the tests left the clone (or the checkout) clean
 for grid in ${GRIDS:-}; do
     throttle_var="GRID_THROTTLE_$grid"

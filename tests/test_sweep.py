@@ -542,13 +542,16 @@ def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path, monkeypatch)
 
     code = sweep.run_bundle(bundle, out, launch, g["extra_configs"], with_manifests, always_alive)
     logs = {p.name: p for p in launch.log_dir.iterdir()}
-    assert code == 0, [(n, p.read_text()[-2000:]) for n, p in logs.items()]
+    why = [train.run_status(r.cfg, "cpu", launch.threads) for r in bundle]  # e.g. a dirty tree
+    assert code == 0, (why, [(n, p.read_text()[-2000:]) for n, p in logs.items()])
     assert held == ["4242_0", "4242_0"]  # the children ran while the sweep held their locks
     assert sorted(logs) == sorted(f"4242_0_{r.name}.log" for r in bundle)
     assert not list((out / "locks").glob("*.lock"))
     for r in bundle:
         run_dir = train.resolve_path(r.cfg["train"]["out_dir"]) / r.name
         assert (run_dir / "final.json").exists()
+        meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+        assert (meta["slurm_job_id"], meta["slurm_array_task_id"]) == ("4243", "0")  # inherited SLURM_*
         saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
         assert train._comparable(saved) == train._comparable(r.cfg)  # the children ran the grid's config
 
