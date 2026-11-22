@@ -1,0 +1,172 @@
+# Phase 6 spec: compute benchmark and Slurm pipeline
+
+**Status:** v3.1, **approved by the user 2026-11-22** (with D1 and D3). v1 was reviewed by two fresh reviewers (RL methodology, engineering): 3 blockers (two shared), 14 majors, 13 minors. v2 resolved them all; its re-review found 5 majors and 13 minors, resolved here (Section 14). Decisions D1 to D7 in Section 13: D2 and D4 to D7 set by the user, D1 and D3 approved by the user, all 2026-11-22. **Branch:** `phase-6-compute` from `main` at `0c44f6c` (Phase 5 merged). **ROADMAP:** Phase 6, Phase 7, Phase 8 task 1, Section 4.
+
+## 0. Gating and branch discipline
+1. No code is written before the user approves this spec. Every commit is reviewed by a fresh read-only reviewer before it is pushed; every push, PR change, `sbatch` and `srun` needs the user's approval, per commit or per job.
+2. Every Explorer job is submitted pinned (`EXPECTED_COMMIT`); every training job only after `slurm/tests_gate.sbatch` passed at the same commit.
+3. **No final-grid data before the real grid (user, D4):** in Phase 6 no run uses a final-grid mixture (seeds 0 to 4) or a final evaluation seed (10000+). The benchmark and the dry run use development mixtures (seeds 100+) and development evaluation seeds (20000+). Pre-flight already refuses mixing the two. Building the seed 3 and 4 mixtures, and the data-only rebuild check of Section 4, train and evaluate nothing.
+4. Phase 6 trains nothing that is reported. Benchmark and dry-run outputs measure time and test the pipeline; a score-blind checker reads them (Section 9), and no score from them is read, plotted or reported.
+5. Merge into `main` with a merge commit.
+
+## 1. Goal
+Before any grid result: (a) a validated cost model and the hardware choice for both grids; (b) `src/offrl/sweep.py`, `slurm/grid.sbatch` and the grid files, so Phase 7 and Phase 8 task 1 each start with one command at **one commit on one hardware type**; (c) the final-grid mixtures for seeds 3 and 4 and development mixtures for the dry run, built, checked and archived; (d) the pre-registration (Section 10), approved by the user and committed before the grid; (e) a dry run on development data that proves paths, logs, resume, locking and skip-finished on the cluster.
+
+## 2. The two grids (user decisions D2, D5, D6, 2026-11-22)
+| Grid | File | Runs | Seeds | Commit, hardware |
+|---|---|---|---|---|
+| Main (H1, H2) | `configs/grid_main.yaml` | BC and IQL (`tau = 0.7`) x `p` in {0, 0.05, 0.2, 0.5, 1}: **50** | 0 to 4 | the grid commit, D1 hardware |
+| Ablation (H3) | `configs/grid_ablation.yaml` | IQL `tau` in {0.5, 0.9} x `p` in {0.05, 0.5}: **20** | 0 to 4 | the same commit and hardware |
+
+- **5 seeds, fixed now (D2):** a superset of the proposal's 3, decided before any grid result and recorded as a deviation from the proposal. Reason: Phase 5's IQL spread across 5 seeds at `p = 1` was 81.6 to 104.5. ROADMAP Phase 8's optional "seeds 3 and 4 for the main grid" is struck: no seed is added after results are seen.
+- **The ablation matches (D5):** 5 seeds, so H3 compares `tau` 0.5, 0.7 and 0.9 on the same seeds. ROADMAP Phase 8 task 1 changes from 12 runs to 20.
+- **300k steps only (D6):** ROADMAP Phase 7's "rerun at 500k if still climbing" is struck. Whether a cell still climbs is reported for every cell with a pre-registered statistic (Section 10).
+- **One commit, one hardware type, a fixed submission order:** both grids are committed in this phase. `gpu` accepts at most 8 submitted jobs per user, and each array task counts (`MaxSubmitJobs`), so on a GPU the 70 runs go in waves. The order of all waves, main and ablation interleaved, is printed by `sweep --submit-plan` and fixed before the first submission; and no `eval.csv` or `final.json` of either grid is opened until `sweep --check` passes on all 70 runs. H3 compares the ablation against the main grid's `tau = 0.7` cells, so the two must not differ in code, hardware, or what was known when either was launched.
+- **Resolved config pinned in golden files:** `configs/pins/` holds the full resolved config of each run type (BC; IQL at `tau` 0.7, 0.5 and 0.9; the dry-run types), committed with this phase. S1 and `sweep --check` require exact equality, ignoring only `seed`, `data.p_expert`, `train.run_suffix`, `train.device`, `train.num_threads`, `train.out_dir` and `data.mixture_dir`. For the real grids this fixes, among the rest, `train.steps` 300000, `eval_every` 5000 (60 evaluations), `eval.episodes` 10, `eval.final_episodes` 50, `eval.final_score_last_n` 5, `eval.seed_offset` 10000, `checkpoint_every` 25000, `log_every` 1000, the network, the optimizer and schedule, the IQL constants and the `score.*` normalization constants. BC and IQL differ only in `algo.*` and `data.scale_rewards` (ROADMAP fairness requirement). Each grid file names its pin set (`pin: main`, `pin: ablation`, `pin: dryrun`); the pins never live in the grid file itself.
+- **Run outcomes (pre-registered, also in Section 10):**
+  1. Only infrastructure failures lead to a resume or a rerun: a time-out, node failure, pre-emption, a stall, or a provenance failure found by `--check`. A rerun is from scratch, same seed and commit.
+  2. A run that finishes is a result, whatever its score. A non-finite or collapsed score (collapsed as the pre-registration defines it, for example a final score below 10) is never rerun or excluded; it is scored as Section 10 states and reported. `--check` and `--index` accept and flag such a run; they refuse only provenance and configuration failures.
+  3. A run is cancelled only on evidence of misconfiguration or infrastructure trouble (wrong config, wrong hardware, a stall), never for its score or curve.
+  4. A code bug found mid-grid means a new commit and a rerun of **both** grids in full. The trigger (what was seen, where and when) is recorded, and the superseded grids' results are archived and reported in an appendix next to the rerun, never discarded.
+
+## 3. What Phases 4 and 5 already measured
+| Quantity | Value | Source |
+|---|---|---|
+| BC update, T4, one run, 4 CPUs | 2.58 ms | Phase 4, `bc_sanity.json` |
+| IQL update (ours), T4, packed with CORL, 8 CPUs, `log_every` 100 | 16.26 ms | job 12031927 |
+| Evaluation, T4 node, packed with CORL | 1.41 ms per environment step (ours) | job 12031927 |
+| 300k-step IQL run, T4, packed with CORL, 800 evaluation episodes | about 1 h 10 min wall clock | array 12034721 |
+| IQL on A100, two packed | 14.1 ms per update each; no faster than T4 | job 11958589 |
+
+These Phase 5 figures were measured with a CORL partner and `log_every` 100, so they are a cross-check, not the model's input. Cluster (`sinfo`, `sacctmgr`, 2026-11-22): `gpu` has one T4 node (4 T4s, 28 cores, about 187 GB), 58 V100s on 17 nodes, A100 and H200 nodes, 8 h limit, 4 running jobs per user. `gpu-short`: 2 h limit, 2 running and 8 submitted jobs. `gpu`: 8 submitted jobs per user. `short` (CPU only): about 250 nodes of 20 or more cores, mixed CPU generations, 2-day limit, 50 running jobs per user, no submit limit shown by `sacctmgr show qos`. Before D1, the benchmark records `sacctmgr show qos format=name,maxjobspu,maxsubmitpu` and `sacctmgr show assoc user=$USER format=user,partition,maxjobs,maxsubmitjobs` for `gpu`, `gpu-short` and `short`. Each benchmark job records `scontrol show node` for its node.
+
+## 4. Mixtures (one data job, CPU `short`)
+- **Final grid, seeds 3 and 4:** `mix_p{0,0.05,0.2,0.5,1}_s{3,4}` (10 mixtures) built with `scripts/build_mixtures.py --seeds 3 4` in a throwaway worktree of a pinned commit (`dev_mixtures.sbatch` pattern); manifests, summary and leakage audit copied out and committed. Built and committed, never trained on before the grid.
+- **Same procedure as seeds 0 to 2:** seeds 0 to 2 were built at Phase 3 (`63bf8fa`) and the data code has changed since (`51eb191`). In the same job, `mix_p0.05_s0` and `mix_p0.5_s0` are rebuilt into a temporary directory and must match their committed manifests' `content_sha256` and `data_sha256`; a mismatch stops the phase. Data only, no training or evaluation.
+- **Development, for the dry run:** `mix_p{0.05,0.5}_s{100,101}` (4 mixtures), the same way. With the existing `p` in {0, 0.2, 1} at seeds 100 and 101 this gives all five `p` values at two development seeds.
+- Afterwards `scripts/check_mixture_files.py` checks all 25 final-grid and 10 development mixtures on /scratch against their committed manifests.
+- **Archive:** the 25 final-grid and 4 new development mixtures go to `~/archive/` with `scripts/archive_runs.sh` (Section 12); about 3 GB more (home holds 21 of 75 GB).
+- **Commit order:** this data job's manifests are committed before the commit that adds S8, which reads them.
+
+## 5. Benchmark
+- **Script:** `slurm/benchmark.sbatch`, modelled on `iql_seeds_smoke.sbatch`: `k` copies of one algorithm on one allocation, 10,000 steps each, on the development mixture `mix_p1_s100` with development evaluation seeds, `train.device` explicit, overrides `train.log_every=1000 train.eval_every=2000 train.checkpoint_every=2000 eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1` (logging as the grid does). Prints ms per update over the middle 80% of the update windows (8 of 10 windows; the count is printed), evaluation seconds per environment step and the summed episode lengths, the node's CPU and GPU model, and peak memory from `seff` and the cgroup's `memory.peak`.
+- **Configurations (8 jobs, each under 30 minutes; 4 CPUs per run):**
+
+  | Id | Partition and device | Algorithm, `k` | Pair |
+  |---|---|---|---|
+  | G2 | `gpu-short`, `gpu:t4:1` | IQL, 2 | T4 |
+  | G4 | `gpu-short`, `gpu:t4:1` | IQL, 4 | T4 |
+  | GB | `gpu-short`, `gpu:t4:1` | BC, 4 | T4 |
+  | GV | `gpu-short`, `gpu:v100-pcie:1` | IQL, 2 | V100 |
+  | GVB | `gpu-short`, `gpu:v100-pcie:1` | BC, 4 | V100 |
+  | C1 | `short`, a pinned CPU feature | IQL, 1 | CPU |
+  | CB | `short`, the same feature | BC, 1 | CPU |
+  | G1 | `gpu-short`, `gpu:t4:1` | IQL, 1 | T4 |
+
+  The 8 jobs train 19 runs of 10,000 steps, under 1 GPU-hour in total.
+- **Cost model:** per algorithm `a`, hours per run `h_a(k) = (300,000 x u_a(k) + 800 x 1,000 x e_a(k)) / 3,600`, with `u` seconds per update and `e` seconds per evaluation step at the 1,000-step upper bound (falls only shorten episodes; update cost does not depend on `p`). The upper bound is used only for `--time` and the choice rule. Wall clock for a set of runs = sum over algorithms of `ceil(N_a / (k_a x J_eff)) x h_a(k_a)`, with `J_eff = min(running-job limit, throttle, free devices of that type, floor(node cores / cores per job), floor(node memory / memory per job))`. Example: G4 at 16 cores per job on the 28-core T4 node gives `J_eff = 1`. Submission waves: `ceil(tasks / MaxSubmit)`, each wave submitted after the previous one's tasks have left the queue, plus a stated human latency per wave (submitting by hand, for example up to 12 h overnight); the wall clock counts both. Computed for all 70 runs (BC 25, IQL 45).
+- **Validation before use, component-wise:** G2's `u` and `e` must predict the "ours" runs of array 12034721 from their own `timing.csv` within 20% each: the summed training seconds against `300,000 x u`, and the summed evaluation seconds against `e` x that run's actual summed episode lengths. Caveat recorded: 12034721 packed ours with CORL, not two copies of ours. A miss is explained and corrected before any choice.
+- **Choice rule (fixed before measuring):** candidates are BC and IQL pairs on one hardware type: T4 (G2 or G4 for IQL, GB for BC), V100 (GV, GVB), CPU (C1, CB). Eligible if `h_a(k_a) x 1.5` fits the partition limit for both algorithms. The shortest wall clock for the 70 runs wins; ties within 10% go to fewer GPU-hours (CPU-only counts as zero). The user approves the measured choice (D1).
+- **`--time`** per algorithm `= h_a(k_a) x 1.5`, rounded up to 10 minutes; BC and IQL are separate arrays, so BC is not over-requested at IQL's time (ROADMAP 4.2.1 rule 1).
+
+## 6. `src/offrl/sweep.py`
+- **Grid file:** `name`, `pin` (Section 2), `extra_configs` (`configs/final.yaml` for the real grids; dry-run overrides for the dry-run grids), and `axes` expanded as a Cartesian product in the order written, last axis fastest. `algo` selects `configs/algo/<algo>.yaml`; other axes are config overrides; the ablation sets `algo.expectile` and `train.run_suffix` (`_tau0.5`, `_tau0.9`). Duplicate `run_name`s refuse the grid.
+- **Bundles:** up to `k_a` consecutive runs of algorithm `a`; its last bundle may be short. Bundle indices are **per algorithm** (0 to `n_a - 1`); `--algo` is required for `--bundle`, `--unfinished` and `--array` lists alike.
+- **Setup record:** `sweep --init` (in the gate job) creates `<out_dir>/sweep.json` with `O_EXCL`, and the log directory: grid file sha256, commit, the checkout path (`REPO_ROOT`), and, as explicit arguments copied from the approved `report/compute.md` row (never detected from the gate's node), the D1 gres or CPU feature, the GPU or CPU model string, and per algorithm `k_a`, CPUs, memory and `--time`. Every other mode only reads it and refuses a call that differs.
+- **`out_dir`:** derived by the sweep as `<root>/<grid name>/<HEAD[:12]>`; a call whose `--commit` differs from HEAD is refused.
+- **Run status, shared with `train.run`:** a new `train.run_status(cfg, device, threads)` returns `(status, reason)` from the run's files only; `train.run` and the sweep use it, so the rules live in one place. `running` is added by the sweep on top, from the locks; `train.run_status` never reads `.lock`. The read-only modes classify a run under a stale lock by its files (`partial` or `started`):
+
+  | Status | Condition | Sweep action |
+  |---|---|---|
+  | `done` | `final.json` parses with this run's name and steps; `meta.json` commit is HEAD, clean, config comparable | skip, `SKIP done` |
+  | `running` | `<run_dir>/.lock` held by another job that is still alive | skip; not in `--unfinished` |
+  | `partial` | checkpoint, no `final.json`, same commit, clean, same config, same device and thread count | resume |
+  | `started` | run directory, no checkpoint, no `final.json` | restart from scratch |
+  | `new` | no run directory | train |
+  | `conflict` | anything else: another commit, a dirty run, another config, device or thread count, a `final.json` that does not parse | refuse the whole bundle before any process starts; exit 3 |
+
+- **Locking:** the sweep first takes every lock of the bundle, then computes the statuses. A lock is `<run_dir>/.lock`, created with `O_CREAT | O_EXCL` (holding `SLURM_ARRAY_JOB_ID_SLURM_ARRAY_TASK_ID` and host) and removed on exit. A lock holding the task's own id (a requeue) is taken over. A lock whose job is gone is stale and broken by an atomic `os.rename` to `.lock.stale.<jobid>` (only one task's rename succeeds), then recreated with `O_EXCL`. The job-alive check is injectable; without `squeue` (CI) a foreign lock counts as held. Rule: `--unfinished` is used only after `squeue -u $USER -n <job name>` is empty.
+- **Processes:** a bundle's runs are parallel `python -m offrl.train` processes, `train.num_threads = cpus // k_a`, `OMP_NUM_THREADS` and `MKL_NUM_THREADS` the same; CPUs not divisible by `k_a` are refused. Logs go to the absolute `/scratch/$USER/logs/<grid>/<sha>/<array job>_<task>_<run>.log` and are archived with the runs. A failed run does not stop its partners. The launcher is injectable (`build_commands()`, `launch(cmds)`).
+- **Exit status:** 0 if every run of the bundle is `done` at the end; 3 on a conflict; 4 if any run was skipped as `running`; a run killed by signal `n` gives `128 + n`; otherwise the first non-zero exit of a run.
+- **Read-only modes:**
+  - `--list`: bundle, run, status and reason per run.
+  - `--unfinished --algo a`: that algorithm's bundle indices with a `started`, `partial` or `new` run, comma-separated for `sbatch --array=`; exits non-zero and names the run when any `conflict` exists.
+  - `--submit-plan`: the fixed list of submission waves (grid, algorithm, bundle indices) under the partition's submit limit, main and ablation interleaved.
+  - `--sbatch-args --algo a`: prints the `sbatch` arguments from `sweep.json` (`--array=...%J`, `--time`, `--cpus-per-task`, `--mem`, `--gres` or `--constraint`, `--output=/scratch/%u/logs/<grid>/<sha>/%x_%A_%a.out`, `--error=...`), since `#SBATCH` lines cannot read it.
+  - `--summary`: counts per status, with runs skipped as `running` shown apart (so a task that exited 4 is not resubmitted); per run the last `metrics.csv` step and its age (stall check, ROADMAP 4.2.1 rule 5) and the Slurm job id.
+  - `--check` and `--index`: refuse unless every run is `done` at one commit, clean, from the recorded checkout, on the D1 hardware (same `device` and GPU or CPU model in every `meta.json`), with a resolved config equal to its pin, `steps / eval_every` evaluations and the last `final_score_last_n` at `final_episodes` episodes. A non-finite or collapsed score is accepted and flagged (Section 2, run outcomes). `--index` then writes `runs_index.csv` (run, algo, `p`, seed, `tau`, suffix, final score, fall rate, flags, commit, dirty, device, GPU or CPU model, threads, resumes, Slurm job id, mixture sha256); non-finite values are written as strings.
+- **`--set`:** only `data.mixture_dir` and the output root. Every other value comes from the grid file and its pin.
+
+## 7. Running jobs from an immutable checkout
+- **Created once:** `slurm/tests_gate.sbatch` creates the checkout `git worktree add --detach --lock /scratch/$USER/src/<sha> <sha>` (skipped if it exists at that sha and clean), runs the tests **in that checkout**, and runs `sweep --init` for the grids it will serve; the gate marker then certifies the checkout. No other job creates it.
+- **Used by every grid job:** each job builds the path from `EXPECTED_COMMIT` first and runs `source "/scratch/$USER/src/$EXPECTED_COMMIT/slurm/lib/common.sh"`, then `cd`s there and sets `PYTHONPATH`. Nothing is read from the shared clone, so it can be pulled and used while a multi-day grid runs.
+- **`pin_commit`** now checks the checkout (HEAD equals `EXPECTED_COMMIT`, clean), catching a wrong or modified checkout.
+- **Import check:** when `<out_dir>/sweep.json` exists (so local runs and tests are unaffected), `train.run` and the sweep refuse unless `REPO_ROOT` equals the checkout path in it (an editable install pointing at the shared clone would otherwise take the code, manifests and configs from there). `meta.json` records `repo_root`.
+- **Cleanup:** after the copy-out and once `squeue` is empty, `scripts/archive_runs.sh --remove-checkout <sha>` runs `git worktree remove --force --force`. The purge on 2026-12-01 is after Phases 7 and 8.
+
+## 8. `slurm/grid.sbatch`
+- One array per algorithm and grid: `--array=<indices>%J`, `--output` and `--error` under `/scratch/$USER/logs/<grid>/<sha>/%x_%A_%a` (ROADMAP Phase 6 pitfall), resources and `--time` from `sweep.json`, `J` = 4 on `gpu`, the D3 throttle on `short`.
+- Environment: `module load miniconda3/24.11.1`, the scratch env, `MINARI_DATASETS_PATH`, `CUBLAS_WORKSPACE_CONFIG=:4096:8` (removes one source of GPU nondeterminism; `seed_everything` does not enable `torch.use_deterministic_algorithms`, so a bitwise resume is checked on the CPU in CI and on CUDA for tiny configs in the gate (R1), and not guaranteed at grid scale; the remaining GPU nondeterminism is unbiased and identical for BC and IQL), `OMP_NUM_THREADS` and `MKL_NUM_THREADS` per child.
+- The checkout (Section 7), `pin_commit`, `require_gate`; `train.device` explicit (`cuda` or `cpu`); the D1 gres string exactly (for example `gpu:t4:1`), or, if CPU wins, a `--constraint` on a model-specific CPU feature, checked before D1 to map to one `lscpu` model name on every node that has it (`sinfo -N -o "%N %f"` and a sample); the job prints `nvidia-smi` or `lscpu`, and the sweep refuses a node whose GPU or CPU model differs from `sweep.json`.
+- **No hardware switch within a grid:** if the D1 hardware becomes unavailable for longer than the schedule allows, the grids are rerun whole on the new hardware, never finished on a mix.
+
+## 9. Dry run (Explorer, development data)
+- **Grid files:** `configs/grid_dryrun_main.yaml` (the main grid's axes at seeds 100 and 101: 20 runs) and `configs/grid_dryrun_ablation.yaml` (the ablation's: 8 runs), `pin: dryrun`, no `final.yaml` (development evaluation seeds), and the overrides `train.steps=10000 train.eval_every=2000 train.checkpoint_every=2000 train.log_every=1000 eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1` in their `extra_configs`. Two files, so the dry run uses two output directories as the real grids do. Checkpoints every 2,000 of 10,000 steps leave time to cancel after a checkpoint and before the end.
+- **Commit identity:** the dry run runs at commit X on the branch; the grids run at the merge commit M. Before the grid, `git diff --quiet X M -- . ':!docs' ':!ROADMAP.md' ':!README.md' ':!report/*.md'` must succeed (code, configs, Slurm scripts, manifests, `pyproject.toml`), and the test gate must pass at M; otherwise the dry run is repeated at M.
+- **Steps:** (1) test gate at X (creates the checkout); (2) the dry-run arrays, one per algorithm and grid, at the D1 configuration, submitted in the waves `sweep --submit-plan` prints for the dry-run grids (on a GPU the 28 runs exceed the submit limit of 8, so the dry run also tests the wave procedure; the lock test in step 6 takes two more slots); (3) `scancel` one task after its first checkpoint; (4) `sweep --unfinished` after `squeue` is empty: only the cancelled bundle is listed; resubmit it: it resumes; (5) submit 2 tasks again (`--array=0,<last>`): every run prints `SKIP done`, exit 0; `--list` shows all 28 `done`; (6) lock test: submit one bundle twice at once; the second reports `running` and exits 4 without training.
+- **Score-blind checker:** `sweep --check` on both dry-run grids (pin `dryrun`: 5 evaluations, the last at 10 episodes): 28 run directories with `config.yaml`, `meta.json` (one commit, clean, the checkout, the D1 hardware), `metrics.csv`, `ckpt/latest.pt`, `final.json`; the resumed run has a resume with `from_step` in 2000 to 8000 (step 3 is repeated if it missed); the skip-only resubmission added no `metrics.csv` rows. It reads file presence, row counts and metadata only. The dry-run directories are deleted afterwards and the deletion recorded in `report/compute.md`.
+
+## 10. Pre-registration (user decision D7)
+`docs/preregistration.md`, drafted in this phase, reviewed by a fresh reviewer against this checklist, approved by the user, and committed before the grid. Before submission, its commit must be an ancestor of M. Required contents:
+1. **Pairing:** analysis is paired by seed (a seed shares its mixture across BC and IQL, and across `tau`).
+2. **Primary and secondary statistics:** primary is the per-cell mean over the 5 seeds of the final score; IQM, probability of improvement, fall rate and learning curves are secondary and descriptive.
+3. **Uncertainty:** the bootstrap (percentile or BCa, chosen), level, number of resamples, and the bootstrap's own random seed.
+4. **H1** ("BC's score rises with `p`, possibly non-monotonically"): the test for "rises" (for example, a paired CI of score(1) minus score(0) above 0, plus a stated trend statistic), and what counts as non-monotone.
+5. **H2** ("IQL reaches near-expert at much lower `p` than BC"): "near-expert" (for example, 90), the crossing `p` per method (the smallest `p` whose CI lower bound, or mean, is at least the threshold, one chosen; and whether every larger `p` must cross too, with the non-monotone case named), "much lower" (for example, at least one `p` level lower), and the verdict when neither method, or only BC, crosses.
+6. **H3** ("higher `tau` helps IQL more at `p = 0.05` than at `p = 0.5`"): the contrast `[score(0.9) - score(0.5)]` at `p = 0.05` minus the same at `p = 0.5`, whether `tau = 0.7` enters, and the paired CI that must exclude 0.
+7. **Verdicts:** supported, not supported, inconclusive, each defined; how multiple comparisons across the 5 `p` values are handled, or the statement that the verdicts are descriptive.
+8. **Run outcomes:** Section 2's four rules, and how a non-finite or collapsed final score is scored (for example, a non-finite final evaluation counts as normalized score 0, reported as such).
+9. **Plateau statistic for every cell**, on one set of evaluation episodes: for example, over evaluations 51 to 60 restricted to evaluation seeds 10000 to 10009 (the 10 every evaluation shares), the mean of 56 to 60 minus that of 51 to 55; reported, not acted on (D6).
+10. **Deviations from the proposal:** score scale, sanity checks, validation gate, update order, 5 seeds, 20 ablation runs, 300k only.
+11. **Amendments:** any change after the grid commit is dated and listed as a deviation, and the original verdict is reported too. A mid-grid bug rerun (Section 2, rule 4) records its trigger and reports the superseded results in an appendix.
+
+## 11. Checks (CI unless marked)
+- **S1, grids and pins:** `grid_main.yaml` expands to 50 runs and `grid_ablation.yaml` to 20 in the documented order; every run's resolved config equals its golden pin (Section 2) apart from the ignored keys; final evaluation seeds and a final mixture seed 0 to 4; BC and IQL differ only in `algo.*` and `data.scale_rewards`; both dry-run grids resolve only to development seeds.
+- **S2, bundles:** for `k` in {1, 2, 3, 4}, every run in exactly one bundle, no mixed algorithms, per-algorithm indices 0 to `n_a - 1`, count `ceil(N_a / k)`.
+- **S3, status and locks:** every row of the Section 6 table on tiny real runs through the injectable in-process launcher (manifest directory passed, metadata patched): `done` skipped without a process, `running` skipped (exit 4), `partial` resumes and ends bitwise equal to an uninterrupted run (R1), `started` restarts, `new` trains, each `conflict` case exits 3 before any run starts; `train.run` and the sweep agree on every case; a stale lock is broken by exactly one of two contenders; a requeued task takes over its own lock.
+- **S4, modes:** `--unfinished` lists only unfinished bundles and fails on a conflict; `--check` refuses each provenance or configuration violation (another commit, mixed hardware, a config off its pin, a wrong evaluation count) and accepts and flags a non-finite score; `--check` passes on a dry-run-shaped run against `pin: dryrun`; `--index` writes the documented columns.
+- **S5, partners and exits:** in a bundle of 2, one failing run does not stop the other; exit codes follow Section 6, including 4 and `128 + n`.
+- **S6, setup:** `sweep --init` refuses to overwrite; a later call with another `k_a`, CPUs, grid file or checkout is refused; threads are `cpus // k_a`; log names are unique per task and run.
+- **S7, one subprocess smoke test:** a `new` bundle of 2 tiny runs through the real `python -m offrl.train` launcher (hidden `--manifest-dir` flag), CPU.
+- **S8, every planned override passes pre-flight:** each resolved config of the benchmark, both dry-run grids, `grid_main.yaml` and `grid_ablation.yaml` passes a new `train.preflight_config(cfg)` (the config-only part of pre-flight) against the committed manifests.
+- **S9, `log_every` rule:** a config with `train.log_every=80` (step checks pass) is refused with "multiples of log_every".
+- **S10, shell:** `bash -n` and `shellcheck -S warning` on `slurm/*.sbatch`, `slurm/lib/common.sh` and `scripts/archive_runs.sh`; existing warnings fixed or annotated in the same commit.
+- **S11, checkout:** `use_commit_checkout` against a temporary git repo: idempotent at the same sha, refuses a dirty or wrong checkout; the `REPO_ROOT` check refuses a run imported from another path.
+- **Shared-file changes (one commit):** `train.run_status`, `train.preflight_config`, atomic `write_json` (temporary file and `os.replace`), `train.run` using `run_status`, the `REPO_ROOT` check and `meta.json`'s `repo_root`; R1 to R5 stay green.
+- **On Explorer:** mixtures (Section 4), benchmark (Section 5), dry run (Section 9).
+
+## 12. Storage and the scratch purge
+- /scratch is purged on the first Tuesday of each month; the next is **2026-12-01**. Phases 7 and 8 run Nov 24 to 29; nothing relies on /scratch after Nov 30.
+- **Copy-out script** `scripts/archive_runs.sh <src> <dest>`: `rsync` to `~/archive/`, then `SHA256SUMS` checked against the source; for the mixtures (Section 4), and after each grid array (runs and their logs), by Nov 29 at the latest; `--remove-checkout <sha>` as Section 7 states.
+
+## 13a. ROADMAP changes in this PR
+- Section 4.2.1 rule 5: "cancel bad runs early" reworded to cancel only misconfigured, wrong-hardware or stalled runs, never for a score or curve (Section 2, rule 3).
+- Section 4.1: the measured cost model replaces "20 to 60 minutes per run". Section 4.3: `grid.sbatch` as built (sweep CLI, per-algorithm arrays, the checkout, `out_dir` per grid and commit, the D1 hardware).
+- Phase 6 tasks and DoD: as this spec (benchmark pairs and choice rule, `sweep.py`, mixtures, pre-registration, development dry run).
+- Phase 7: goal 50 runs (5 seeds); task 2 becomes a status and stall check with `sweep --summary`, no curve-watching; DoD "all runs `done` per `sweep --check`, 60 evaluations"; the plateau and 500k sentence struck (D6), replaced by the pre-registered plateau statistic.
+- Phase 8 task 1: 20 runs, 5 seeds (D5), submitted with Phase 7 at the same commit and hardware; the optional "seeds 3 and 4" struck (D2).
+- Open question 3 (seeds) answered by D2.
+
+## 13. Decisions
+- **D1, hardware. Approved by the user (2026-11-22):** one hardware type for both grids, the exact gres string or CPU feature, `train.device` explicit, no switch within a grid (Section 8); the user approves the measured choice after the benchmark.
+- **D2, seeds: 5, fixed now. Set by the user (2026-11-22).**
+- **D3, throttle on `short` (if CPU wins): `%25`, used as `J` in the cost model. Approved by the user (2026-11-22).**
+- **D4, dry run on development data. Set by the user (2026-11-22).**
+- **D5, ablation seeds match the main grid: 20 runs. Set by the user (2026-11-22).**
+- **D6, 300k only; the 500k rerun rule dropped. Set by the user (2026-11-22).**
+- **D7, pre-registration drafted by Claude, approved by the user. Set by the user (2026-11-22).**
+
+## 14. Review log
+- **v1 to v2.** Blockers (both reviewers): the benchmark used a final-grid mixture with development evaluation seeds, and the dry run used 2-episode final evaluations on final mixtures; pre-flight refuses both, and both touched final data. RL majors: the seeds decision and its conditional, Phase 8 optional seeds, hardware homogeneity and CPU fallback, drift between the grids, the unpinned resolved config, the 500k rule, pre-registration, `runs_index.csv`, commit identity. Engineering majors: status table gaps and duplicated rules, resubmission with other resources, two jobs on one run, untestable subprocess tests, the cost model, mixtures for seeds 3 and 4, the shared clone frozen for days. Minors and nits as listed in v2.
+- **v2 to v3.** RL majors: run outcomes left to a post-result choice (Section 2, run outcomes); the pre-registration's contents only as examples (Section 10 checklist). RL minors: a pin per grid, the full resolved config as golden files, the rebuild check for seeds 0 to 2's procedure, two dry-run grid files, the determinism wording; nit: the plateau statistic for every cell. Engineering majors: `--check` refused every dry-run run (pins per grid); the checkout sourced `common.sh` from the shared clone, was created racily, could be bypassed by an editable install, and deleted its logs (Section 7); the cost-model validation was ill-defined (G2, component-wise). Engineering minors: lock races and requeue, exit 4, `sweep --init`, per-algorithm indices, choice by BC and IQL pairs with memory in `J_eff` (C8 dropped), the full commit-identity diff and gate at M, `shellcheck -S warning`, the commit order of S8; nits: window count, S11.
+- **v3 review.** RL: approved; minors (ROADMAP edits listed, Section 13a; mid-grid rerun trigger recorded, superseded results reported) and nits (H2 crossing with non-monotone curves; "collapsed" defined) applied. Engineering: one major, the `gpu` submit limit of 8 (submission waves in the cost model, `--submit-plan`, the order fixed before the first submission, no results opened before `--check` passes on all 70); minors (locks only in the sweep, `--sbatch-args` and the log directory, `--init` arguments from the approved choice, a model-specific CPU feature) and nits (CUDA resume wording, `--summary` shows `running` apart, one episode set for the plateau statistic) applied.
