@@ -235,9 +235,9 @@ Mixture manifest (`report/mixtures/mix_p0.05_s0.json`, committed; full field lis
 ### 4.1 How much GPU do we actually need?
 Honest answer: **very little.** Our networks are 256x256 MLPs with batch 256. A modern GPU is mostly idle on one run, and evaluation rollouts in MuJoCo run on the CPU. So:
 
-- **One GPU per job, any type.** V100 or T4 is plenty. Do not request A100 or H200: they are overkill and queue longer.
+- **One GPU per job, any type.** V100 or T4 is plenty. Do not request A100 or H200: they are overkill and queue longer. (2026-11-21: V100 is ineligible in this environment, no PyTorch 2.11+cu128 kernels for it; the grids run on CPU, D1.)
 - **Pack several runs per GPU** (run 2 to 4 training processes in parallel inside one job) to use the GPU properly.
-~~**Measure before scheduling** (Phase 6). Rough guess to be replaced by the benchmark: 20 to 60 minutes per 300k-step run including eval. 42 core runs is roughly 15 to 40 GPU-hours, which fits easily.~~ **Measured (2026-11-21, Phase 6, `report/compute.md`):** a 300k-step IQL run takes about 1.0 h on one 4-CPU cascadelake node and about 1.0 h alone on a T4 (BC 0.22 h and 0.68 h); with one T4 node and up to 22 CPU jobs at once, the 70 grid runs take about 3.5 h on CPU against 13.3 h on the best T4 setup, so the grids run on CPU (D1).
+- ~~**Measure before scheduling** (Phase 6). Rough guess to be replaced by the benchmark: 20 to 60 minutes per 300k-step run including eval. 42 core runs is roughly 15 to 40 GPU-hours, which fits easily.~~ **Measured (2026-11-21, Phase 6, `report/compute.md`):** a 300k-step IQL run takes about 1.0 h with 4 CPUs on a cascadelake node and about 1.0 h alone on a T4 (BC: 0.22 h on CPU, 0.68 h on a T4 packed 4 per GPU); with one T4 node and up to 22 CPU jobs at once, the 70 grid runs take about 3.5 h on CPU against 13.3 h on the best T4 setup, so the grids run on CPU (D1).
 - CPU-only on the `short` partition is a valid fallback and has a much higher running-job limit. Phase 6 benchmarks both and picks the faster wall-clock.
 
 ### 4.2 Explorer facts (from RC docs, checked 2026-11-12) [13]
@@ -258,15 +258,17 @@ Honest answer: **very little.** Our networks are 256x256 MLPs with batch 256. A 
 1. **Smallest request that works:** 1 GPU of any type, `--time` = measured runtime + 50%, `--mem` and `--cpus-per-task` from the Phase 6 benchmark, not guesses.
 2. **No idle GPUs:** never hold an interactive GPU session while reading or writing code; use `gpu-short` for tests and exit when done. Debug on your laptop CPU first.
 3. **No speculative grids:** the grid is submitted only after Phases 4 to 6 DoDs pass, and only once per code version. Failed bundles are resubmitted, not the whole array.
-4. **Throttle arrays** (`%4`) so you never exceed the partition's running-job limit or crowd out the LLM course's students. Avoid launching big arrays right before that course's deadlines.
+4. **Throttle arrays** (`%4`; 2026-11-21: on `short` the grids use `%25`, D3, and `%4` stays for `gpu`) so you never exceed the partition's running-job limit or crowd out the LLM course's students. Avoid launching big arrays right before that course's deadlines.
 5. **Cancel bad runs early:** ~~check the first bundle's log within 15 minutes; `scancel` anything diverging or misconfigured.~~ (2026-11-21) check the first bundle's log within 15 minutes; `scancel` only a misconfigured, wrong-hardware or stalled run, never for its score or curve (Phase 6 spec Section 2, run outcomes; pre-registration Section 9).
 6. **Clean storage:** delete checkpoints except the final one after Phase 9; keep scratch under a few GB.
 7. **Keep a usage log** (`report/compute.md`): total GPU-hours used, so you can show the professor what was consumed if asked.
 
 ### 4.3 Job layout
-- `slurm/grid.sbatch` is a **job array**: one array task = one bundle of 2 runs that share a GPU.
-~~Main grid: 30 runs / 2 per task = 15 array tasks, throttled with `%4` to match the 4-running-job limit on `gpu`.~~ **As built (2026-11-21, Phase 6 spec Sections 6 to 8):** `slurm/grid.sbatch` runs one bundle per array task through `src/offrl/sweep.py`, from an immutable checkout of the grid commit, one array per algorithm and grid; resources and `--time` come from the grid's `sweep.json` (`sweep --sbatch-args`). The grids run on CPU (`short`, `--constraint=cascadelake`, one run per job, 4 CPUs, 8G), throttled `%25` (D3); 70 runs, 25 BC and 45 IQL.
+- ~~`slurm/grid.sbatch` is a **job array**: one array task = one bundle of 2 runs that share a GPU.~~ (2026-11-21) `slurm/grid.sbatch` is a **job array**: one array task = one bundle; on the D1 hardware (CPU) a bundle is one run.
+- ~~Main grid: 30 runs / 2 per task = 15 array tasks, throttled with `%4` to match the 4-running-job limit on `gpu`.~~ **As built (2026-11-21, Phase 6 spec Sections 6 to 8):** `slurm/grid.sbatch` runs one bundle per array task through `src/offrl/sweep.py`, from an immutable checkout of the grid commit, one array per algorithm and grid, with outputs under `<root>/<grid name>/<commit[:12]>`; resources and `--time` come from the grid's `sweep.json` (`sweep --sbatch-args`). The grids run on CPU (`short`, `--constraint=cascadelake`, one run per job, 4 CPUs, 8G), throttled `%25` (D3); 70 runs, 25 BC and 45 IQL.
 - Every run checkpoints every 25k steps and resumes automatically, so the 8 h limit and pre-emption cannot lose more than 25k steps.
+
+(2026-11-21) Superseded: the example below is the pre-Phase 6 sketch; the real script is `slurm/grid.sbatch`, submitted with the arguments `sweep --sbatch-args` prints.
 
 ```bash
 #!/bin/bash
@@ -291,7 +293,7 @@ python -m offrl.sweep --grid configs/grid_main.yaml \
     --out /scratch/$USER/runs
 ```
 
-After the grid, `rsync` (or `scp`) `/scratch/$USER/runs/*/metrics.csv` and configs back to your laptop. Never leave the only copy of results on scratch.
+After the grid, `rsync` (or `scp`) `/scratch/$USER/runs/*/metrics.csv` and configs back to your laptop. Never leave the only copy of results on scratch. (2026-11-21) Runs and logs are archived with `scripts/archive_runs.sh` (SHA256SUMS checked) by Nov 29.
 
 ---
 
@@ -330,9 +332,11 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 | 4 | BC + evaluation harness | Nov 18 to 19 | BC sanity checks pass |
 | 5 | IQL implementation and validation | Nov 20 to 22 | Phase 5 spec DoD met (V1 recorded, follow-up rule applied) |
 | 6 | Compute benchmark + Slurm pipeline | Nov 22 to 25 | Phase 6 spec DoD (cost model, D1, dry run, pre-registration) |
-| 7 | Main grid (50 runs) and the tau ablation (20 runs), one commit | Nov 26 to 27 (Nov 28 contingency) | `sweep --check` passes on all 70 runs; archived before Nov 29 |
+| 7 | Main grid (50 runs) and the `tau` ablation (20 runs), one commit | Nov 26 to 27 (Nov 28 contingency) | `sweep --check` passes on all 70 runs; archived by Nov 29 |
 | 8 | Optional extras (the tau ablation moved into Phase 7's window) | Nov 28 | Each extra done or listed as not done |
 | 9 | Analysis and figures (from the archive; /scratch purged Dec 1) | Nov 28 to Dec 1 | Figures final |
+
+(2026-11-21, Phase 6 D2, D5, D6) Rows 6 to 9 replaced; they were: 6, Nov 23, "Cost model + dry run"; 7, "Main grid (30 runs)", Nov 24 to 27, "All runs complete"; 8, "Ablations (+ optional CQL / reweighting)", Nov 27 to 29, "Ablation complete"; 9, Nov 30 to Dec 1, "Figures final".
 | 10 | Report + portfolio packaging | Dec 1 to 4 | Submitted |
 
 ---
@@ -511,14 +515,14 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **Tasks**
 1. ~~Time 10k steps of IQL with 1, 2 and 4 runs per GPU on `gpu-short`, and on CPU in `short`. Record steps/s and eval time.~~ (2026-11-21) Benchmark IQL and BC pairs on T4, V100 and CPU on development data, validate the cost model against Phase 5, and choose by a rule fixed before measuring (Phase 6 spec Section 5).
-2. Pick the configuration with the best runs-per-hour; set `--runs-per-bundle` and `--time` with a 50% safety margin.
+2. ~~Pick the configuration with the best runs-per-hour; set `--runs-per-bundle` and `--time` with a 50% safety margin.~~ (2026-11-21) Choose by the shortest wall clock for the 70 runs (ties within 10% to fewer GPU-hours); `--time` = h x 1.5, rounded up to 10 minutes, per algorithm; runs per job and resources recorded in `sweep.json` by `sweep --init`.
 3. `sweep.py`: expands a grid file into a run list, maps an array index to a bundle, skips runs that already finished (so re-submitting is safe).
 4. ~~Dry run: submit the array with `--steps 2000` to check paths, logs and resume.~~ (2026-11-21) Dry run on development data (D4): both grids' paths at 10,000 steps, one task cancelled and resumed, a skip-only resubmission, a lock test (Phase 6 spec Section 9). Also: final-grid mixtures for seeds 3 and 4, and the pre-registration of the H1 to H3 criteria (`docs/preregistration.md`).
 5. Write `report/compute.md`: GPU type, steps/s, GPU-hours per run and total.
 
-**Deliverables:** `slurm/grid.sbatch`, `sweep.py`, `report/compute.md`.
+**Deliverables:** `slurm/grid.sbatch`, `sweep.py`, `report/compute.md`. (2026-11-21) Also `configs/grid_*.yaml`, `configs/pins/`, `docs/preregistration.md`, the seed 3 and 4 mixture manifests.
 
-**DoD:** dry-run array completes with every run folder containing config, metrics and a checkpoint; resubmitting skips finished runs.
+**DoD:** ~~dry-run array completes with every run folder containing config, metrics and a checkpoint; resubmitting skips finished runs.~~ (2026-11-21) Phase 6 spec Sections 1 and 9: the cost model is validated (G2 within 20% of array 12034721) and D1 is approved; the seed 3 and 4 mixtures are built, checked and archived; `sweep --check` passes on both dry-run grids (28 runs), the cancelled task resumes, the skip-only resubmission adds no rows and the lock test exits 4; `docs/preregistration.md` is approved and its commit is an ancestor of the grid commit M; the dry-run commit X equals M outside docs and the test gate passes at M, otherwise the dry run is repeated at M.
 
 **Pitfalls:** writing outputs to `/home` (quota); log files with the same name across array tasks (use `%A_%a`).
 
@@ -532,10 +536,10 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Why:** this is the data for the main figure and H1, H2.
 
 **Tasks**
-1. Submit the array; check the first bundle's log within 15 minutes.
-2. ~~Daily: `squeue -u $USER`, `sacct` for failures, glance at curves in TensorBoard.~~ (2026-11-21) Status and stall checks with `sweep --summary` and `sacct`; no curve or `eval.csv` is opened before `sweep --check` passes on all 70 runs (Phase 6 spec Section 2).
+1. ~~Submit the array; check the first bundle's log within 15 minutes.~~ (2026-11-21) At the grid commit M, after the test gate, submit the three arrays (main BC, main IQL, ablation IQL) in the order `sweep --submit-plan` prints, with the arguments `sweep --sbatch-args` prints; check the first bundle's log within 15 minutes.
+2. ~~Daily: `squeue -u $USER`, `sacct` for failures, glance at curves in TensorBoard.~~ (2026-11-21) Status and stall checks with `sweep --summary` and `sacct`; no curve, `eval.csv` or `final.json` is opened before `sweep --check` passes on all 70 runs (Phase 6 spec Section 2).
 3. Re-submit failed bundles (the sweep skips finished runs).
-4. Copy results off scratch after it finishes.
+4. ~~Copy results off scratch after it finishes.~~ (2026-11-21) Archive runs and logs with `scripts/archive_runs.sh` (SHA256SUMS checked) by Nov 29, before the Dec 1 purge; then `--remove-checkout <sha>` once `squeue` is empty.
 
 **Deliverables:** ~~30 complete run folders~~ (2026-11-21) 50 complete run folders; `runs_index.csv` (written by `sweep --index`).
 
@@ -552,9 +556,9 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 
 **Tasks**
 1. **Required:** IQL `tau` in {0.5, 0.9} at `p` in {0.05, 0.5}, ~~3 seeds (12 runs)~~ 5 seeds (20 runs; D5, 2026-11-21), submitted with Phase 7 at the same commit on the same hardware. `tau = 0.7` reuses Phase 7 runs.
-2. **Optional, in priority order:**
+2. **Optional, in priority order:** (2026-11-21) all optional extras are descriptive and enter no H1 to H3 verdict (pre-registration).
    - ~~Seeds 3 and 4 for the main grid (5 seeds total; strengthens every claim).~~ (struck 2026-11-21: 5 seeds are in the main grid from the start, D2; no seed is added after results are seen)
-   - Extra `p` in {0.01, 0.02} if the BC/IQL gap is not visible at 0.05.
+   - Extra `p` in {0.01, 0.02} if the BC/IQL gap is not visible at 0.05 (descriptive only, enters no verdict; pre-registration, "Data it applies to"; decided after the main grid's results, so reported as a post-hoc extra).
    - Trajectory reweighting at `p = 0.05` [19].
    - CQL via CORL at `p` in {0.05, 0.5}, 2 seeds [2, 8].
 
