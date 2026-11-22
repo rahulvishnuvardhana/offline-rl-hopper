@@ -5,6 +5,7 @@ pre-flight against the committed manifests."""
 from pathlib import Path
 
 import pytest
+import yaml
 
 from offrl import sweep, train
 from offrl.config import load_checked
@@ -72,20 +73,41 @@ def test_real_grids_pin_the_preregistered_values(name):
         )
         assert (tr["lr"], tr["batch_size"], tr["actor_cosine_lr"]) == (3e-4, 256, True)
         assert r.cfg["seed"] in range(5) and r.cfg["seed"] < train.DEV_SEED_MIN
+        d, n, s = r.cfg["data"], r.cfg["net"], r.cfg["score"]
+        assert n["hidden"] == [256, 256] and d["n_transitions"] == 900000
+        assert d["normalize_states"] is True and d["state_std_eps"] == 1e-3
+        assert d["scale_rewards"] is (r.algo == "iql")
+        assert (round(s["r_random"], 2), round(s["r_expert"], 2)) == (17.03, 3857.80)
         if r.algo == "iql":
-            assert a["beta"] == 3.0 and a["expectile"] in (0.5, 0.7, 0.9)
-            assert a["expectile"] == 0.7 or name == "grid_ablation"
+            assert a["beta"] == 3.0
+            assert (a["discount"], a["target_update_rate"], a["exp_adv_max"]) == (0.99, 0.005, 100.0)
+            assert a["expectile"] == 0.7 if name == "grid_main" else a["expectile"] in (0.5, 0.9)
         else:
             assert a["beta"] == 0.0
 
 
 def test_bc_and_iql_differ_only_in_algo_and_reward_scaling():
     """ROADMAP fairness requirement: same network, data handling, budget and evaluation."""
-    bc, iql = (sweep.pin_for({"pin": "main"}, r) for r in (runs_of("grid_main")[0], runs_of("grid_main")[-1]))
+    runs = runs_of("grid_main")
+    bc_run = next(r for r in runs if r.algo == "bc")
+    iql_run = next(r for r in runs if r.algo == "iql")
+    bc, iql = (sweep.pin_for({"pin": "main"}, r) for r in (bc_run, iql_run))
     for pin in (bc, iql):
         pin.pop("algo")
         pin["data"].pop("scale_rewards")
     assert bc == iql
+
+
+def test_ablation_matches_main_iql_except_expectile():
+    """H3 compares the ablation with the main grid's tau = 0.7 cells: nothing else may differ."""
+    main = yaml.safe_load((sweep.PIN_DIR / "main_iql_tau0.7.yaml").read_text(encoding="utf-8"))
+    main["algo"].pop("expectile")
+    for t in ("0.5", "0.9"):
+        abl = yaml.safe_load((sweep.PIN_DIR / f"ablation_iql_tau{t}.yaml").read_text(encoding="utf-8"))
+        abl["algo"].pop("expectile")
+        assert abl == main
+    grids = [sweep.load_grid(CONFIGS / f"{g}.yaml") for g in ("grid_main", "grid_ablation")]
+    assert grids[0]["extra_configs"] == grids[1]["extra_configs"]
 
 
 @pytest.mark.parametrize("name", ["grid_dryrun_main", "grid_dryrun_ablation"])
@@ -97,7 +119,8 @@ def test_dry_run_uses_development_data_only(name):
 
 
 def benchmark_configs():
-    """slurm/benchmark.sbatch's resolved configs (spec Section 5)."""
+    """slurm/benchmark.sbatch's resolved configs (spec Section 5): keep in step with its
+    ``common=(...)`` overrides."""
     overrides = [
         "seed=100", "data.p_expert=1", "train.steps=10000", "train.log_every=1000",
         "train.eval_every=2000", "train.checkpoint_every=2000", "eval.episodes=10",

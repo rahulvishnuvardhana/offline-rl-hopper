@@ -1,6 +1,8 @@
 """Phase 6 spec Section 5: apply the pre-fixed choice rule to the benchmark logs (the D1 evidence).
 
-Usage: python choice_rule.py <dir with offrl-bench-*.out logs> <dir with archived 12034721 iql runs>
+Usage: python scripts/phase6_cost_model.py <dir of offrl-bench-*.out or .log>
+    <dir of archived 12034721 iql runs>
+(on Explorer: ~/archive/offrl_phase5_runs_2026-11-21/runs_phase5_seeds).
 Prints the per-configuration model inputs, the 12034721 validation, and the grid wall clock for
 each candidate pair (T4, CPU; V100 ineligible: no kernels for sm_70 in torch 2.11+cu128).
 """
@@ -17,7 +19,7 @@ UPDATES, EVAL_STEPS = 300_000, 800 * 1_000
 
 logs = Path(sys.argv[1])
 cfg = {}
-for f in sorted(logs.glob("offrl-bench-*.out")):
+for f in sorted(logs.glob("offrl-bench-*.[lo][ou][gt]")):
     text = f.read_text(errors="replace")
     m = re.search(r"model inputs \(slowest run\): u = ([\d.]+) ms, e = ([\d.]+) ms", text)
     c = re.search(r"config: algo=(\w+) k=(\d+) device=(\w+) cpus=(\d+) mem=(\d+)M", text)
