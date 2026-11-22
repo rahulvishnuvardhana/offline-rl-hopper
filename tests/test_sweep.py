@@ -411,8 +411,15 @@ def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeyp
     with_final(score=95.0, fall_rate=0.1)
     errors, _ = sweep.check_run(r, g, {**record, "hardware": {"kind": "cpu", "model": "Other CPU"}})
     assert any("cpu_model" in e for e in errors)
-    errors, _ = sweep.check_run(r, g, {**record, "hardware": {"kind": "gpu", "model": "Tesla T4"}})
+    t4 = {**record, "hardware": {"kind": "gpu", "model": "Tesla T4"}}
+    # meta's gpu names the node's GPU even for a CPU run (the test gate runs on a T4 node), so both
+    # cases are set explicitly: no GPU fails on gpu and device, a T4 node's CPU run on device alone.
+    (run_dir / "meta.json").write_text(json.dumps({**meta, "gpu": None}))
+    errors, _ = sweep.check_run(r, g, t4)
     assert any("gpu" in e for e in errors) and any("device" in e for e in errors)
+    (run_dir / "meta.json").write_text(json.dumps({**meta, "gpu": "Tesla T4"}))
+    errors, _ = sweep.check_run(r, g, t4)
+    assert errors and all("device" in e for e in errors)
     (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "cpu_model"}))
     assert any("cpu_model" in e for e in sweep.check_run(r, g, record)[0])  # a missing key refuses
     (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "repo_root"}))
