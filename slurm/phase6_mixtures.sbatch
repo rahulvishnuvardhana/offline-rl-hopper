@@ -45,10 +45,24 @@ for f in "${new[@]}"; do  # refuse before building anything: an install never re
         exit 1
     fi
 done
+if [ "$(stat -c %d "$mixtures")" != "$(stat -c %d "/scratch/$USER")" ]; then
+    echo "REFUSING: $mixtures is not on the staging filesystem; mv would not be an atomic rename" >&2
+    exit 1
+fi
 enter_worktree
-mkdir -p "$out" "$stage/check" "$stage/new"
-# The staging copies go whatever happens; the job keeps its exit status (_remove_worktree reads $?).
-trap 'rc=$?; rm -rf "$stage"; (exit "$rc"); _remove_worktree' EXIT
+# The staging copies go whatever happens and the worktree is removed; the job keeps its exit
+# status (_remove_worktree reads $?). `set +e` first: under errexit the `(exit "$rc")` that
+# restores a failure's status would stop the trap before the worktree is removed.
+# After a hard kill (time limit) no trap runs: remove $stage (about 2.3 GB) by hand.
+trap 'rc=$?; set +e; rm -rf "$stage"; (exit "$rc"); _remove_worktree' EXIT
+mkdir -p "$out" "$stage/check" "$stage/new" "$stage/existing"
+
+# The six existing development mixtures, read from scratch and checked against their committed
+# manifests before anything is built or installed (the worktree is at the pinned commit here).
+for f in mix_p0_s100 mix_p0_s101 mix_p0.2_s100 mix_p0.2_s101 mix_p1_s100 mix_p1_s101; do
+    cp "report/mixtures/$f.json" "$stage/existing/"
+done
+python scripts/check_mixture_files.py --manifests "$stage/existing" --mixture-dir "$mixtures"
 
 # Compares report/mixtures/<name>.json in the worktree with the committed one: same data, or exit 1.
 same_data() {
@@ -95,8 +109,13 @@ done
 cp report/mixtures/summary_s100_s101.json report/mixtures/audit_s100_s101.json "$out"/
 
 # Install: every check passed. Each new file is renamed into place (atomic on one filesystem);
-# `mv -n` never replaces a file that appeared meanwhile, and the count below proves none did.
-for f in "${new[@]}"; do mv -n "$stage/new/$f.npz" "$mixtures/$f.npz"; done
+# `mv -n` never replaces a file that appeared meanwhile, and the count below proves none did
+# (`|| true`: newer coreutils exit 1 on a skipped move; the count reports it either way).
+# If the job dies inside this loop, each installed file is complete (one rename each) and a rerun
+# is refused by the check at the top. Recovery: check_mixture_files.py --manifests
+# logs/phase6_mix_<id> --mixture-dir /scratch/$USER/mixtures, then, with approval, remove the
+# partial new files and resubmit.
+for f in "${new[@]}"; do mv -n "$stage/new/$f.npz" "$mixtures/$f.npz" || true; done
 left=$(find "$stage/new" -name '*.npz' | wc -l)
 if [ "$left" -ne 0 ]; then
     echo "INSTALL INCOMPLETE: $left file(s) not moved (a target appeared meanwhile)" >&2

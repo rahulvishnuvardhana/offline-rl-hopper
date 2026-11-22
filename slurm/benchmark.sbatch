@@ -7,6 +7,7 @@
 # Partition, device and resources come from the submit line, one job per configuration, e.g.
 #   G2:  sbatch -p gpu-short --gres=gpu:t4:1 -c 8 --mem=12G $pin,ALGO=iql,K=2,DEVICE=cuda,GPU="Tesla T4" slurm/benchmark.sbatch
 #   C1:  sbatch -p short --constraint=cascadelake -c 4 --mem=8G $pin,ALGO=iql,K=1,DEVICE=cpu slurm/benchmark.sbatch
+# plus --dependency=afterok:<mixture job> --kill-on-invalid-dep=yes (a failed mixture job cancels it),
 # with pin="--export=ALL,EXPECTED_COMMIT=$(git rev-parse HEAD)", after slurm/tests_gate.sbatch
 # passed at that commit, and after the mixture job (--dependency=afterok:<it>). 4 CPUs and 4G per
 # run, plus 4G. At most 30 minutes (ROADMAP 4.2.1). The job refuses an allocation other than the
