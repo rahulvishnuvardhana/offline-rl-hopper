@@ -378,6 +378,10 @@ def _on_sigterm(signum: int, _frame: Any) -> None:
     for p in _children:
         if p.poll() is None:
             p.send_signal(signum)
+    deadline = time.monotonic() + 20  # within Slurm's KillWait: the runs end before their locks go
+    for p in _children:
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            p.wait(timeout=max(0.0, deadline - time.monotonic()))
     raise SystemExit(128 + signum)
 
 
@@ -587,6 +591,17 @@ def submit_plan(
     return [order[i : i + max_submit] for i in range(0, len(order), max_submit)]
 
 
+def parse_indices(text: str, n: int) -> list[int]:
+    """A wave of ``--submit-plan``: comma-separated bundle indices, each in 0 to n - 1."""
+    items = text.split(",")
+    if not all(i.isdigit() for i in items):
+        raise SweepError(f"--indices takes comma-separated bundle numbers, got {text!r}")
+    wave = [int(i) for i in items]
+    if any(i >= n for i in wave):
+        raise SweepError(f"--indices {text}: this algorithm has bundles 0 to {n - 1}")
+    return wave
+
+
 def sbatch_args(record: dict[str, Any], algo: str, indices: Sequence[int], log_root: Path) -> list[str]:
     a, hw = record["algos"][algo], record["hardware"]
     logs = log_root / record["grid"] / record["commit"][:12]
@@ -680,6 +695,8 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
         raise SweepError(f"--set takes only {SET_KEYS}: {bad}")
     if not a.init and any(getattr(a, k) is not None for k in INIT_ONLY):
         raise SweepError(f"{', '.join('--' + k.replace('_', '-') for k in INIT_ONLY)} are for --init only")
+    if a.indices is not None and not a.sbatch_args:
+        raise SweepError("--indices is for --sbatch-args only")
     commit = head_commit()
     if a.commit and a.commit != commit:
         raise SweepError(f"HEAD is {commit}, not --commit {a.commit}")
@@ -741,7 +758,7 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
         if a.unfinished:
             print(",".join(map(str, todo)))
             return 0
-        wave = [int(i) for i in a.indices.split(",")] if a.indices else todo
+        wave = parse_indices(a.indices, len(groups[a.algo])) if a.indices else todo
         chosen = [i for i in wave if i in todo]
         if not chosen:
             print("nothing unfinished in this wave", file=sys.stderr)

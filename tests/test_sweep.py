@@ -254,6 +254,15 @@ def test_init_only_options_are_refused_elsewhere(tmp_path):
     assert sweep.main(argv) == sweep.EXIT_CONFLICT
 
 
+def test_indices_are_checked(tmp_path):
+    assert sweep.parse_indices("0,2", 3) == [0, 2]
+    for bad in ("a", "1,,2", "-1", "3"):
+        with pytest.raises(sweep.SweepError, match="--indices"):
+            sweep.parse_indices(bad, 3)
+    argv = ["--grid", "g.yaml", "--root", str(tmp_path), "--indices", "0", "--list"]
+    assert sweep.main(argv) == sweep.EXIT_CONFLICT  # only with --sbatch-args
+
+
 def test_unfinished_lists_bundles_and_fails_on_conflict(grid, env, tmp_path):
     _, out, runs, manifests = grid
     groups = sweep.bundles(runs, {"bc": 1, "iql": 1})["bc"]
