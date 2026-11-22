@@ -257,6 +257,8 @@ def run_status(
     finished = (run_dir / "final.json").exists()
     if not finished and not (run_dir / "ckpt" / "latest.pt").exists():
         return "started", "no checkpoint yet: restarts from scratch"
+    if not (run_dir / "config.yaml").exists():  # nothing to compare: reuse or resume would be blind
+        return "conflict", f"{run_dir}: config.yaml missing"
     meta = _read_json(run_dir / "meta.json")
     if not isinstance(meta, dict):
         return "conflict", f"{run_dir}: meta.json missing or unreadable"
@@ -285,9 +287,12 @@ def run_status(
 def check_checkout(out_dir: Path) -> None:
     """A grid's ``sweep.json`` names the checkout its runs must come from (Phase 6 spec Section 7):
     an install pointing elsewhere would take code, manifests and configs from another tree."""
-    record = _read_json(out_dir / "sweep.json")
-    if record is None:
+    path = out_dir / "sweep.json"
+    if not path.exists():
         return
+    record = _read_json(path)
+    if not isinstance(record, dict) or not isinstance(record.get("repo_root"), str):
+        raise PreflightError(f"{path} unreadable or without repo_root")
     if Path(record["repo_root"]).resolve() != REPO_ROOT.resolve():
         raise PreflightError(
             f"code imported from {REPO_ROOT}, but {out_dir} belongs to checkout {record['repo_root']}"

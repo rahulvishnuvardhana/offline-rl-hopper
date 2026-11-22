@@ -70,6 +70,9 @@ def interrupted(make, manifests, env):
         (finished, lambda d: (d / "final.json").write_text('{"run": "trunc', encoding="utf-8"), "final.json"),
         (finished, lambda d: edit_json(d / "final.json", run="another_run"), "final.json"),
         (finished, lambda d: (d / "meta.json").unlink(), "meta.json"),
+        (finished, lambda d: edit_json(d / "final.json", steps=[1, 2]), "final.json"),
+        (finished, lambda d: (d / "config.yaml").unlink(), "config.yaml"),
+        (interrupted, lambda d: (d / "config.yaml").unlink(), "config.yaml"),
         (interrupted, lambda d: edit_json(d / "meta.json", torch_threads=999), "same setup"),
         (interrupted, lambda d: edit_json(d / "meta.json", device="cuda"), "same setup"),
     ],
@@ -139,5 +142,21 @@ def test_run_refuses_code_from_another_checkout(small_run, env, tmp_path):
     (out / "sweep.json").write_text(json.dumps({"repo_root": str(tmp_path / "elsewhere")}), encoding="utf-8")
     with pytest.raises(train.PreflightError, match="belongs to checkout"):
         train.run(cfg, env=env, manifest_dir=manifests)
+    for broken in ('{"repo_root": "trunc', "[]", "{}"):  # truncated, not an object, no repo_root
+        (out / "sweep.json").write_text(broken, encoding="utf-8")
+        with pytest.raises(train.PreflightError, match="unreadable or without repo_root"):
+            train.run(cfg, env=env, manifest_dir=manifests)
     (out / "sweep.json").write_text(json.dumps({"repo_root": str(train.REPO_ROOT)}), encoding="utf-8")
     assert (train.run(cfg, env=env, manifest_dir=manifests) / "final.json").exists()
+
+
+def test_started_run_restarts_with_cleared_logs(small_run, env):
+    make, manifests = small_run
+    cfg = make()
+    run_dir = train.run(cfg, stop_at=100, env=env, manifest_dir=manifests)  # before the first checkpoint
+    assert status(cfg)[0] == "started"
+    rows_before = (run_dir / "metrics.csv").read_text(encoding="utf-8").splitlines()
+    train.run(cfg, stop_at=150, env=env, manifest_dir=manifests)
+    rows = (run_dir / "metrics.csv").read_text(encoding="utf-8").splitlines()
+    assert rows[: len(rows_before)] == rows_before and len(rows) == len(rows_before) + 1  # 50, 100, 150
+    assert json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))["resumes"] == []
