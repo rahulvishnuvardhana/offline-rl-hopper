@@ -41,6 +41,8 @@ def test_reward_scale_ignores_trimmed():
     assert reward_scale(returns, whole) == pytest.approx(1000.0 / 400.0)
     with pytest.raises(ValueError):
         reward_scale(np.array([5.0, 9.0]), np.array([True, False]))
+    with pytest.raises(ValueError):  # zero return range: no division by zero
+        reward_scale(np.array([7.0, 7.0]), np.array([True, True]))
 
 
 def test_beta_eff_reference():

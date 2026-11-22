@@ -14,6 +14,7 @@ import torch
 
 from offrl.analysis.eda import normalized_score
 from offrl.data.load import Episode
+from offrl.data.mixture import EXPERT, SIMPLE
 from offrl.data.normalize import StateNormalizer
 from offrl.nets import GaussianPolicy
 
@@ -90,3 +91,76 @@ def no_fall_return(rows: Sequence[Mapping[str, str]], steps: Sequence[int]) -> d
     keep = [r for r in rows if int(r["step"]) in set(steps)]
     ok = [float(r["return"]) for r in keep if r["fell"] == "False"]
     return {"n_episodes": len(keep), "n_no_fall": len(ok), "mean": float(np.mean(ok)) if ok else None}
+
+
+def _clean_at(record: Mapping[str, Any], commit: str) -> bool:
+    return record["git_commit"] == commit and record["git_dirty"] is False
+
+
+def assemble_checks(
+    results: Sequence[Mapping[str, Any]],
+    resume: Mapping[str, bool],
+    demo_meta: Mapping[str, Any],
+    commit: str,
+    no_fall_ref: Mapping[str, float],
+    seeds: Sequence[int],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """The DoD checks and the reported p = 1 vs. p = 0 scores.
+
+    ``results`` holds one entry per run in training order; a 300k rerun (D4) follows its miss,
+    so ``runs[-1]`` of a cell is the rerun when there is one. Provenance covers the start of
+    every run **and** every resume record, so a resume on another commit or a dirty tree fails.
+    """
+    checks: list[dict[str, Any]] = []
+
+    def check(name: str, passed: bool, detail: str) -> None:
+        checks.append({"name": name, "passed": bool(passed), "detail": detail})
+
+    by_cell: dict[tuple[float, int], list[Mapping[str, Any]]] = {}
+    for r in results:
+        by_cell.setdefault((r["p"], r["seed"]), []).append(r)
+    for (p, s), runs in by_cell.items():
+        detail = "; ".join(
+            f"{r['run']}: {r['final']['score']:.1f} in {[round(b, 1) for b in r['band']]}"
+            + ("" if r["in_band"] else " MISS (kept, D4)")
+            for r in runs
+        )
+        check(f"band[p{p:g}_s{s}]", any(r["in_band"] for r in runs), detail)
+        prov = runs[0]["provenance"]
+        check(
+            f"R5_provenance[p{p:g}_s{s}]",
+            all(
+                _clean_at(r["provenance"], commit)
+                and all(_clean_at(rec, commit) for rec in r["provenance"]["resume_records"])
+                and r["provenance"]["content_sha256"] == r["provenance"]["manifest_content_sha256"]
+                for r in runs
+            ),
+            f"commit {prov['git_commit'][:7]}, dirty {prov['git_dirty']}, "
+            f"resumes {sum(len(r['provenance']['resume_records']) for r in runs)}, "
+            f"mixture {prov['content_sha256'][:12]}",
+        )
+        src = EXPERT if p == 1.0 else SIMPLE
+        ok, detail = no_fall_match(runs[-1]["no_fall_return"], no_fall_ref[src])
+        check(f"no_fall_match[p{p:g}_s{s}]", ok, f"{runs[-1]['run']}: {detail}")
+        if p == 1.0:
+            r2 = runs[-1]["heldout_fit"]["r2"]
+            check(f"heldout_r2[p1_s{s}]", r2 >= R2_MIN_EXPERT, f"R^2 {r2:.3f} >= {R2_MIN_EXPERT} (D3)")
+    # Reported, not a gate (spec Section 8.1): "expert data makes BC better" is a hypothesis.
+    p1_vs_p0 = {
+        f"s{s}": {
+            "p1": by_cell[(1.0, s)][-1]["final"]["score"],
+            "p0": by_cell[(0.0, s)][-1]["final"]["score"],
+        }
+        for s in seeds
+    }
+    records = demo_meta["resumes"]
+    check(
+        "resume_bitwise",
+        all(resume.values())
+        and len(records) == 1  # must have resumed, not restarted
+        and _clean_at(demo_meta, commit)  # a demo left by an earlier job is not reused
+        and all(_clean_at(rec, commit) for rec in records),
+        f"{dict(resume)}; resumed from {[r['from_step'] for r in records]} "
+        f"at commit {str(demo_meta['git_commit'])[:7]}",
+    )
+    return checks, p1_vs_p0

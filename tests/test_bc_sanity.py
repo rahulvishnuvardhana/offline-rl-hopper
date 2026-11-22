@@ -61,3 +61,93 @@ def test_no_fall_match_tolerance_and_minimum_episodes():
     assert not ok and "-11.0%" in detail
     ok, detail = bs.no_fall_match({"n_no_fall": 9, "mean": 4157.0}, 4157.0)
     assert not ok and "cannot be evaluated" in detail
+
+
+COMMIT = "a" * 40
+NO_FALL_REF = {"expert": 4157.0, "simple": 3179.0}
+
+
+def result(p, seed, score=100.0, in_band=True, no_fall=None, r2=0.9, resumes=(), dirty=False, run=None):
+    ref = NO_FALL_REF["expert" if p == 1.0 else "simple"]
+    return {
+        "run": run or f"bc_p{p:g}_s{seed}",
+        "p": p,
+        "seed": seed,
+        "final": {"score": score},
+        "band": [80.0, 113.0],
+        "in_band": in_band,
+        "no_fall_return": {"n_no_fall": 50, "mean": ref if no_fall is None else no_fall},
+        "heldout_fit": {"r2": r2},
+        "provenance": {
+            "git_commit": COMMIT,
+            "git_dirty": dirty,
+            "content_sha256": "h",
+            "manifest_content_sha256": "h",
+            "resume_records": list(resumes),
+        },
+    }
+
+
+def clean(**extra):
+    return {"git_commit": COMMIT, "git_dirty": False, **extra}
+
+
+def clean_demo(**extra):
+    return {"git_commit": COMMIT, "git_dirty": False, "resumes": [clean(from_step=25)], **extra}
+
+
+def grid(overrides=None):
+    overrides = overrides or {}
+    out = []
+    for s in (100, 101):
+        for p in (0.0, 1.0):
+            out.append(result(p, s, **overrides.get((p, s), {})))
+    return out
+
+
+def names(checks, passed):
+    return {c["name"] for c in checks if c["passed"] is passed}
+
+
+def test_assemble_checks_all_pass_gives_the_15_dod_checks():
+    resume = {"metrics.csv": True, "eval.csv": True, "eval_episodes.csv": True}
+    checks, p1_vs_p0 = bs.assemble_checks(grid(), resume, clean_demo(), COMMIT, NO_FALL_REF, [100, 101])
+    assert len(checks) == 15 and all(c["passed"] for c in checks)
+    assert p1_vs_p0 == {"s100": {"p1": 100.0, "p0": 100.0}, "s101": {"p1": 100.0, "p0": 100.0}}
+
+
+def test_assemble_checks_judges_a_rerun_after_its_kept_miss():
+    results = grid({(1.0, 100): {"score": 70.0, "in_band": False, "no_fall": 1000.0, "r2": 0.1}})
+    rerun = result(1.0, 100, score=104.0, run="bc_p1_s100_300k")
+    results.insert(2, rerun)  # D4: the rerun follows its miss in training order
+    checks, p1_vs_p0 = bs.assemble_checks(results, {"m": True}, clean_demo(), COMMIT, NO_FALL_REF, [100, 101])
+    assert all(c["passed"] for c in checks)  # band: any run in band; fits judged on the rerun
+    band = next(c for c in checks if c["name"] == "band[p1_s100]")
+    assert "MISS (kept, D4)" in band["detail"] and "_300k" in band["detail"]
+    assert p1_vs_p0["s100"]["p1"] == 104.0
+
+
+def test_assemble_checks_r5_reads_every_resume_record():
+    dirty_resume = [clean(from_step=25, git_dirty=True)]
+    results = grid({(0.0, 101): {"resumes": dirty_resume}, (1.0, 101): {"dirty": True}})
+    checks, _ = bs.assemble_checks(results, {"m": True}, clean_demo(), COMMIT, NO_FALL_REF, [100, 101])
+    assert names(checks, False) == {"R5_provenance[p0_s101]", "R5_provenance[p1_s101]"}
+
+
+@pytest.mark.parametrize(
+    "demo",
+    [
+        clean_demo(git_commit="b" * 40),  # a finished demo from an earlier job
+        clean_demo(resumes=[clean(from_step=25, git_commit="b" * 40)]),
+        clean_demo(resumes=[]),  # restarted, never resumed
+        clean_demo(resumes=[clean(from_step=25), clean(from_step=50)]),
+    ],
+)
+def test_assemble_checks_resume_demo_must_be_one_resume_at_this_commit(demo):
+    checks, _ = bs.assemble_checks(grid(), {"m": True}, demo, COMMIT, NO_FALL_REF, [100, 101])
+    assert names(checks, False) == {"resume_bitwise"}
+
+
+def test_assemble_checks_resume_mismatch_fails():
+    checks, _ = bs.assemble_checks(grid(), {"m": False}, clean_demo(), COMMIT, NO_FALL_REF, [100, 101])
+    assert names(checks, False) == {"resume_bitwise"}

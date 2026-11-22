@@ -4,8 +4,8 @@
     python -m offrl.train configs/algo/bc.yaml configs/final.yaml seed=0   # final grid only
 
 ``run(cfg)`` is the importable form (Phase 6's sweep). A finished run (``final.json``) returns
-immediately; an interrupted one resumes from ``ckpt/latest.pt`` only if its config and git
-commit are unchanged.
+immediately and an interrupted one resumes from ``ckpt/latest.pt``, both only if the config
+and git commit are unchanged; a resume also needs a clean tree.
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ import numpy as np
 import torch
 
 from offrl.algos.bc import BCTrainer
+from offrl.algos.corl import CorlTrainer
+from offrl.algos.iql import IQLTrainer
 from offrl.config import Config, load_checked, save_config
 from offrl.data import mixture as mx
 from offrl.data.buffer import ReplayBuffer
@@ -38,7 +40,10 @@ BASE_CONFIG = REPO_ROOT / "configs" / "base.yaml"
 MANIFEST_DIR = REPO_ROOT / "report" / "mixtures"
 DEV_SEED_MIN = 100  # mixture seeds 0 to 99 are final-grid seeds; 100+ are development
 FINAL_EVAL_SEEDS = range(FINAL_EVAL_SEED_OFFSET, FINAL_EVAL_SEED_OFFSET + 50)  # Phase 4 D1
-TRAINERS = {"bc": BCTrainer}
+TRAINERS = {"bc": BCTrainer, "iql": IQLTrainer, "corl_iql": CorlTrainer}
+# data.scale_rewards each algorithm must use (Phase 5 spec Section 3): IQL's 1000 / return range
+# sets its effective temperature; BC's loss ignores rewards, so scaling there signals a wrong config.
+SCALE_REWARDS = {"bc": False, "iql": True, "corl_iql": True}
 EVAL_FIELDS = ["step", "n_episodes", "return_mean", "return_std", "score_mean", "fall_rate", "length_mean"]
 EVAL_FIELDS += [f"sub_{k}" for k in EVAL_FIELDS[1:]]
 EPISODE_FIELDS = ["step", "seed", "return", "length", "fell"]
@@ -77,6 +82,11 @@ def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) ->
             errors.append(f"content_sha256 {content[:12]} != manifest {manifest['content_sha256'][:12]}")
         if manifest["p_target"] != data["p_expert"] or manifest["seed"] != seed:
             errors.append(f"manifest is p={manifest['p_target']} s={manifest['seed']}, config {name}")
+    algo = cfg["algo"]["name"]
+    if algo not in TRAINERS:
+        errors.append(f"unknown algo.name {algo!r}; known: {sorted(TRAINERS)}")
+    elif data["scale_rewards"] != SCALE_REWARDS[algo]:
+        errors.append(f"data.scale_rewards must be {str(SCALE_REWARDS[algo]).lower()} for {algo}")
     if not data["normalize_states"]:
         errors.append("data.normalize_states must be true (the buffer always normalizes)")
     eps = float(arrays["state_std_eps"])
@@ -183,6 +193,13 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
     }
 
 
+def _comparable(cfg: Config) -> Config:
+    """The config minus where it runs: device and thread count do not change what a finished run
+    means, and a resume checks them separately against ``meta.json`` (the Phase 5 seed follow-up
+    also requires ``meta.json``'s device to be the GPU, D7)."""
+    return {**cfg, "train": {k: v for k, v in cfg["train"].items() if k not in ("device", "num_threads")}}
+
+
 def pick_device(name: str) -> torch.device:
     if name == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -195,8 +212,26 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
     replaces the recovered env (tests)."""
     tr, ev = cfg["train"], cfg["eval"]
     run_dir = resolve_path(tr["out_dir"]) / run_name(cfg)
-    if (run_dir / "final.json").exists():
+    meta_now = collect_metadata()
+    ckpt_path = run_dir / "ckpt" / "latest.pt"
+    finished = (run_dir / "final.json").exists()
+    resuming = not finished and ckpt_path.exists()
+    # Checked before a finished run is reused, so a resubmitted sweep never silently returns a
+    # result from another config or another commit.
+    if (run_dir / "config.yaml").exists():
+        import yaml
+
+        saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
+        if _comparable(saved) != _comparable(cfg):
+            raise PreflightError(f"{run_dir} holds a run with a different config; use a new run_suffix")
+    if finished or resuming:
+        meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+        if meta_now["git_commit"] is None or meta["git_commit"] != meta_now["git_commit"]:
+            raise PreflightError(f"{run_dir} was started at commit {meta['git_commit']}; code has changed")
+    if finished:
         return run_dir
+    if resuming and meta_now["git_dirty"] is not False:  # None: git failed, so cleanliness is unknown
+        raise PreflightError(f"{run_dir}: refusing to resume on a dirty tree; uncommitted code would mix in")
 
     name = mx.mixture_name(cfg["data"]["p_expert"], cfg["seed"])
     path = resolve_path(cfg["data"]["mixture_dir"]) / f"{name}.npz"
@@ -204,20 +239,6 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
         raise PreflightError(f"mixture file {path} not found (scripts/build_mixtures.py)")
     arrays = mx.load_mixture(path)
     audit = preflight(cfg, arrays, manifest_dir)
-
-    meta_now = collect_metadata()
-    ckpt_path = run_dir / "ckpt" / "latest.pt"
-    resuming = ckpt_path.exists()
-    if (run_dir / "config.yaml").exists():
-        import yaml
-
-        saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
-        if saved != cfg:
-            raise PreflightError(f"{run_dir} holds a run with a different config; use a new run_suffix")
-    if resuming:
-        meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
-        if meta["git_commit"] != meta_now["git_commit"]:
-            raise PreflightError(f"{run_dir} was started at commit {meta['git_commit']}; code has changed")
 
     if tr["num_threads"]:
         torch.set_num_threads(int(tr["num_threads"]))
@@ -303,6 +324,7 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
                 t0 = time.perf_counter()
             if step % tr["checkpoint_every"] == 0:
                 save_checkpoint(ckpt_path, step, trainer, buffer)
+                t0 = time.perf_counter()  # checkpoint I/O stays out of the update timing
             if step == stop_at:
                 return run_dir
     finally:

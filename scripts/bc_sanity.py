@@ -134,6 +134,9 @@ def analyze(cfg: Config, run_dir: Path, episodes, env, band: list[float]) -> dic
             "content_sha256": meta["preflight"]["content_sha256"],
             "manifest_content_sha256": manifest["content_sha256"],
             "resumes": [r["from_step"] for r in meta["resumes"]],
+            "resume_records": [
+                {k: r[k] for k in ("from_step", "git_commit", "git_dirty")} for r in meta["resumes"]
+            ],
         },
         "run_dir": run_dir.as_posix(),
     }
@@ -177,7 +180,11 @@ def main() -> int:
     parser.add_argument("--steps", type=int, default=100_000)
     parser.add_argument("--seeds", type=int, nargs="+", default=[100, 101])
     parser.add_argument("--rerun-misses", action="store_true", help="D4: train a 300k rerun of a band miss")
-    parser.add_argument("--allow-dirty", action="store_true", help="development only; the report records it")
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="development only; the report records it, and the resume demo still needs a clean tree",
+    )
     parser.add_argument("--set", nargs="*", default=[], help="overrides for every run: device and paths")
     args = parser.parse_args()
     allowed = ("train.device=", "data.mixture_dir=", "train.out_dir=", "train.num_threads=")
@@ -204,6 +211,7 @@ def main() -> int:
     # Resume demonstration on the real data (spec Section 8): stop between checkpoints, resume.
     demo_cfg = config(1.0, args.seeds[0], args.steps, "_resume_demo")
     demo_dir = train.resolve_path(demo_cfg["train"]["out_dir"]) / train.run_name(demo_cfg)
+    # A finished demo is reused; resume_bitwise fails it unless it ran at this commit, clean.
     if not (demo_dir / "final.json").exists():
         shutil.rmtree(demo_dir, ignore_errors=True)  # a job killed mid-demo: start the demo afresh
         print("resume demonstration: stopping mid-run, then resuming", flush=True)
@@ -246,51 +254,8 @@ def main() -> int:
         src = source_of(r["p"])
         r["no_fall_return"]["dataset_no_fall_mean"] = no_fall_ref[src]
 
-    checks = []
-
-    def check(name: str, passed: bool, detail: str) -> None:
-        checks.append({"name": name, "passed": bool(passed), "detail": detail})
-
-    by_cell: dict[tuple[float, int], list[dict[str, Any]]] = {}
-    for r in results:
-        by_cell.setdefault((r["p"], r["seed"]), []).append(r)
-    for (p, s), runs in by_cell.items():
-        ok = any(r["in_band"] for r in runs)
-        detail = "; ".join(
-            f"{r['run']}: {r['final']['score']:.1f} in {[round(b, 1) for b in r['band']]}"
-            + ("" if r["in_band"] else " MISS (kept, D4)")
-            for r in runs
-        )
-        check(f"band[p{p:g}_s{s}]", ok, detail)
-        prov = runs[0]["provenance"]
-        check(
-            f"R5_provenance[p{p:g}_s{s}]",
-            all(
-                r["provenance"]["git_dirty"] is False
-                and r["provenance"]["git_commit"] == meta["git_commit"]
-                and r["provenance"]["content_sha256"] == r["provenance"]["manifest_content_sha256"]
-                for r in runs
-            ),
-            f"commit {prov['git_commit'][:7]}, dirty {prov['git_dirty']}, "
-            f"mixture {prov['content_sha256'][:12]}",
-        )
-        ok, detail = bs.no_fall_match(runs[-1]["no_fall_return"], no_fall_ref[source_of(p)])
-        check(f"no_fall_match[p{p:g}_s{s}]", ok, f"{runs[-1]['run']}: {detail}")
-        if p == 1.0:
-            r2 = runs[-1]["heldout_fit"]["r2"]
-            check(f"heldout_r2[p1_s{s}]", r2 >= bs.R2_MIN_EXPERT, f"R^2 {r2:.3f} >= {bs.R2_MIN_EXPERT} (D3)")
-    # Reported, not a gate (spec Section 8.1): "expert data makes BC better" is a hypothesis.
-    p1_vs_p0 = {
-        f"s{s}": {
-            "p1": by_cell[(1.0, s)][-1]["final"]["score"],
-            "p0": by_cell[(0.0, s)][-1]["final"]["score"],
-        }
-        for s in args.seeds
-    }
-    check(
-        "resume_bitwise",
-        all(resume.values()) and len(demo_meta["resumes"]) == 1,  # must have resumed, not restarted
-        f"{resume}; resumed from {[r['from_step'] for r in demo_meta['resumes']]}",
+    checks, p1_vs_p0 = bs.assemble_checks(
+        results, resume, demo_meta, meta["git_commit"], no_fall_ref, args.seeds
     )
 
     OUT.mkdir(parents=True, exist_ok=True)

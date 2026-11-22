@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 
 from offrl.config import load_checked
 from offrl.data import mixture as mx
@@ -42,6 +43,7 @@ def synthetic_mixture(n: int = 2_000, seed: int = 0) -> dict[str, np.ndarray]:
         "rew": rng.uniform(0, 4, n).astype(np.float32),
         "next_obs": rng.normal(size=(n, 11)).astype(np.float32),
         "done": (rng.random(n) < 0.01).astype(np.float32),
+        "t": np.arange(n, dtype=np.int32) % 100,  # 100-step episodes, as mixture rows are laid out
         "state_mean": o64.mean(0),
         "state_std": o64.std(0),
         "state_std_eps": np.array(1e-3),
@@ -56,9 +58,10 @@ def make_mixture():
 
 @pytest.fixture
 def small_run(tmp_path):
-    """A fast BC config on a synthetic development mixture (seed 100) with its manifest.
+    """A fast config on a synthetic development mixture (seed 100) with its manifest.
 
-    Returns ``make(**overrides) -> cfg`` and the manifest directory.
+    Returns ``make(*overrides, out=, algo=) -> cfg`` (``algo`` names ``configs/algo/<algo>.yaml``)
+    and the manifest directory.
     """
     mix_dir, manifest_dir = tmp_path / "mixtures", tmp_path / "manifests"
     mix_dir.mkdir()
@@ -71,7 +74,7 @@ def small_run(tmp_path):
         manifest = {"p_target": p, "seed": seed, "content_sha256": mx.content_sha256(arrays)}
         (manifest_dir / f"{name}.json").write_text(json.dumps(manifest), encoding="utf-8")
 
-    def make(*extra: str, out: str = "runs") -> dict:
+    def make(*extra: str, out: str = "runs", algo: str = "bc") -> dict:
         overrides = [
             "seed=100",
             "data.p_expert=1.0",
@@ -90,9 +93,20 @@ def small_run(tmp_path):
             *extra,
         ]
         cfg = load_checked(
-            ROOT / "configs" / "base.yaml", ROOT / "configs" / "algo" / "bc.yaml", overrides=overrides
+            ROOT / "configs" / "base.yaml", ROOT / "configs" / "algo" / f"{algo}.yaml", overrides=overrides
         )
         write_mixture(cfg["data"]["p_expert"], cfg["seed"])
         return cfg
 
     return make, manifest_dir
+
+
+@pytest.fixture
+def f64():
+    """float64 on the CPU with one thread, restored afterwards (Phase 5 exactness tests)."""
+    dtype, threads = torch.get_default_dtype(), torch.get_num_threads()
+    torch.set_default_dtype(torch.float64)
+    torch.set_num_threads(1)
+    yield
+    torch.set_default_dtype(dtype)
+    torch.set_num_threads(threads)
