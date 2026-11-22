@@ -296,8 +296,51 @@ def test_sbatch_args_come_from_the_record(tmp_path):
     }
     args = sweep.sbatch_args(record, "iql", [0, 3], tmp_path)
     assert "--array=0,3%10" in args and "--constraint=cascadelake" in args and "--time=3:10:00" in args
+    assert f"--job-name=offrl-main-iql-{'a' * 12}" in args
     assert "--mem=8G" in args and "--cpus-per-task=4" in args and "--partition=short" in args
     assert not any(a.startswith("--gres") for a in args)
+
+
+def test_queued_bundles_reads_one_line_per_task_and_refuses_on_error():
+    def squeue(out="", code=0, err=""):
+        return lambda cmd, **_: SimpleNamespace(returncode=code, stdout=out, stderr=err, cmd=cmd)
+
+    assert sweep.queued_bundles("n", squeue("0\n3\n4\n")) == {0, 3, 4}
+    assert sweep.queued_bundles("n", squeue("N/A\n")) == set()
+    with pytest.raises(sweep.SweepError, match="squeue failed"):
+        sweep.queued_bundles("n", squeue(code=1, err="slurm_load_jobs error"))
+
+    def missing(cmd, **_):
+        raise FileNotFoundError("squeue")
+
+    with pytest.raises(sweep.SweepError, match="squeue failed"):
+        sweep.queued_bundles("n", missing)
+
+
+def test_sbatch_args_refuses_a_bundle_already_queued(grid, monkeypatch, tmp_path, capsys):
+    g, _, _, _ = grid
+    argv = [
+        "--grid", str(tmp_path / "grid.yaml"), "--root", str(tmp_path / "root"), "--init",
+        "--hardware", "cpu",
+        "--partition", "short", "--constraint", "c", "--model", "X", "--max-submit", "8",
+        "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1", "--throttle", "bc:7", "iql:10",
+    ]  # fmt: skip
+    assert sweep.main(argv) == 0
+    base = [
+        "--grid",
+        str(tmp_path / "grid.yaml"),
+        "--root",
+        str(tmp_path / "root"),
+        "--algo",
+        "bc",
+        "--sbatch-args",
+    ]
+    seen = []
+    monkeypatch.setattr(sweep, "queued_bundles", lambda name: seen.append(name) or {1})
+    assert sweep.main([*base, "--indices", "0,1"]) == sweep.EXIT_CONFLICT
+    assert "[1]" in capsys.readouterr().err and seen[0].startswith("offrl-t-bc-")
+    assert sweep.main([*base, "--indices", "0"]) == 0
+    assert "--array=0%7" in capsys.readouterr().out
 
 
 def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeypatch):

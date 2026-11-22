@@ -20,7 +20,9 @@ Exit codes of ``--bundle``, in this order of precedence: 3 a conflict, the wrong
 mismatch, refused before any run starts; then a run process's failure: 128 + n if it was killed
 by signal n, else its exit code; then 4 if a run was skipped as ``running``; then 1 if every
 process succeeded but a run is still not done; else 0 (every run of the bundle done).
-``--sbatch-args`` exits 5 when the requested wave holds no unfinished bundle.
+``--sbatch-args`` exits 5 when the requested wave holds no unfinished bundle, and 3 when a
+bundle of the wave already has a pending or running task of this grid, algorithm and commit
+(found by the job name it sets), so a bundle is never queued twice.
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import csv
+import getpass
 import hashlib
 import itertools
 import json
@@ -602,10 +605,36 @@ def parse_indices(text: str, n: int) -> list[int]:
     return wave
 
 
+def job_name(record: dict[str, Any], algo: str) -> str:
+    """The array's Slurm job name: one per grid, algorithm and commit, so squeue finds its tasks."""
+    return f"offrl-{record['grid']}-{algo}-{record['commit'][:12]}"
+
+
+def queued_bundles(name: str, run: Callable[..., Any] = subprocess.run) -> set[int]:
+    """Array indices with a pending or running task of job ``name`` (one line per task: ``-r``).
+    squeue failing is not proof that none is queued, so it refuses."""
+    user = os.environ.get("USER") or getpass.getuser()
+    try:
+        out = run(
+            ["squeue", "-h", "-r", "-u", user, "-n", name, "-o", "%K"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        raise SweepError(f"squeue failed ({e}); cannot tell which bundles are already queued") from None
+    if out.returncode != 0:
+        raise SweepError(
+            f"squeue failed ({(out.stderr or '').strip()}); cannot tell which bundles are already queued"
+        )
+    return {int(x) for x in out.stdout.split() if x.isdigit()}
+
+
 def sbatch_args(record: dict[str, Any], algo: str, indices: Sequence[int], log_root: Path) -> list[str]:
     a, hw = record["algos"][algo], record["hardware"]
     logs = log_root / record["grid"] / record["commit"][:12]
     args = [
+        f"--job-name={job_name(record, algo)}",
         f"--array={','.join(map(str, indices))}%{record['throttle'][algo]}",
         f"--time={a['time']}",
         f"--cpus-per-task={a['cpus']}",
@@ -763,6 +792,12 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
         if not chosen:
             print("nothing unfinished in this wave", file=sys.stderr)
             return EXIT_NOTHING
+        queued = sorted(set(chosen) & queued_bundles(job_name(record, a.algo)))
+        if queued:
+            raise SweepError(
+                f"bundles {queued} of {job_name(record, a.algo)} are already pending or running; "
+                "wait for them, or leave them out of --indices"
+            )
         print(" ".join(sbatch_args(record, a.algo, chosen, log_root)))
         return 0
     return _check(a, grid, record, runs, out)

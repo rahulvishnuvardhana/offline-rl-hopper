@@ -64,6 +64,18 @@ Benchmark jobs 12055649 to 12055656 at `d037a0d` (spec Section 5; logs in `repor
 
 **Wall clock for the 70 grid runs (BC 25, IQL 45), BC and IQL counted one after the other:** CPU cascadelake 3.5 h, 0 GPU-hours; T4 with IQL at k = 2 13.3 h (29.2 GPU-hours), k = 1 16.3 h (48.0), k = 4 20.9 h (20.9); V100 ineligible; the T4 figures exclude the human latency per submission wave, which would only lengthen them. **Choice by the pre-fixed rule: CPU on `short`, `--constraint=cascadelake`**, 1 run per job, 4 CPUs, 8G (2G per CPU; measured peak 1.2 GiB), `--time` 1:30 for IQL and 0:20 for BC (h x 1.5, rounded up to 10 minutes), required CPU model `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz` (both CPU jobs, on nodes d0014 and d0036, recorded it; all 24 cascadelake nodes have the same 56-core layout; a task on any other model is refused by the sweep).
 
+**Throttle split (D3, 25 in total; comparison requested by the user 2026-11-22):** `scripts/phase6_throttle_sim.py` (output `report/phase6/throttle_sim_output.txt`) simulates the three arrays (main IQL 25 runs, ablation IQL 20, main BC 25; IQL 1.00 h, BC 0.22 h per run from C1 and CB) with Slurm filling a free slot from the earliest-submitted array under its throttle, for a cluster cap `C` of 25, 22, 20 and 16 concurrent jobs (22 and 16 are the idle-core and memory readings above). Makespan in hours, range over the 6 submission orders:
+
+| Split (main IQL / ablation IQL / BC) | C = 25 | C = 22 | C = 20 | C = 16 |
+|---|---|---|---|---|
+| **10/8/7 (approved)** | **3.00** | **3.00** | **3.00 to 3.66** | **3.44 to 4.00** |
+| 12/10/3 (proportional to work) | 3.00 | 3.00 to 3.98 | 3.00 to 3.98 | 4.00 |
+| 13/10/2 | 2.86 | 3.00 to 4.86 | 3.00 to 4.86 | 4.00 to 4.86 |
+| 11/9/5 | 3.00 | 3.00 | 3.10 | 3.54 to 4.10 |
+| 9/9/7 | 3.00 | 3.00 to 3.66 | 3.00 to 3.66 | 3.44 to 4.00 |
+
+10/8/7 is never slower than any other split at its best submission order and is the only one with no spread at `C` 22 or more; 13/10/2 gains 8 minutes only if all 25 slots are free and loses up to 1.9 h otherwise. Submitting main IQL, then ablation IQL, then BC gives 3.00, 3.00, 3.00 and 3.44 h. The split is kept; the arrays go in that order. Durations are the benchmark means with no spread, so these are planning figures, not guarantees.
+
 ## Measured throughput (Phase 6 input)
 
 From `report/phase4/bc_sanity.json`, Tesla T4, one run at a time, 4 CPUs:
