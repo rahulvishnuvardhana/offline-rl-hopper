@@ -9,7 +9,8 @@
 # Everything runs from the checkout, never the shared clone, which may be pulled meanwhile. The
 # sweep is exec'd, so Slurm's SIGTERM (time-out, scancel) reaches it and its locks are released.
 #SBATCH --job-name=offrl-grid
-# Overridden by --sbatch-args; here only so a bare submission never writes a log into the checkout.
+# Overridden by --sbatch-args (which sets --job-name offrl-<grid>-<algo>-<sha12>, the name its submit
+# guard looks for); here only so a bare submission never writes a log into the checkout.
 #SBATCH --output=/scratch/%u/logs/offrl-grid_unconfigured_%A_%a.out
 #SBATCH --error=/scratch/%u/logs/offrl-grid_unconfigured_%A_%a.err
 

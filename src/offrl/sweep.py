@@ -20,9 +20,9 @@ Exit codes of ``--bundle``, in this order of precedence: 3 a conflict, the wrong
 mismatch, refused before any run starts; then a run process's failure: 128 + n if it was killed
 by signal n, else its exit code; then 4 if a run was skipped as ``running``; then 1 if every
 process succeeded but a run is still not done; else 0 (every run of the bundle done).
-``--sbatch-args`` exits 5 when the requested wave holds no unfinished bundle, and 3 when a
-bundle of the wave already has a pending or running task of this grid, algorithm and commit
-(found by the job name it sets), so a bundle is never queued twice.
+``--sbatch-args`` exits 3 when a bundle of the requested wave already has a pending, running or
+completing task of this grid, algorithm and commit (found by the job name it sets), so a bundle
+is never queued twice; else 5 when the wave holds no unfinished bundle.
 """
 
 from __future__ import annotations
@@ -385,6 +385,9 @@ def _on_sigterm(signum: int, _frame: Any) -> None:
     for p in _children:
         with contextlib.suppress(subprocess.TimeoutExpired):
             p.wait(timeout=max(0.0, deadline - time.monotonic()))
+    print(
+        f"signal {signum}: runs stopped, releasing the bundle's locks, exit {128 + signum}", file=sys.stderr
+    )
     raise SystemExit(128 + signum)
 
 
@@ -610,13 +613,18 @@ def job_name(record: dict[str, Any], algo: str) -> str:
     return f"offrl-{record['grid']}-{algo}-{record['commit'][:12]}"
 
 
+QUEUED_STATES = "PD,R,CG,CF,S,ST,RQ,RH,RF,RS,SE,SO"  # every state a task can still run from
+
+
 def queued_bundles(name: str, run: Callable[..., Any] = subprocess.run) -> set[int]:
-    """Array indices with a pending or running task of job ``name`` (one line per task: ``-r``).
-    squeue failing is not proof that none is queued, so it refuses."""
+    """Array indices with a task of job ``name`` in a state it can still run from (pending,
+    running, completing, suspended, requeued), one line per task (``-r``), the states named rather
+    than left to squeue's default. squeue failing, or printing anything but indices, is not proof
+    that none is queued, so it refuses."""
     user = os.environ.get("USER") or getpass.getuser()
     try:
         out = run(
-            ["squeue", "-h", "-r", "-u", user, "-n", name, "-o", "%K"],
+            ["squeue", "-h", "-r", "-u", user, "-t", QUEUED_STATES, "-n", name, "-o", "%K"],
             capture_output=True,
             text=True,
             timeout=30,
@@ -627,7 +635,12 @@ def queued_bundles(name: str, run: Callable[..., Any] = subprocess.run) -> set[i
         raise SweepError(
             f"squeue failed ({(out.stderr or '').strip()}); cannot tell which bundles are already queued"
         )
-    return {int(x) for x in out.stdout.split() if x.isdigit()}
+    tokens = [x for x in out.stdout.split() if x != "N/A"]
+    if not all(x.isdigit() for x in tokens):
+        raise SweepError(
+            f"unexpected squeue output {out.stdout.strip()!r}; expected one array index per line"
+        )
+    return {int(x) for x in tokens}
 
 
 def sbatch_args(record: dict[str, Any], algo: str, indices: Sequence[int], log_root: Path) -> list[str]:
@@ -788,16 +801,16 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
             print(",".join(map(str, todo)))
             return 0
         wave = parse_indices(a.indices, len(groups[a.algo])) if a.indices else todo
-        chosen = [i for i in wave if i in todo]
-        if not chosen:
-            print("nothing unfinished in this wave", file=sys.stderr)
-            return EXIT_NOTHING
-        queued = sorted(set(chosen) & queued_bundles(job_name(record, a.algo)))
+        queued = sorted(set(wave) & queued_bundles(job_name(record, a.algo)))
         if queued:
             raise SweepError(
                 f"bundles {queued} of {job_name(record, a.algo)} are already pending or running; "
                 "wait for them, or leave them out of --indices"
             )
+        chosen = [i for i in wave if i in todo]
+        if not chosen:
+            print("nothing unfinished in this wave", file=sys.stderr)
+            return EXIT_NOTHING
         print(" ".join(sbatch_args(record, a.algo, chosen, log_root)))
         return 0
     return _check(a, grid, record, runs, out)

@@ -38,8 +38,8 @@ def makespan(caps, C, order):
 
 
 SPLITS = {
-    "10/8/7 (current)": (10, 8, 7),
-    "12/10/3 (work-proportional)": (12, 10, 3),
+    "10/8/7 (approved)": (10, 8, 7),
+    "12/10/3 (proportional to work)": (12, 10, 3),
     "13/10/2": (13, 10, 2),
     "11/9/5": (11, 9, 5),
     "9/9/7": (9, 9, 7),
@@ -51,11 +51,11 @@ for C in (25, 22, 20, 16):
         caps = {"main_iql": a, "abl_iql": b, "main_bc": c}
         res = []
         for order in itertools.permutations(range(3)):
-            m, d = makespan(caps, C, order)
+            m, _ = makespan(caps, C, order)
             res.append(m)
         m_bc_first, d = makespan(caps, C, (2, 0, 1))
         print(
-            f"  {label:28s} makespan {min(res):.2f} to {max(res):.2f} h over the 6 submission orders;"
+            f"  {label:31s} makespan {min(res):.2f} to {max(res):.2f} h over the 6 submission orders;"
             f" BC submitted first: {m_bc_first:.2f} h (BC done {d['main_bc']:.2f} h)"
         )
 

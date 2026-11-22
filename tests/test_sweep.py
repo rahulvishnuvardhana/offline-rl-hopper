@@ -302,11 +302,18 @@ def test_sbatch_args_come_from_the_record(tmp_path):
 
 
 def test_queued_bundles_reads_one_line_per_task_and_refuses_on_error():
+    calls = []
+
     def squeue(out="", code=0, err=""):
-        return lambda cmd, **_: SimpleNamespace(returncode=code, stdout=out, stderr=err, cmd=cmd)
+        return lambda cmd, **_: calls.append(cmd) or SimpleNamespace(returncode=code, stdout=out, stderr=err)
 
     assert sweep.queued_bundles("n", squeue("0\n3\n4\n")) == {0, 3, 4}
+    cmd = calls[0]
+    assert cmd[:4] == ["squeue", "-h", "-r", "-u"] and cmd[-4:] == ["-n", "n", "-o", "%K"]
+    assert cmd[cmd.index("-t") + 1] == sweep.QUEUED_STATES and "PD" in sweep.QUEUED_STATES.split(",")
     assert sweep.queued_bundles("n", squeue("N/A\n")) == set()
+    with pytest.raises(sweep.SweepError, match="unexpected squeue output"):
+        sweep.queued_bundles("n", squeue("3-5%10\n"))  # a range: -r was lost
     with pytest.raises(sweep.SweepError, match="squeue failed"):
         sweep.queued_bundles("n", squeue(code=1, err="slurm_load_jobs error"))
 
@@ -341,6 +348,35 @@ def test_sbatch_args_refuses_a_bundle_already_queued(grid, monkeypatch, tmp_path
     assert "[1]" in capsys.readouterr().err and seen[0].startswith("offrl-t-bc-")
     assert sweep.main([*base, "--indices", "0"]) == 0
     assert "--array=0%7" in capsys.readouterr().out
+
+
+def test_sbatch_args_refuses_a_running_locked_bundle(grid, env, monkeypatch, tmp_path, capsys):
+    """A running task holds its lock, so its bundle is not unfinished; the guard still names it."""
+    _, out, runs, _ = grid
+    argv = [
+        "--grid", str(tmp_path / "grid.yaml"), "--root", str(tmp_path / "root"), "--init",
+        "--hardware", "cpu", "--partition", "short", "--constraint", "c", "--model", "X",
+        "--max-submit", "8", "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1", "--throttle", "bc:7", "iql:10",
+    ]  # fmt: skip
+    assert sweep.main(argv) == 0
+    root = str(tmp_path / "root")
+    base = ["--grid", str(tmp_path / "grid.yaml"), "--root", root, "--algo", "bc", "--sbatch-args"]
+    monkeypatch.setattr(sweep, "squeue_alive", lambda token, run=None: True)
+    out_dir = next((tmp_path / "root").glob("t/*"))
+    every = sweep.expand(sweep.load_grid(str(tmp_path / "grid.yaml")), out_dir, [])
+    bc0 = sweep.bundles(every, {"bc": 1, "iql": 1})["bc"][0]
+    (out_dir / "locks").mkdir(exist_ok=True)
+    for r in bc0:
+        sweep.lock_path(out_dir, r).write_text(json.dumps({"token": "123_0", "host": "h"}))
+    monkeypatch.setattr(sweep, "queued_bundles", lambda name: {0})
+    assert sweep.main([*base, "--indices", "0"]) == sweep.EXIT_CONFLICT  # not 5
+    assert "[0]" in capsys.readouterr().err
+
+    def no_squeue(name):
+        raise sweep.SweepError("squeue failed (test)")
+
+    monkeypatch.setattr(sweep, "queued_bundles", no_squeue)
+    assert sweep.main([*base, "--indices", "0"]) == sweep.EXIT_CONFLICT  # refuses when squeue cannot answer
 
 
 def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeypatch):
