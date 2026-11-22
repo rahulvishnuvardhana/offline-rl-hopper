@@ -6361,7 +6361,7 @@
     5.909096813016664
   ],
   "state_std_eps": 0.001,
-  "git_commit": "cdf30a62e33297ff7ce0a8fe51e76c02c8a28808",
+  "git_commit": "d037a0da01ccc5866f5b0aefe404b86be2be5a5a",
   "packages": {
     "torch": "2.11.0+cu128",
     "numpy": "2.4.6",

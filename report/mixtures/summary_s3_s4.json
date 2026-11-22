@@ -1,0 +1,182 @@
+{
+  "mix_p0_s3": {
+    "p_target": 0.0,
+    "p_actual": 0.0,
+    "n_transitions": 900000,
+    "seed": 3,
+    "n_episodes": 1751,
+    "n_trimmed": 1,
+    "mean_return": 1662.212427447359,
+    "score": 42.83468045934117,
+    "fall_rate_untrimmed": 0.6611428571428571,
+    "tq": 42.85572784788646,
+    "reward_scale": 0.3673694114449996,
+    "beta_eff": 4.387373544327225,
+    "saco": {
+      "bin_0.5": 1.0,
+      "bin_1": 1.0
+    }
+  },
+  "mix_p0.05_s3": {
+    "p_target": 0.05,
+    "p_actual": 0.05,
+    "n_transitions": 900000,
+    "seed": 3,
+    "n_episodes": 1706,
+    "n_trimmed": 2,
+    "mean_return": 1730.918232493865,
+    "score": 44.62353320365446,
+    "fall_rate_untrimmed": 0.6473004694835681,
+    "tq": 44.66624988146092,
+    "reward_scale": 0.26348920707124107,
+    "beta_eff": 3.146766008016414,
+    "saco": {
+      "bin_0.5": 1.0450691543382438,
+      "bin_1": 1.1913465124953375
+    }
+  },
+  "mix_p0.2_s3": {
+    "p_target": 0.2,
+    "p_actual": 0.2,
+    "n_transitions": 900000,
+    "seed": 3,
+    "n_episodes": 1580,
+    "n_trimmed": 2,
+    "mean_return": 1950.403782315046,
+    "score": 50.33814971777532,
+    "fall_rate_untrimmed": 0.6051964512040557,
+    "tq": 50.36770297085435,
+    "reward_scale": 0.26348920707124107,
+    "beta_eff": 3.146766008016414,
+    "saco": {
+      "bin_0.5": 1.1299117379150045,
+      "bin_1": 1.4053939243234281
+    }
+  },
+  "mix_p0.5_s3": {
+    "p_target": 0.5,
+    "p_actual": 0.5,
+    "n_transitions": 900000,
+    "seed": 3,
+    "n_episodes": 1343,
+    "n_trimmed": 2,
+    "mean_return": 2487.72107059659,
+    "score": 64.32796477137678,
+    "fall_rate_untrimmed": 0.5078299776286354,
+    "tq": 64.36377152369573,
+    "reward_scale": 0.26348920707124107,
+    "beta_eff": 3.146766008016414,
+    "saco": {
+      "bin_0.5": 1.1968192145407335,
+      "bin_1": 1.5384599444651663
+    }
+  },
+  "mix_p1_s3": {
+    "p_target": 1.0,
+    "p_actual": 1.0,
+    "n_transitions": 900000,
+    "seed": 3,
+    "n_episodes": 979,
+    "n_trimmed": 1,
+    "mean_return": 3854.158437011831,
+    "score": 99.90509295129671,
+    "fall_rate_untrimmed": 0.28016359918200406,
+    "tq": 100.0020681016309,
+    "reward_scale": 0.2512128702267578,
+    "beta_eff": 3.0001537049373947,
+    "saco": {
+      "bin_0.5": 1.043019128686748,
+      "bin_1": 1.1751005014712586
+    }
+  },
+  "mix_p0_s4": {
+    "p_target": 0.0,
+    "p_actual": 0.0,
+    "n_transitions": 900000,
+    "seed": 4,
+    "n_episodes": 1768,
+    "n_trimmed": 1,
+    "mean_return": 1646.447226605755,
+    "score": 42.42421117263295,
+    "fall_rate_untrimmed": 0.66553480475382,
+    "tq": 42.4021181662993,
+    "reward_scale": 0.3670667786266002,
+    "beta_eff": 4.383759298884557,
+    "saco": {
+      "bin_0.5": 1.0,
+      "bin_1": 1.0
+    }
+  },
+  "mix_p0.05_s4": {
+    "p_target": 0.05,
+    "p_actual": 0.05,
+    "n_transitions": 900000,
+    "seed": 4,
+    "n_episodes": 1717,
+    "n_trimmed": 2,
+    "mean_return": 1719.8824722326779,
+    "score": 44.33620158712737,
+    "fall_rate_untrimmed": 0.6478134110787171,
+    "tq": 44.37933046464598,
+    "reward_scale": 0.26318403106138977,
+    "beta_eff": 3.1431213900643686,
+    "saco": {
+      "bin_0.5": 1.0432941936647862,
+      "bin_1": 1.1797125016939258
+    }
+  },
+  "mix_p0.2_s4": {
+    "p_target": 0.2,
+    "p_actual": 0.2,
+    "n_transitions": 900000,
+    "seed": 4,
+    "n_episodes": 1602,
+    "n_trimmed": 2,
+    "mean_return": 1924.825838278625,
+    "score": 49.67219179249562,
+    "fall_rate_untrimmed": 0.618125,
+    "tq": 49.68465933390469,
+    "reward_scale": 0.26318403106138977,
+    "beta_eff": 3.1431213900643686,
+    "saco": {
+      "bin_0.5": 1.1323077439481066,
+      "bin_1": 1.414547956343622
+    }
+  },
+  "mix_p0.5_s4": {
+    "p_target": 0.5,
+    "p_actual": 0.5,
+    "n_transitions": 900000,
+    "seed": 4,
+    "n_episodes": 1388,
+    "n_trimmed": 2,
+    "mean_return": 2408.5860904904976,
+    "score": 62.26757371361768,
+    "fall_rate_untrimmed": 0.5367965367965368,
+    "tq": 62.30576813208547,
+    "reward_scale": 0.26341687296286226,
+    "beta_eff": 3.145902145257113,
+    "saco": {
+      "bin_0.5": 1.2022199891329204,
+      "bin_1": 1.5588078931732183
+    }
+  },
+  "mix_p1_s4": {
+    "p_target": 1.0,
+    "p_actual": 1.0,
+    "n_transitions": 900000,
+    "seed": 4,
+    "n_episodes": 981,
+    "n_trimmed": 1,
+    "mean_return": 3848.3881164731333,
+    "score": 99.75485450020469,
+    "fall_rate_untrimmed": 0.29285714285714287,
+    "tq": 99.84017277035728,
+    "reward_scale": 0.2512128702267578,
+    "beta_eff": 3.0001537049373947,
+    "saco": {
+      "bin_0.5": 1.044259223905897,
+      "bin_1": 1.1865194775411494
+    }
+  }
+}

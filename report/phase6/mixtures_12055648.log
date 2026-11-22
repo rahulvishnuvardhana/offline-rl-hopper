@@ -1,0 +1,89 @@
+PASS  mix_p0.2_s100: file 099eca23dfe5 vs manifest 099eca23dfe5
+PASS  mix_p0.2_s101: file f8fea4bddda7 vs manifest f8fea4bddda7
+PASS  mix_p0_s100: file b73cd50e4f1a vs manifest b73cd50e4f1a
+PASS  mix_p0_s101: file 97ea8cc12867 vs manifest 97ea8cc12867
+PASS  mix_p1_s100: file 0713c058cdc2 vs manifest 0713c058cdc2
+PASS  mix_p1_s101: file 2069e6ea2907 vs manifest 2069e6ea2907
+  built mix_p0.05_s0: content 58f95b597663, scale 0.2512, score 44.9
+  built mix_p0.5_s0: content 7c8728744433, scale 0.2512, score 62.8
+  [PASS] M7_distinct_within_seed[s0]: 2 mixtures (guard)
+  [PASS] M8_clean_tree: git_dirty=False at commit d037a0da01ccc5866f5b0aefe404b86be2be5a5a
+  [PASS] M8b_inputs_on_disk_equal_commit: byte-identical to HEAD
+  17/17 checks passed; M9 (informational): {'max_abs_error': {'expert': 2.2328972004714842e-10, 'simple': 1.7436230237422023e-10}, 'steps': 100, 'episodes_per_source': 3, 'mujoco': '3.2.3', 'within_1e-9': True}
+
+ALL CHECKS PASSED; audit written to /tmp/offrl_wt_12055648_QAhQ/report/mixtures/audit_s0.json
+SAME DATA mix_p0.05_s0 content 58f95b597663
+SAME DATA mix_p0.5_s0 content 7c8728744433
+  built mix_p0_s3: content 9abb4e8893f4, scale 0.3674, score 42.8
+  built mix_p0.05_s3: content 48cdf4a500d9, scale 0.2635, score 44.6
+  built mix_p0.2_s3: content c66b67430875, scale 0.2635, score 50.3
+  built mix_p0.5_s3: content 1ea4de6a3ec1, scale 0.2635, score 64.3
+  built mix_p1_s3: content 1b1f8d93f138, scale 0.2512, score 99.9
+  built mix_p0_s4: content a54682eb3503, scale 0.3671, score 42.4
+  built mix_p0.05_s4: content dfe25c7a9f2e, scale 0.2632, score 44.3
+  built mix_p0.2_s4: content bad95cac29cd, scale 0.2632, score 49.7
+  built mix_p0.5_s4: content 6956159a5563, scale 0.2634, score 62.3
+  built mix_p1_s4: content 8a7cec8caf07, scale 0.2512, score 99.8
+  [PASS] M7_distinct_within_seed[s3]: 5 mixtures (guard)
+  [PASS] M7_distinct_within_seed[s4]: 5 mixtures (guard)
+  [PASS] M7_distinct_across_seeds[p0]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.05]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.2]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.5]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p1]: 2 seeds (guard)
+  [PASS] M8_clean_tree: git_dirty=False at commit d037a0da01ccc5866f5b0aefe404b86be2be5a5a
+  [PASS] M8b_inputs_on_disk_equal_commit: byte-identical to HEAD
+  79/79 checks passed; M9 (informational): {'max_abs_error': {'expert': 2.2328972004714842e-10, 'simple': 1.7436230237422023e-10}, 'steps': 100, 'episodes_per_source': 3, 'mujoco': '3.2.3', 'within_1e-9': True}
+
+ALL CHECKS PASSED; audit written to /tmp/offrl_wt_12055648_QAhQ/report/mixtures/audit_s3_s4.json
+  built mix_p0_s100: content b73cd50e4f1a, scale 0.3674, score 42.8
+  built mix_p0.05_s100: content b696d91f223f, scale 0.2681, score 44.4
+  built mix_p0.2_s100: content 099eca23dfe5, scale 0.2648, score 50.0
+  built mix_p0.5_s100: content 362af777f6ec, scale 0.2514, score 62.8
+  built mix_p1_s100: content 0713c058cdc2, scale 0.2512, score 100.1
+  built mix_p0_s101: content 97ea8cc12867, scale 0.3671, score 43.1
+  built mix_p0.05_s101: content 0bd1d4e96907, scale 0.2706, score 44.7
+  built mix_p0.2_s101: content f8fea4bddda7, scale 0.2635, score 50.5
+  built mix_p0.5_s101: content 20cf85bc8f31, scale 0.2633, score 64.5
+  built mix_p1_s101: content 2069e6ea2907, scale 0.2705, score 99.8
+  [PASS] M7_distinct_within_seed[s100]: 5 mixtures (guard)
+  [PASS] M7_distinct_within_seed[s101]: 5 mixtures (guard)
+  [PASS] M7_distinct_across_seeds[p0]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.05]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.2]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p0.5]: 2 seeds (guard)
+  [PASS] M7_distinct_across_seeds[p1]: 2 seeds (guard)
+  [PASS] M8_clean_tree: git_dirty=False at commit d037a0da01ccc5866f5b0aefe404b86be2be5a5a
+  [PASS] M8b_inputs_on_disk_equal_commit: byte-identical to HEAD
+  79/79 checks passed; M9 (informational): {'max_abs_error': {'expert': 2.2328972004714842e-10, 'simple': 1.7436230237422023e-10}, 'steps': 100, 'episodes_per_source': 3, 'mujoco': '3.2.3', 'within_1e-9': True}
+
+ALL CHECKS PASSED; audit written to /tmp/offrl_wt_12055648_QAhQ/report/mixtures/audit_s100_s101.json
+SAME DATA mix_p0_s100 content b73cd50e4f1a
+SAME DATA mix_p0_s101 content 97ea8cc12867
+SAME DATA mix_p0.2_s100 content 099eca23dfe5
+SAME DATA mix_p0.2_s101 content f8fea4bddda7
+SAME DATA mix_p1_s100 content 0713c058cdc2
+SAME DATA mix_p1_s101 content 2069e6ea2907
+PASS  mix_p0.05_s100: file b696d91f223f vs manifest b696d91f223f
+PASS  mix_p0.05_s101: file 0bd1d4e96907 vs manifest 0bd1d4e96907
+PASS  mix_p0.05_s3: file 48cdf4a500d9 vs manifest 48cdf4a500d9
+PASS  mix_p0.05_s4: file dfe25c7a9f2e vs manifest dfe25c7a9f2e
+PASS  mix_p0.2_s100: file 099eca23dfe5 vs manifest 099eca23dfe5
+PASS  mix_p0.2_s101: file f8fea4bddda7 vs manifest f8fea4bddda7
+PASS  mix_p0.2_s3: file c66b67430875 vs manifest c66b67430875
+PASS  mix_p0.2_s4: file bad95cac29cd vs manifest bad95cac29cd
+PASS  mix_p0.5_s100: file 362af777f6ec vs manifest 362af777f6ec
+PASS  mix_p0.5_s101: file 20cf85bc8f31 vs manifest 20cf85bc8f31
+PASS  mix_p0.5_s3: file 1ea4de6a3ec1 vs manifest 1ea4de6a3ec1
+PASS  mix_p0.5_s4: file 6956159a5563 vs manifest 6956159a5563
+PASS  mix_p0_s100: file b73cd50e4f1a vs manifest b73cd50e4f1a
+PASS  mix_p0_s101: file 97ea8cc12867 vs manifest 97ea8cc12867
+PASS  mix_p0_s3: file 9abb4e8893f4 vs manifest 9abb4e8893f4
+PASS  mix_p0_s4: file a54682eb3503 vs manifest a54682eb3503
+PASS  mix_p1_s100: file 0713c058cdc2 vs manifest 0713c058cdc2
+PASS  mix_p1_s101: file 2069e6ea2907 vs manifest 2069e6ea2907
+PASS  mix_p1_s3: file 1b1f8d93f138 vs manifest 1b1f8d93f138
+PASS  mix_p1_s4: file 8a7cec8caf07 vs manifest 8a7cec8caf07
+PASS  audit_s100_s101.json: 79/79 checks, dirty False
+PASS  audit_s3_s4.json: 79/79 checks, dirty False
+installed 14 new mixtures; existing files untouched

@@ -7046,7 +7046,7 @@
       "data/metadata.json": "0aae273c3c5e9e6cd49c66ef18b1da3f21b20788b5678beaf859e63c01996579"
     }
   },
-  "file_sha256": "373569a07546ebafdb3216574268c49595ba5a4084ba2f7671f218ae51cba053",
+  "file_sha256": "e665c2067f50a7e5d8a887002d9deb068a7f67c768d64661b647e7aa9ff81291",
   "content_sha256": "b73cd50e4f1a9f8982f92a232ebae28c487eb52dd8e865ea85c40cfac548326d",
   "data_sha256": "1e93c453f1f5004363b3c7081f9cd66211e8c0e93571d8f6c83916a0310a22ff",
   "state_mean": [
@@ -7076,9 +7076,9 @@
     5.660917247100213
   ],
   "state_std_eps": 0.001,
-  "git_commit": "51eb19104c218546f3056d8e4e9aa6174af6a0f2",
+  "git_commit": "d037a0da01ccc5866f5b0aefe404b86be2be5a5a",
   "packages": {
-    "torch": "2.11.0",
+    "torch": "2.11.0+cu128",
     "numpy": "2.4.6",
     "gymnasium": "1.4.0",
     "mujoco": "3.2.3",

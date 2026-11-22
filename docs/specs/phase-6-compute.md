@@ -160,7 +160,7 @@ These Phase 5 figures were measured with a CORL partner and `log_every` 100, so 
 - Open question 3 (seeds) answered by D2.
 
 ## 13. Decisions
-- **D1, hardware. Approved by the user (2026-11-21):** one hardware type for both grids, the exact gres string or CPU feature, `train.device` explicit, no switch within a grid (Section 8); the user approves the measured choice after the benchmark.
+- **D1, hardware. Approved by the user (2026-11-21):** one hardware type for both grids, the exact gres string or CPU feature, `train.device` explicit, no switch within a grid (Section 8). **Measured choice, approved by the user 2026-11-21: CPU on `short`, `--constraint=cascadelake`, model `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz`, 1 run per job, 4 CPUs, 8G, `--time` 1:30 (IQL) and 0:20 (BC); 3.5 h for the 70 runs against 13.3 h on the best T4 setup; V100 ineligible (no kernels in PyTorch 2.11+cu128).** Benchmark table, validation and concurrency in `report/compute.md`.
 - **D2, seeds: 5, fixed now. Set by the user (2026-11-21).**
 - **D3, throttle on `short` (if CPU wins): `%25`, used as `J` in the cost model. Approved by the user (2026-11-21).**
 - **D4, dry run on development data. Set by the user (2026-11-21).**

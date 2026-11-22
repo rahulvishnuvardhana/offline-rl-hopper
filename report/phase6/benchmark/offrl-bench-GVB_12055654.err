@@ -1,0 +1,119 @@
+/scratch/vishnuvardhana.r/envs/offrl/lib/python3.11/site-packages/torch/cuda/__init__.py:371: UserWarning: Found GPU0 Tesla V100-PCIE-32GB which is of compute capability (CC) 7.0.
+The following list shows the CCs this version of PyTorch was built for and the hardware CCs it supports:
+- 7.5 which supports hardware CC >=7.5,<8.0
+- 8.0 which supports hardware CC >=8.0,<9.0 except {8.7}
+- 8.6 which supports hardware CC >=8.6,<9.0 except {8.7}
+- 9.0 which supports hardware CC >=9.0,<10.0
+- 10.0 which supports hardware CC >=10.0,<11.0 except {10.1}
+- 12.0 which supports hardware CC >=12.0,<13.0
+Please follow the instructions at https://pytorch.org/get-started/locally/ to install a PyTorch release that supports one of these CUDA versions: 12.6, 12.8
+  _warn_unsupported_code(d, device_cc, code_ccs)
+/scratch/vishnuvardhana.r/envs/offrl/lib/python3.11/site-packages/torch/cuda/__init__.py:371: UserWarning: Found GPU0 Tesla V100-PCIE-32GB which is of compute capability (CC) 7.0.
+The following list shows the CCs this version of PyTorch was built for and the hardware CCs it supports:
+- 7.5 which supports hardware CC >=7.5,<8.0
+- 8.0 which supports hardware CC >=8.0,<9.0 except {8.7}
+- 8.6 which supports hardware CC >=8.6,<9.0 except {8.7}
+- 9.0 which supports hardware CC >=9.0,<10.0
+- 10.0 which supports hardware CC >=10.0,<11.0 except {10.1}
+- 12.0 which supports hardware CC >=12.0,<13.0
+Please follow the instructions at https://pytorch.org/get-started/locally/ to install a PyTorch release that supports one of these CUDA versions: 12.6, 12.8
+  _warn_unsupported_code(d, device_cc, code_ccs)
+/scratch/vishnuvardhana.r/envs/offrl/lib/python3.11/site-packages/torch/cuda/__init__.py:371: UserWarning: Found GPU0 Tesla V100-PCIE-32GB which is of compute capability (CC) 7.0.
+The following list shows the CCs this version of PyTorch was built for and the hardware CCs it supports:
+- 7.5 which supports hardware CC >=7.5,<8.0
+- 8.0 which supports hardware CC >=8.0,<9.0 except {8.7}
+- 8.6 which supports hardware CC >=8.6,<9.0 except {8.7}
+- 9.0 which supports hardware CC >=9.0,<10.0
+- 10.0 which supports hardware CC >=10.0,<11.0 except {10.1}
+- 12.0 which supports hardware CC >=12.0,<13.0
+Please follow the instructions at https://pytorch.org/get-started/locally/ to install a PyTorch release that supports one of these CUDA versions: 12.6, 12.8
+  _warn_unsupported_code(d, device_cc, code_ccs)
+/scratch/vishnuvardhana.r/envs/offrl/lib/python3.11/site-packages/torch/cuda/__init__.py:371: UserWarning: Found GPU0 Tesla V100-PCIE-32GB which is of compute capability (CC) 7.0.
+The following list shows the CCs this version of PyTorch was built for and the hardware CCs it supports:
+- 7.5 which supports hardware CC >=7.5,<8.0
+- 8.0 which supports hardware CC >=8.0,<9.0 except {8.7}
+- 8.6 which supports hardware CC >=8.6,<9.0 except {8.7}
+- 9.0 which supports hardware CC >=9.0,<10.0
+- 10.0 which supports hardware CC >=10.0,<11.0 except {10.1}
+- 12.0 which supports hardware CC >=12.0,<13.0
+Please follow the instructions at https://pytorch.org/get-started/locally/ to install a PyTorch release that supports one of these CUDA versions: 12.6, 12.8
+  _warn_unsupported_code(d, device_cc, code_ccs)
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+Traceback (most recent call last):
+  File "<frozen runpy>", line 88, in _run_code
+  File "<frozen runpy>", line 198, in _run_module_as_main
+Traceback (most recent call last):
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 433, in <module>
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 433, in <module>
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 433, in <module>
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 433, in <module>
+    main()
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 427, in main
+    main()
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 427, in main
+    main()
+    run_dir = run(cfg)
+              ^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 427, in main
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in run
+    run_dir = run(cfg)
+              ^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in run
+    run_dir = run(cfg)
+              ^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in run
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in <dictcomp>
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in <dictcomp>
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in <dictcomp>
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+    main()
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 427, in main
+    run_dir = run(cfg)
+              ^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in run
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vishnuvardhana.r/offline-rl-hopper/src/offrl/train.py", line 381, in <dictcomp>
+    sums = {k: torch.zeros((), device=device) for k in log_keys}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
