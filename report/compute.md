@@ -28,7 +28,7 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12048550 | 5 | short | none | 1, 4G | Completed | 0:00:23 | 0.00 | seed follow-up scoring at `a389b60`: proceed (B false, 1 of 3 seeds) |
 | 12053724 | 5 | short | none | 2, 16G | Failed (exit 1, V1 miss, as expected) | 0:00:40 | 0.00 | validation reanalysis at `1939b0d` with the checks added in review: same 38 outcomes, no numeric difference from 11981887 |
 | 12055647 | 6 | gpu-short | T4 | 4, 8G | Completed | 0:02:16 | 0.04 | test gate at `d037a0d`: 264 passed (CUDA tests included) |
-| 12055648 | 6 | short | none | 2, 16G | Completed | 0:05:01 | 0.00 | mixtures: seeds 3, 4 (all p) and dev p 0.05, 0.5 at s100, s101; procedure check (s0 p 0.05, 0.5) and the six existing dev files match their committed hashes; 14 new files installed, existing untouched; 79/79 builder checks per build |
+| 12055648 | 6 | short | none | 2, 16G | Completed | 0:05:01 | 0.00 | mixtures: seeds 3, 4 (all p) and dev p 0.05, 0.5 at s100, s101; procedure check (s0 p 0.05, 0.5) and the six existing dev files match their committed hashes; 14 new files installed, existing untouched; 79/79 builder checks for each grid build (17/17 for the s0 procedure check); the six existing s100/s101 manifests stay as committed (the rebuild's copies record other file bytes and build commit, same data) |
 | 12055649 | 6 | gpu-short | T4 | 4, 8G | Completed | 0:01:58 | 0.03 | benchmark G1: IQL k=1, 8.97 ms/update, 0.967 ms per eval step |
 | 12055650 | 6 | gpu-short | T4 | 8, 12G | Completed | 0:02:10 | 0.04 | benchmark G2: IQL k=2, 9.70 ms/update, 1.152 ms per eval step |
 | 12055651 | 6 | gpu-short | T4 | 16, 20G | Completed | 0:02:43 | 0.05 | benchmark G4: IQL k=4, 12.25 ms/update, 1.470 ms per eval step |
@@ -46,23 +46,23 @@ The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 
 
 ## Phase 6 benchmark and hardware choice (D1, approved by the user 2026-11-21)
 
-Benchmark jobs 12055649 to 12055656 at `d037a0d` (spec Section 5; logs in `report/phase6/benchmark/`): 10,000 steps per run on the development mixture `mix_p1_s100`, development evaluation seeds, `log_every` 1000. Hours per 300k-step run `h = (300,000 u + 800 x 1,000 e) / 3,600`, `e` at the 1,000-step upper bound; `u` and `e` from the slowest packed run.
+Benchmark jobs 12055649 to 12055656 at `d037a0d` (spec Section 5; logs in `report/phase6/benchmark/`): 10,000 steps per run on the development mixture `mix_p1_s100`, development evaluation seeds, `log_every` 1000. Hours per 300k-step run `h = (300,000 u + 800 x 1,000 e) / 3,600`, `e` at the 1,000-step upper bound; `u` and `e` the largest among a job's packed runs. Computed by `scripts/phase6_cost_model.py`; its output is `report/phase6/benchmark/cost_model_output.txt`.
 
-| Config | Hardware | Algorithm, runs per job | CPUs, memory | u (ms/update) | e (ms/eval step) | h per run | Peak memory |
+| Config | Hardware | Algorithm, runs per job | CPUs, memory | u (ms/update) | e (ms/eval step) | h per run | Peak memory (MiB) |
 |---|---|---|---|---|---|---|---|
-| G1 | T4 | IQL, 1 | 4, 8G | 8.97 | 0.967 | 0.96 | 1.0 GB |
-| G2 | T4 | IQL, 2 | 8, 12G | 9.70 | 1.152 | 1.06 | 2.1 GB |
-| G4 | T4 | IQL, 4 | 16, 20G | 12.25 | 1.470 | 1.35 | 4.2 GB |
-| GB | T4 | BC, 4 | 16, 20G | 4.58 | 1.330 | 0.68 | 3.8 GB |
-| GV, GVB | V100-PCIE | IQL 2, BC 4 | | failed: no V100 kernels in PyTorch 2.11+cu128 | | | |
-| C1 | CPU, cascadelake | IQL, 1 | 4, 8G | 10.99 | 0.366 | 1.00 | 1.2 GB |
-| CB | CPU, cascadelake | BC, 1 | 4, 8G | 1.88 | 0.267 | 0.22 | 1.2 GB |
+| G1 | T4 | IQL, 1 | 4, 8G | 8.97 | 0.967 | 0.96 | 1030 |
+| G2 | T4 | IQL, 2 | 8, 12G | 9.70 | 1.152 | 1.06 | 2064 |
+| G4 | T4 | IQL, 4 | 16, 20G | 12.25 | 1.470 | 1.35 | 4227 |
+| GB | T4 | BC, 4 | 16, 20G | 4.58 | 1.330 | 0.68 | 3753 |
+| GV, GVB | V100-PCIE | IQL 2, BC 4 | | failed: the installed PyTorch 2.11.0+cu128 has no kernels for compute capability 7.0 (V100); V100 ineligible in this environment | | | |
+| C1 | CPU, cascadelake | IQL, 1 | 4, 8G | 10.99 | 0.366 | 1.00 | 1242 |
+| CB | CPU, cascadelake | BC, 1 | 4, 8G | 1.88 | 0.267 | 0.22 | 1226 |
 
-**Validation (within 20% required):** G2's `u` and `e` predict the three archived IQL runs of array 12034721 (packed with CORL on a T4): training -3%, -7%, -4%; evaluation -6%, -7%, -6% (using each run's actual episode lengths). Pass.
+**Validation (within 20% required):** G2's `u` and `e` predict the three archived IQL runs of array 12034721 (packed with CORL on a T4): training -3%, -7%, -4%; evaluation -6%, -7%, -6%, using each run's actual episode lengths (negative = prediction below the measured time; a CORL partner slows a run). Pass. The validation covers the T4 model only: the CPU figures have no archived counterpart and are checked by the dry run.
 
-**Concurrency (`J_eff`):** T4: one node of 28 cores and 4 GPUs, so 4 jobs at 4 cores, 3 at 8, 1 at 16; `gpu` takes 8 submitted jobs, so the 30 to 52 tasks go in 4 to 7 waves. CPU: the lowest free-core reading on the 24 cascadelake nodes, 90 idle of 1,344 cores (recorded by the CPU benchmark jobs, 2026-11-21 23:40; 98 at 22:30), gives 22 jobs of 4 cores under the D3 throttle of 25; `short` shows no submit limit; measured queue wait 50 s.
+**Concurrency (`J_eff`):** T4: one node of 28 cores and 4 GPUs, so 4 jobs at 4 cores, 3 at 8, 1 at 16; `gpu` takes 8 submitted jobs, so the 19 to 52 tasks go in 3 to 7 submission waves. CPU: the lowest free-core reading on the 24 cascadelake nodes, 90 idle of 1,344 cores (recorded by the CPU benchmark jobs, 2026-11-21 23:34; 98 at 22:30), gives 22 jobs of 4 cores by total idle cores (20 when packed per node, about 16 when each node's free memory is also counted; the wave counts, 2 for BC and 3 for IQL, are the same for any `J_eff` of 15 or more) under the D3 throttle of 25; `short` shows no submit limit; measured queue wait 50 s from eligible to start (the jobs were held on their dependency until 23:32:55).
 
-**Wall clock for the 70 grid runs (BC 25, IQL 45), BC and IQL counted one after the other:** CPU cascadelake 3.5 h, 0 GPU-hours; T4 with IQL at k = 2 13.3 h (29.2 GPU-hours), k = 1 16.3 h (48.0), k = 4 20.9 h (20.9); V100 ineligible. **Choice by the pre-fixed rule: CPU on `short`, `--constraint=cascadelake`**, 1 run per job, 4 CPUs, 8G, `--time` 1:30 for IQL and 0:20 for BC (h x 1.5, rounded up to 10 minutes), required CPU model `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz` (both CPU jobs, on nodes d0014 and d0036, recorded it; all 24 cascadelake nodes have the same 56-core layout; a task on any other model is refused by the sweep).
+**Wall clock for the 70 grid runs (BC 25, IQL 45), BC and IQL counted one after the other:** CPU cascadelake 3.5 h, 0 GPU-hours; T4 with IQL at k = 2 13.3 h (29.2 GPU-hours), k = 1 16.3 h (48.0), k = 4 20.9 h (20.9); V100 ineligible; the T4 figures exclude the human latency per submission wave, which would only lengthen them. **Choice by the pre-fixed rule: CPU on `short`, `--constraint=cascadelake`**, 1 run per job, 4 CPUs, 8G (2G per CPU; measured peak 1.2 GiB), `--time` 1:30 for IQL and 0:20 for BC (h x 1.5, rounded up to 10 minutes), required CPU model `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz` (both CPU jobs, on nodes d0014 and d0036, recorded it; all 24 cascadelake nodes have the same 56-core layout; a task on any other model is refused by the sweep).
 
 ## Measured throughput (Phase 6 input)
 
