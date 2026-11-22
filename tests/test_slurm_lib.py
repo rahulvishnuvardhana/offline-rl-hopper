@@ -1,5 +1,6 @@
 """Phase 6 spec S11: slurm/lib/common.sh's commit checkout, against a temporary git repo."""
 
+import os
 import shutil
 import subprocess
 
@@ -36,7 +37,11 @@ def sh(repo, root, commit, body):
         f'export USER=t CHECKOUT_ROOT="{root.as_posix()}" EXPECTED_COMMIT={commit}; '
         f'cd "{repo.as_posix()}"; source "{COMMON}"; {body}'
     )
-    return subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+    # Not the test gate's own job: its SLURM_SUBMIT_DIR would point create_commit_checkout at the
+    # real clone, and its EXPECTED_COMMIT and GRIDS are not this test's.
+    gate = ("EXPECTED_COMMIT", "GRIDS", "CHECKOUT_ROOT", "PYTHONPATH")
+    env = {k: v for k, v in os.environ.items() if not k.startswith("SLURM_") and k not in gate}
+    return subprocess.run(["bash", "-c", script], capture_output=True, text=True, env=env)
 
 
 def test_checkout_is_created_once_and_reused(repo, tmp_path):

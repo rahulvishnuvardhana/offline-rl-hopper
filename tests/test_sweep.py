@@ -44,6 +44,7 @@ def grid(tmp_path, small_run):
             "log_every": 50,
             "checkpoint_every": 200,
             "eval_every": 100,
+            "device": "cpu",  # not auto: the test gate runs on a GPU node, the bundles here on CPU
         },
         "eval": {"episodes": 2, "final_episodes": 3, "final_score_last_n": 2},
         "net": {"hidden": [32, 32]},
@@ -520,20 +521,36 @@ def test_sigterm_releases_the_bundle_locks(grid, tmp_path):
 
 
 @pytest.mark.requires_data  # a child train process recovers its env from the Minari dataset
-def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path):
-    """S7: the real launcher, two `python -m offrl.train` processes in parallel, each with its own
-    log; the hidden --manifest-dir points the children at the test manifests. Runs in the
-    Explorer test gate (datasets present), skipped in CI."""
-    _, out, runs, manifests = grid
+def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path, monkeypatch):
+    """S7: the real launcher under Slurm-like conditions, as an array task runs a bundle: the sweep
+    holds the bundle's locks under its task token, and two `python -m offrl.train` children, which
+    inherit SLURM_*, train in parallel without waiting on those locks (train never reads locks),
+    each with its own log, from the grid's own config files. The hidden --manifest-dir points the
+    children at the test manifests. Runs in the Explorer test gate (datasets present), skipped in CI."""
+    g, out, runs, manifests = grid
+    monkeypatch.setenv("SLURM_JOB_ID", "4243")
+    monkeypatch.setenv("SLURM_ARRAY_JOB_ID", "4242")
+    monkeypatch.setenv("SLURM_ARRAY_TASK_ID", "0")
     launch = L(tmp_path)
     bundle = runs[:2]
-    cmds = [[*c, f"--manifest-dir={manifests.as_posix()}"] for c in sweep.build_commands(bundle, [], launch)]
-    codes = sweep.subprocess_launch(bundle, cmds, launch)
-    logs = sorted(p.name for p in launch.log_dir.iterdir())
-    assert codes == [0, 0], [(p, p.read_text()[-2000:]) for p in launch.log_dir.iterdir()]
-    assert logs == sorted(f"{sweep.job_token()}_{r.name}.log" for r in bundle)
+    held = []
+
+    def with_manifests(runs_, cmds, launch_):
+        held.extend(sweep.lock_holder(sweep.lock_path(out, r)) for r in runs_)
+        cmds = [[*c, f"--manifest-dir={manifests.as_posix()}"] for c in cmds]
+        return sweep.subprocess_launch(runs_, cmds, launch_)
+
+    code = sweep.run_bundle(bundle, out, launch, g["extra_configs"], with_manifests, always_alive)
+    logs = {p.name: p for p in launch.log_dir.iterdir()}
+    assert code == 0, [(n, p.read_text()[-2000:]) for n, p in logs.items()]
+    assert held == ["4242_0", "4242_0"]  # the children ran while the sweep held their locks
+    assert sorted(logs) == sorted(f"4242_0_{r.name}.log" for r in bundle)
+    assert not list((out / "locks").glob("*.lock"))
     for r in bundle:
-        assert (train.resolve_path(r.cfg["train"]["out_dir"]) / r.name / "final.json").exists()
+        run_dir = train.resolve_path(r.cfg["train"]["out_dir"]) / r.name
+        assert (run_dir / "final.json").exists()
+        saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
+        assert train._comparable(saved) == train._comparable(r.cfg)  # the children ran the grid's config
 
 
 def test_grid_setup_pins_the_approved_limits():
