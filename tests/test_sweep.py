@@ -394,3 +394,20 @@ def test_sigterm_releases_the_bundle_locks(grid, tmp_path):
         sweep.run_bundle(runs[:2], out, L(tmp_path), [], killed, never_alive)
     assert e.value.code == 143
     assert not list((out / "locks").glob("*.lock"))
+
+
+@pytest.mark.requires_data  # a child train process recovers its env from the Minari dataset
+def test_s7_subprocess_launcher_trains_a_new_bundle(grid, tmp_path):
+    """S7: the real launcher, two `python -m offrl.train` processes in parallel, each with its own
+    log; the hidden --manifest-dir points the children at the test manifests. Runs in the
+    Explorer test gate (datasets present), skipped in CI."""
+    _, out, runs, manifests = grid
+    launch = L(tmp_path)
+    bundle = runs[:2]
+    cmds = [[*c, f"--manifest-dir={manifests.as_posix()}"] for c in sweep.build_commands(bundle, [], launch)]
+    codes = sweep.subprocess_launch(bundle, cmds, launch)
+    logs = sorted(p.name for p in launch.log_dir.iterdir())
+    assert codes == [0, 0], [(p, p.read_text()[-2000:]) for p in launch.log_dir.iterdir()]
+    assert logs == sorted(f"{sweep.job_token()}_{r.name}.log" for r in bundle)
+    for r in bundle:
+        assert (train.resolve_path(r.cfg["train"]["out_dir"]) / r.name / "final.json").exists()

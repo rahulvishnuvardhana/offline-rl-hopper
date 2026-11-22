@@ -428,11 +428,12 @@ def main(argv: list[str] | None = None) -> Path:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("args", nargs="+", help="algo YAML file(s), then key.sub=value overrides")
-    args = parser.parse_args(argv).args
-    files = [a for a in args if "=" not in a]
-    overrides = [a for a in args if "=" in a]
+    parser.add_argument("--manifest-dir", default=None, help=argparse.SUPPRESS)  # tests (spec S7)
+    parsed = parser.parse_args(argv)
+    files = [a for a in parsed.args if "=" not in a]
+    overrides = [a for a in parsed.args if "=" in a]
     cfg = load_checked(BASE_CONFIG, *files, overrides=overrides)
-    run_dir = run(cfg)
+    run_dir = run(cfg, manifest_dir=Path(parsed.manifest_dir) if parsed.manifest_dir else MANIFEST_DIR)
     print(json.dumps(json.loads((run_dir / "final.json").read_text(encoding="utf-8")), indent=2))
     return run_dir
 

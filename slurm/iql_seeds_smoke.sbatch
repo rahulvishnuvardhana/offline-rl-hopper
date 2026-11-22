@@ -35,10 +35,10 @@ nvidia-smi --query-gpu=name,memory.total --format=csv
 out=/scratch/$USER/runs_seeds_smoke_$SLURM_JOB_ID
 rm -rf "$out"  # smoke runs only: never reused
 threads=$((SLURM_CPUS_PER_TASK / 2))
-common=(seed=102 data.p_expert=1 train.device=cuda train.num_threads=$threads train.steps=10000
+common=(seed=102 data.p_expert=1 train.device=cuda train.num_threads="$threads" train.steps=10000
         train.log_every=100 train.eval_every=2000 train.checkpoint_every=2000
         eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1
-        data.mixture_dir=/scratch/$USER/mixtures train.out_dir=$out)
+        data.mixture_dir="/scratch/$USER/mixtures" train.out_dir="$out")
 
 pids=()
 for algo in iql corl_iql; do

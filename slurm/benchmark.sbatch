@@ -72,10 +72,10 @@ sacctmgr -n show assoc user="$USER" format=user,partition,maxjobs,maxsubmitjobs 
 
 out=/scratch/$USER/runs_bench_$SLURM_JOB_ID
 rm -rf "$out"  # benchmark runs only: never reused
-common=(seed=100 data.p_expert=1 train.device="$DEVICE" train.num_threads=$threads train.steps=10000
+common=(seed=100 data.p_expert=1 train.device="$DEVICE" train.num_threads="$threads" train.steps=10000
         train.log_every=1000 train.eval_every=2000 train.checkpoint_every=2000
         eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1
-        data.mixture_dir=/scratch/$USER/mixtures train.out_dir="$out")
+        data.mixture_dir="/scratch/$USER/mixtures" train.out_dir="$out")
 pids=()
 for i in $(seq 1 "$K"); do
     python -m offrl.train "configs/algo/$ALGO.yaml" "${common[@]}" train.run_suffix="_copy$i" > /dev/null &

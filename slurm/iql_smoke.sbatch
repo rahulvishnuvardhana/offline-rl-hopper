@@ -32,7 +32,7 @@ rm -rf "$out"  # smoke runs only: never reused
 common=(seed=100 data.p_expert=1.0 train.device=cuda train.num_threads=4 train.steps=2000
         train.log_every=100 train.eval_every=1000 train.checkpoint_every=1000
         eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1
-        data.mixture_dir=/scratch/$USER/mixtures train.out_dir=$out)
+        data.mixture_dir="/scratch/$USER/mixtures" train.out_dir="$out")
 
 for algo in bc iql corl_iql; do
     python -m offrl.train configs/algo/$algo.yaml "${common[@]}" train.run_suffix=_single > /dev/null
