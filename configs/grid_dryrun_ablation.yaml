@@ -1,0 +1,10 @@
+# Phase 6 dry run of the ablation grid's path (spec Section 9; D4): the ablation's axes at
+# development mixture seeds 100 and 101 = 8 runs, in its own output directory as the real grids.
+name: dryrun_ablation
+pin: dryrun
+extra_configs: [configs/dryrun.yaml]
+axes:
+  algo: [iql]
+  algo.expectile,train.run_suffix: [[0.5, _tau0.5], [0.9, _tau0.9]]
+  data.p_expert: [0.05, 0.5]
+  seed: [100, 101]

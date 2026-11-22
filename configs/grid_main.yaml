@@ -1,0 +1,11 @@
+# Phase 7 main grid (Phase 6 spec Section 2; user decision D2: 5 seeds): BC and IQL (tau 0.7)
+# x 5 values of p x seeds 0 to 4 = 50 runs at 300k steps, final evaluation seeds (final.yaml).
+# Expanded by src/offrl/sweep.py in the order written, last axis fastest; every run's resolved
+# config must equal its golden pin in configs/pins/ (main_bc.yaml, main_iql_tau0.7.yaml).
+name: main
+pin: main
+extra_configs: [configs/final.yaml]
+axes:
+  algo: [bc, iql]
+  data.p_expert: [0.0, 0.05, 0.2, 0.5, 1.0]
+  seed: [0, 1, 2, 3, 4]
