@@ -39,8 +39,10 @@ python -c "import torch; assert torch.cuda.is_available(), 'no CUDA: the CUDA te
 python -m pytest -o addopts="" -q -rs
 pin_commit  # the tests left the clone (or the checkout) clean
 for grid in ${GRIDS:-}; do
+    throttle_var="GRID_THROTTLE_$grid"
+    read -ra throttle <<< "${!throttle_var:?no throttle for grid $grid in slurm/grid_setup.sh}"
     python -m offrl.sweep --grid "configs/grid_$grid.yaml" --root "$GRID_ROOT" --set "${GRID_SETS[@]}" \
-        --commit "$EXPECTED_COMMIT" --init "${GRID_INIT_ARGS[@]}"
+        --commit "$EXPECTED_COMMIT" --init "${GRID_INIT_ARGS[@]}" --throttle "${throttle[@]}"
 done
 mkdir -p "$GATE_DIR"
 echo "job $SLURM_JOB_ID $(date -Is)" > "$GATE_DIR/$EXPECTED_COMMIT.ok"  # require_gate reads this

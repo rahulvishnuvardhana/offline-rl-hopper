@@ -198,13 +198,14 @@ def test_init_once_and_setup_must_match(grid, tmp_path):
     g, out, _, _ = grid
     commit = sweep.head_commit()
     setup = sweep.parse_algo_setup(["bc:1:4:8:0.5", "iql:2:8:12:2.6"])
-    record = sweep.setup_record(g, commit, HW_CPU, setup, SETS, 25, 8)
-    sweep.init(out, record, tmp_path / "logs")
+    record = sweep.setup_record(g, commit, HW_CPU, setup, SETS, {"bc": 7, "iql": 10}, 8)
+    assert sweep.init(out, record, tmp_path / "logs") is True
     assert (tmp_path / "logs" / "t" / commit[:12]).is_dir()
-    with pytest.raises(sweep.SweepError, match="exists"):
-        sweep.init(out, record, tmp_path / "logs")
+    assert sweep.init(out, record, tmp_path / "logs") is False  # a rerun with the same setup
+    with pytest.raises(sweep.SweepError, match="another setup"):
+        sweep.init(out, {**record, "max_submit": 9}, tmp_path / "logs")
     got = sweep.read_setup(out, g, commit, SETS)
-    assert got["algos"]["iql"]["time"] == "2:40:00" and got["throttle"] == 25 and got["max_submit"] == 8
+    assert got["algos"]["iql"]["time"] == "2:40:00" and got["throttle"] == {"bc": 7, "iql": 10}
     for grid_, commit_, sets_ in (
         ({**g, "sha256": "0" * 64}, commit, SETS),
         (g, "f" * 40, SETS),
@@ -222,15 +223,34 @@ def test_algo_setup_refuses_uneven_cpus():
 def test_init_needs_every_algorithm_and_one_device_kind(grid, tmp_path):
     base = [
         "--grid", str(tmp_path / "grid.yaml"), "--root", str(tmp_path / "root"), "--init",
-        "--hardware", "cpu", "--partition", "short", "--model", "X", "--throttle", "25", "--max-submit", "8",
+        "--hardware", "cpu", "--partition", "short", "--model", "X", "--max-submit", "8",
     ]  # fmt: skip
-    assert sweep.main([*base, "--constraint", "c", "--algo-setup", "bc:1:4:8:1"]) == sweep.EXIT_CONFLICT
-    assert sweep.main([*base, "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1"]) == sweep.EXIT_CONFLICT
-    assert sweep.main([*base, "--constraint", "c", "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1"]) == 0
+    both = ["--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1", "--throttle", "bc:7", "iql:10"]
+    assert sweep.main([*base, "--constraint", "c", "--algo-setup", "bc:1:4:8:1", "--throttle", "bc:7"]) == 3
+    assert sweep.main([*base, *both]) == sweep.EXIT_CONFLICT  # no --constraint for a CPU grid
+    assert sweep.main([*base, "--constraint", "c", *both]) == 0
+    assert sweep.main([*base, "--constraint", "c", *both]) == 0  # the same setup again: accepted
+
+
+def test_one_setup_serves_a_grid_with_fewer_algorithms(grid, tmp_path):
+    """The gate passes one setup (bc and iql) to every grid; an iql-only grid keeps its own part."""
+    g, _, _, _ = grid
+    iql_only = tmp_path / "iql.yaml"
+    text = (tmp_path / "grid.yaml").read_text().replace("- bc\n  - iql", "- iql")
+    iql_only.write_text(text.replace("name: t", "name: ti"))
+    argv = [
+        "--grid", str(iql_only), "--root", str(tmp_path / "root"), "--init", "--hardware", "cpu",
+        "--partition", "short", "--constraint", "c", "--model", "X", "--max-submit", "8",
+        "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1", "--throttle", "bc:7", "iql:8",
+    ]  # fmt: skip
+    assert sweep.main(argv) == 0
+    path = next((tmp_path / "root").glob("ti/*/sweep.json"))
+    record = json.loads(path.read_text())
+    assert set(record["algos"]) == {"iql"} and record["throttle"] == {"iql": 8}
 
 
 def test_init_only_options_are_refused_elsewhere(tmp_path):
-    argv = ["--grid", "g.yaml", "--root", str(tmp_path), "--throttle", "50", "--list"]
+    argv = ["--grid", "g.yaml", "--root", str(tmp_path), "--throttle", "iql:50", "--list"]
     assert sweep.main(argv) == sweep.EXIT_CONFLICT
 
 
@@ -262,11 +282,11 @@ def test_sbatch_args_come_from_the_record(tmp_path):
         "grid": "main",
         "commit": "a" * 40,
         "hardware": HW_CPU,
-        "throttle": 25,
+        "throttle": {"iql": 10},
         "algos": sweep.parse_algo_setup(["iql:1:4:8:3.1"]),
     }
     args = sweep.sbatch_args(record, "iql", [0, 3], tmp_path)
-    assert "--array=0,3%25" in args and "--constraint=cascadelake" in args and "--time=3:10:00" in args
+    assert "--array=0,3%10" in args and "--constraint=cascadelake" in args and "--time=3:10:00" in args
     assert "--mem=8G" in args and "--cpus-per-task=4" in args and "--partition=short" in args
     assert not any(a.startswith("--gres") for a in args)
 

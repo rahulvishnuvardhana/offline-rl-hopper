@@ -4,7 +4,7 @@ skip what is done, resume what is partial, and refuse what does not belong.
     python -m offrl.sweep --grid configs/grid_main.yaml --root /scratch/$USER/runs_grid \\
         --set data.mixture_dir=/scratch/$USER/mixtures --init --hardware gpu --partition gpu \\
         --gres gpu:t4:1 --model "Tesla T4" --algo-setup bc:4:16:20:1.5 iql:2:8:12:2.6 \\
-        --throttle 4 --max-submit 8
+        --throttle bc:7 iql:10 --max-submit 8
     python -m offrl.sweep --grid G --root R --set ... --algo iql --bundle 3
     python -m offrl.sweep --grid G --root R --set ... --list | --summary | --check | --index
     python -m offrl.sweep --grid G --root R --set ... --algo iql --unfinished
@@ -12,7 +12,7 @@ skip what is done, resume what is partial, and refuse what does not belong.
     python -m offrl.sweep --grid G --grid G2 --root R --set ... --submit-plan
 
 Runs go to ``<root>/<grid name>/<HEAD[:12]>``; ``sweep.json`` there fixes the setup (``--init``,
-in the gate job), the throttle and the submit limit included. A run's status comes from
+in the gate job), the per-array throttle and the submit limit included. A run's status comes from
 ``train.run_status``; ``running`` is added here, from locks in ``<out>/locks/`` (kept out of the
 run directories, so a lock never makes a ``new`` run look ``started``).
 
@@ -153,7 +153,7 @@ def setup_record(
     hardware: dict[str, str],
     algo_setup: dict[str, dict],
     sets: Sequence[str],
-    throttle: int,
+    throttle: dict[str, int],
     max_submit: int,
 ) -> dict:
     return {
@@ -169,17 +169,29 @@ def setup_record(
     }
 
 
-def init(out: Path, record: dict[str, Any], log_root: Path) -> None:
-    """Create ``sweep.json`` once (``O_EXCL``) and the log directory; refuse an existing record."""
+def init(out: Path, record: dict[str, Any], log_root: Path) -> bool:
+    """Create ``sweep.json`` once (``O_EXCL``) and the log directory. An existing record equal to
+    this one is accepted (a rerun of a gate that stopped after it), so the call returns False;
+    a different one is refused: a setup is fixed once per grid and commit."""
     out.mkdir(parents=True, exist_ok=True)
     try:
         fd = os.open(out / "sweep.json", os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        raise SweepError(f"{out / 'sweep.json'} exists; a setup is fixed once per grid and commit") from None
+        try:
+            same = json.loads((out / "sweep.json").read_text(encoding="utf-8")) == record
+        except (OSError, ValueError):
+            same = False
+        if not same:
+            raise SweepError(
+                f"{out / 'sweep.json'} exists with another setup; it is fixed once per grid and commit"
+            ) from None
+        (log_root / record["grid"] / record["commit"][:12]).mkdir(parents=True, exist_ok=True)
+        return False
     with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
         json.dump(record, f, indent=2)
         f.write("\n")
     (log_root / record["grid"] / record["commit"][:12]).mkdir(parents=True, exist_ok=True)
+    return True
 
 
 def read_setup(out: Path, grid: dict[str, Any], commit: str, sets: Sequence[str]) -> dict[str, Any]:
@@ -557,7 +569,7 @@ def sbatch_args(record: dict[str, Any], algo: str, indices: Sequence[int], log_r
     a, hw = record["algos"][algo], record["hardware"]
     logs = log_root / record["grid"] / record["commit"][:12]
     args = [
-        f"--array={','.join(map(str, indices))}%{record['throttle']}",
+        f"--array={','.join(map(str, indices))}%{record['throttle'][algo]}",
         f"--time={a['time']}",
         f"--cpus-per-task={a['cpus']}",
         f"--mem={a['mem_gb']}G",
@@ -628,7 +640,7 @@ def main(
     p.add_argument("--constraint")
     p.add_argument("--model")
     p.add_argument("--algo-setup", nargs="*")
-    p.add_argument("--throttle", type=int)
+    p.add_argument("--throttle", nargs="*", help="algo:n, concurrent tasks of that algorithm's array")
     p.add_argument("--max-submit", type=int)
     a = p.parse_args(argv)
     if a.bundle is not None:  # Slurm ends a job with SIGTERM; release the locks on the way out
@@ -682,6 +694,12 @@ def _main(a: argparse.Namespace, alive: Callable[[str], bool], launcher: Callabl
         if a.algo not in groups or not 0 <= a.bundle < len(groups[a.algo]):
             raise SweepError(f"no bundle {a.algo}/{a.bundle}")
         require_clean()
+        cpus = os.environ.get("SLURM_CPUS_PER_TASK")
+        if cpus is not None and int(cpus) != record["algos"][a.algo]["cpus"]:
+            raise SweepError(
+                f"allocated {cpus} CPUs, the grid records {record['algos'][a.algo]['cpus']}: "
+                "submit with the arguments of --sbatch-args"
+            )
         model = node_model(record["hardware"]["kind"])
         if model != record["hardware"]["model"]:
             raise SweepError(f"this node has {model!r}, the grid requires {record['hardware']['model']!r}")
@@ -724,12 +742,16 @@ def _init(a: argparse.Namespace, grid: dict[str, Any], commit: str, out: Path, l
         hw["constraint"] = a.constraint
     else:
         raise SweepError("--init needs --gres for a GPU grid or --constraint for a CPU grid, not both")
-    setup = parse_algo_setup(a.algo_setup)
     algos = set(grid["axes"]["algo"])
-    if set(setup) != algos:
-        raise SweepError(f"--algo-setup covers {sorted(setup)}, the grid has {sorted(algos)}")
-    init(out, setup_record(grid, commit, hw, setup, a.set, a.throttle, a.max_submit), log_root)
-    print(f"initialised {out / 'sweep.json'}")
+    setup = parse_algo_setup(a.algo_setup)  # one setup may serve several grids: keep this grid's
+    throttle = {k: int(n) for k, n in (t.split(":") for t in a.throttle)}
+    for name, given in (("--algo-setup", setup), ("--throttle", throttle)):
+        if not algos <= set(given):
+            raise SweepError(f"{name} covers {sorted(given)}, the grid has {sorted(algos)}")
+    setup = {k: v for k, v in setup.items() if k in algos}
+    throttle = {k: v for k, v in throttle.items() if k in algos}
+    created = init(out, setup_record(grid, commit, hw, setup, a.set, throttle, a.max_submit), log_root)
+    print(f"{'initialised' if created else 'already initialised, identical'} {out / 'sweep.json'}")
     return 0
 
 

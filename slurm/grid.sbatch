@@ -9,11 +9,16 @@
 # Everything runs from the checkout, never the shared clone, which may be pulled meanwhile. The
 # sweep is exec'd, so Slurm's SIGTERM (time-out, scancel) reaches it and its locks are released.
 #SBATCH --job-name=offrl-grid
+# Overridden by --sbatch-args; here only so a bare submission never writes a log into the checkout.
+#SBATCH --output=/scratch/%u/logs/offrl-grid_unconfigured_%A_%a.out
+#SBATCH --error=/scratch/%u/logs/offrl-grid_unconfigured_%A_%a.err
 
 set -euo pipefail
 : "${EXPECTED_COMMIT:?}" "${GRID:?export GRID=main|ablation|dryrun_main|dryrun_ablation}" "${ALGO:?}"
+: "${SLURM_ARRAY_TASK_ID:?submit as an array, with the arguments sweep --sbatch-args prints}"
+export CHECKOUT_ROOT="/scratch/$USER/src"  # the tree sourced below is the tree entered
 # shellcheck source=slurm/lib/common.sh
-source "/scratch/$USER/src/$EXPECTED_COMMIT/slurm/lib/common.sh"
+source "$CHECKOUT_ROOT/$EXPECTED_COMMIT/slurm/lib/common.sh"
 use_commit_checkout
 pin_commit
 require_gate

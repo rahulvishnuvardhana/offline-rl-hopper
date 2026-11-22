@@ -44,9 +44,12 @@ def test_checkout_is_created_once_and_reused(repo, tmp_path):
     for _ in range(2):  # idempotent: the second call accepts the existing checkout
         r = sh(repo, root, head, "create_commit_checkout && echo ok")
         assert r.returncode == 0 and r.stdout.strip() == "ok", r.stderr
-    r = sh(repo, root, head, 'use_commit_checkout && echo "$PWD|$PYTHONPATH"')
+    r = sh(repo, root, head, 'use_commit_checkout && git rev-parse --show-toplevel && echo "$PYTHONPATH"')
     assert r.returncode == 0, r.stderr
-    assert git(root / head, "rev-parse", "HEAD") == head
+    toplevel, pythonpath = r.stdout.split()
+    assert git(toplevel, "rev-parse", "HEAD") == head  # entered the checkout
+    assert pythonpath.endswith(f"{head}/src")
+    assert "locked" in git(repo, "worktree", "list", "--porcelain")
 
 
 def test_use_refuses_missing_modified_or_moved_checkouts(repo, tmp_path):
