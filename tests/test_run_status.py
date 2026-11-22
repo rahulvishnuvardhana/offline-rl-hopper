@@ -160,3 +160,21 @@ def test_started_run_restarts_with_cleared_logs(small_run, env):
     rows = (run_dir / "metrics.csv").read_text(encoding="utf-8").splitlines()
     assert rows[: len(rows_before)] == rows_before and len(rows) == len(rows_before) + 1  # 50, 100, 150
     assert json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))["resumes"] == []
+
+
+def test_non_finite_final_score_still_writes_final_json(small_run, env, monkeypatch):
+    """A run that finishes is a result whatever its score: NaN is written as a string, the run is
+    done, and the sweep's --check flags it (Phase 6 spec Section 2, run outcomes)."""
+    make, manifests = small_run
+    cfg = make()
+    real = train.evaluate
+
+    def nan_scores(*args, **kwargs):
+        summary, rows = real(*args, **kwargs)
+        return {**summary, "score_mean": float("nan")}, rows
+
+    monkeypatch.setattr(train, "evaluate", nan_scores)
+    run_dir = train.run(cfg, env=env, manifest_dir=manifests)
+    final = json.loads((run_dir / "final.json").read_text(encoding="utf-8"))
+    assert final["score"] == "nan" and final["per_eval"][0]["score_mean"] == "nan"
+    assert status(cfg) == ("done", "")

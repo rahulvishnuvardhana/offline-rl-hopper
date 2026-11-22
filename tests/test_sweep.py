@@ -3,6 +3,8 @@ runs, trained in-process by an injected launcher (the real one starts ``python -
 
 import json
 import math
+import os
+from types import SimpleNamespace
 
 import gymnasium as gym
 import pytest
@@ -188,27 +190,48 @@ def test_exit_codes(codes, want):
     assert sweep.exit_code(codes) == want
 
 
+HW_CPU = {"kind": "cpu", "partition": "short", "constraint": "cascadelake", "model": "X"}
+SETS = ["data.mixture_dir=/m"]
+
+
 def test_init_once_and_setup_must_match(grid, tmp_path):
     g, out, _, _ = grid
     commit = sweep.head_commit()
-    record = sweep.setup_record(
-        g,
-        commit,
-        {"kind": "cpu", "partition": "short", "constraint": "cascadelake", "model": "X"},
-        sweep.parse_algo_setup(["bc:1:4:8:0.5", "iql:2:8:12:2.6"]),
-    )
+    setup = sweep.parse_algo_setup(["bc:1:4:8:0.5", "iql:2:8:12:2.6"])
+    record = sweep.setup_record(g, commit, HW_CPU, setup, SETS, 25, 8)
     sweep.init(out, record, tmp_path / "logs")
     assert (tmp_path / "logs" / "t" / commit[:12]).is_dir()
     with pytest.raises(sweep.SweepError, match="exists"):
         sweep.init(out, record, tmp_path / "logs")
-    assert sweep.read_setup(out, g, commit)["algos"]["iql"]["time"] == "2:40:00"
-    with pytest.raises(sweep.SweepError, match="does not match"):
-        sweep.read_setup(out, {**g, "sha256": "0" * 64}, commit)
+    got = sweep.read_setup(out, g, commit, SETS)
+    assert got["algos"]["iql"]["time"] == "2:40:00" and got["throttle"] == 25 and got["max_submit"] == 8
+    for grid_, commit_, sets_ in (
+        ({**g, "sha256": "0" * 64}, commit, SETS),
+        (g, "f" * 40, SETS),
+        (g, commit, ["data.mixture_dir=/x"]),
+    ):
+        with pytest.raises(sweep.SweepError, match="does not match"):
+            sweep.read_setup(out, grid_, commit_, sets_)
 
 
 def test_algo_setup_refuses_uneven_cpus():
     with pytest.raises(sweep.SweepError, match="divide"):
         sweep.parse_algo_setup(["iql:3:8:12:2"])
+
+
+def test_init_needs_every_algorithm_and_one_device_kind(grid, tmp_path):
+    base = [
+        "--grid", str(tmp_path / "grid.yaml"), "--root", str(tmp_path / "root"), "--init",
+        "--hardware", "cpu", "--partition", "short", "--model", "X", "--throttle", "25", "--max-submit", "8",
+    ]  # fmt: skip
+    assert sweep.main([*base, "--constraint", "c", "--algo-setup", "bc:1:4:8:1"]) == sweep.EXIT_CONFLICT
+    assert sweep.main([*base, "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1"]) == sweep.EXIT_CONFLICT
+    assert sweep.main([*base, "--constraint", "c", "--algo-setup", "bc:1:4:8:1", "iql:1:4:8:1"]) == 0
+
+
+def test_init_only_options_are_refused_elsewhere(tmp_path):
+    argv = ["--grid", "g.yaml", "--root", str(tmp_path), "--throttle", "50", "--list"]
+    assert sweep.main(argv) == sweep.EXIT_CONFLICT
 
 
 def test_unfinished_lists_bundles_and_fails_on_conflict(grid, env, tmp_path):
@@ -238,14 +261,14 @@ def test_sbatch_args_come_from_the_record(tmp_path):
     record = {
         "grid": "main",
         "commit": "a" * 40,
-        "hardware": {"kind": "cpu", "partition": "short", "constraint": "cascadelake", "model": "X"},
+        "hardware": HW_CPU,
+        "throttle": 25,
         "algos": sweep.parse_algo_setup(["iql:1:4:8:3.1"]),
     }
-    args = sweep.sbatch_args(record, "iql", [0, 3], 25, tmp_path)
+    args = sweep.sbatch_args(record, "iql", [0, 3], tmp_path)
     assert "--array=0,3%25" in args and "--constraint=cascadelake" in args and "--time=3:10:00" in args
-    assert (
-        "--mem=8G" in args and "--cpus-per-task=4" in args and not any(a.startswith("--gres") for a in args)
-    )
+    assert "--mem=8G" in args and "--cpus-per-task=4" in args and "--partition=short" in args
+    assert not any(a.startswith("--gres") for a in args)
 
 
 def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeypatch):
@@ -262,24 +285,112 @@ def test_check_accepts_flags_and_refuses_provenance(grid, env, tmp_path, monkeyp
         "repo_root": str(train.REPO_ROOT),
         "hardware": {"kind": "cpu", "model": meta["cpu_model"]},
     }
-    assert sweep.check_run(r, g, record) == ([], [])
     final = json.loads((run_dir / "final.json").read_text())
-    (run_dir / "final.json").write_text(json.dumps({**final, "score": "nan"}))
-    errors, flags = sweep.check_run(r, g, record)
+
+    def with_final(**changes):
+        (run_dir / "final.json").write_text(json.dumps({**final, **changes}))
+        return sweep.check_run(r, g, record)
+
+    assert with_final(score=95.0, fall_rate=0.1) == ([], [])
+    errors, flags = with_final(score="nan")
     assert errors == [] and "non-finite" in flags[0]  # a result, flagged, not refused
+    assert "collapsed" in with_final(score=5.0, fall_rate=0.0)[1][0]
+    assert "high-fall" in with_final(score=17.0, fall_rate=0.9)[1][0]  # Phase 5's p = 0.2 kind
+    with_final(score=95.0, fall_rate=0.1)
     errors, _ = sweep.check_run(r, g, {**record, "hardware": {"kind": "cpu", "model": "Other CPU"}})
     assert any("cpu_model" in e for e in errors)
     errors, _ = sweep.check_run(r, g, {**record, "hardware": {"kind": "gpu", "model": "Tesla T4"}})
     assert any("gpu" in e for e in errors) and any("device" in e for e in errors)
+    (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "cpu_model"}))
+    assert any("cpu_model" in e for e in sweep.check_run(r, g, record)[0])  # a missing key refuses
+    (run_dir / "meta.json").write_text(json.dumps({k: v for k, v in meta.items() if k != "repo_root"}))
+    assert any("trained from" in e for e in sweep.check_run(r, g, record)[0])
+    resume = {
+        "from_step": 200,
+        "git_commit": meta["git_commit"],
+        "git_dirty": False,
+        "cpu_model": "Other CPU",
+    }
+    (run_dir / "meta.json").write_text(json.dumps({**meta, "resumes": [resume]}))
+    assert any("cpu_model" in e for e in sweep.check_run(r, g, record)[0])  # resume records checked too
+    (run_dir / "meta.json").write_text(json.dumps(meta))
     (tmp_path / "pins" / "t_bc.yaml").write_text(yaml.safe_dump({**sweep.pin_view(saved), "seed": 7}))
-    errors, _ = sweep.check_run(r, g, record)
-    assert any("pin" in e for e in errors)
+    assert any("pin" in e for e in sweep.check_run(r, g, record)[0])
 
 
 def test_set_accepts_only_the_mixture_dir(tmp_path):
-    assert (
-        sweep.main(
-            ["--grid", "configs/grid_x.yaml", "--root", str(tmp_path), "--set", "train.steps=10", "--list"]
-        )
-        == sweep.EXIT_CONFLICT
-    )
+    argv = ["--grid", "configs/grid_x.yaml", "--root", str(tmp_path), "--set", "train.steps=10", "--list"]
+    assert sweep.main(argv) == sweep.EXIT_CONFLICT
+
+
+@pytest.mark.parametrize(
+    ("returncode", "stdout", "stderr", "alive"),
+    [
+        (0, "12345_1 gpu offrl R", "", True),
+        (0, "", "", False),
+        (1, "", "slurm_load_jobs error: Invalid job id specified", False),  # gone from slurmctld
+        (1, "", "Socket timed out", True),  # not proof the job is gone
+    ],
+)
+def test_squeue_alive(returncode, stdout, stderr, alive):
+    def run(*_, **__):
+        return SimpleNamespace(returncode=returncode, stdout=stdout, stderr=stderr)
+
+    assert sweep.squeue_alive("12345_1", run=run) is alive
+
+
+def test_unreadable_lock_is_stale_only_once_old(tmp_path):
+    lock = tmp_path / "locks" / "r.lock"
+    lock.parent.mkdir()
+    lock.write_text('{"tok')  # killed mid-write
+    assert not sweep.acquire(lock, "a_1", never_alive)  # may be being written right now
+    old = lock.stat().st_mtime - 2 * sweep.FRESH_LOCK_S
+    os.utime(lock, (old, old))
+    assert sweep.acquire(lock, "a_1", never_alive)
+
+
+def test_breaking_a_stale_lock_never_steals_a_fresh_one(tmp_path):
+    """B finds a stale lock; while B asks squeue, A breaks it and takes the lock. B's rename then
+    moves A's fresh lock: B must give it back and report the run as held."""
+    lock = tmp_path / "locks" / "r.lock"
+    lock.parent.mkdir()
+    lock.write_text(json.dumps({"token": "dead_0"}))
+
+    def slow_squeue(token):
+        if token == "dead_0" and not (tmp_path / "a_done").exists():
+            (tmp_path / "a_done").write_text("")
+            assert sweep.acquire(lock, "a_1", never_alive)  # A, meanwhile
+        return False
+
+    assert not sweep.acquire(lock, "b_2", slow_squeue)
+    assert json.loads(lock.read_text())["token"] == "a_1"
+
+
+def test_paired_axes_expand_the_ablation(grid):
+    g, out, _, _ = grid
+    axes = {
+        "algo": ["iql"],
+        "algo.expectile,train.run_suffix": [[0.5, "_tau0.5"], [0.9, "_tau0.9"]],
+        "data.p_expert": [1.0],
+        "seed": [100, 101],
+    }
+    runs = sweep.expand({**g, "axes": axes}, out, ["data.mixture_dir=/m"])
+    names = ["iql_p1_s100_tau0.5", "iql_p1_s101_tau0.5", "iql_p1_s100_tau0.9", "iql_p1_s101_tau0.9"]
+    assert [r.name for r in runs] == names
+    assert [r.cfg["algo"]["expectile"] for r in runs] == [0.5, 0.5, 0.9, 0.9]
+    bad = {"algo": ["iql"], "algo.expectile,train.run_suffix": [[0.5]]}
+    with pytest.raises(sweep.SweepError, match="zipped axis"):
+        sweep.expand({**g, "axes": bad}, out)
+
+
+def test_sigterm_releases_the_bundle_locks(grid, tmp_path):
+    """Slurm's SIGTERM (time-out, scancel) leaves through SystemExit, so the locks are released."""
+    _, out, runs, _ = grid
+
+    def killed(runs_, cmds, launch):
+        sweep._on_sigterm(15, None)
+
+    with pytest.raises(SystemExit) as e:
+        sweep.run_bundle(runs[:2], out, L(tmp_path), [], killed, never_alive)
+    assert e.value.code == 143
+    assert not list((out / "locks").glob("*.lock"))

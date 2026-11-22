@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import shutil
@@ -197,8 +198,13 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
     if any(int(r["n_episodes"]) != cfg["eval"]["final_episodes"] for r in sel):
         raise RuntimeError("a final evaluation does not have eval.final_episodes episodes")
 
-    def mean(key: str) -> float:
-        return float(np.mean([float(r[key]) for r in sel]))
+    def finite(x: float) -> float | str:
+        """A non-finite value is written as a string ("nan", "inf"), so ``final.json`` can always
+        be written: a finished run is a result whatever its score (Phase 6 spec Section 2)."""
+        return x if math.isfinite(x) else str(x)
+
+    def mean(key: str) -> float | str:
+        return finite(float(np.mean([float(r[key]) for r in sel])))
 
     return {
         "run": run_name(cfg),
@@ -207,7 +213,9 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
         "fall_rate": mean("fall_rate"),
         "sub_score": mean("sub_score_mean"),
         "steps": steps,
-        "per_eval": [{k: float(r[k]) for k in ("score_mean", "return_mean", "fall_rate")} for r in sel],
+        "per_eval": [
+            {k: finite(float(r[k])) for k in ("score_mean", "return_mean", "fall_rate")} for r in sel
+        ],
         "episodes_per_eval": cfg["eval"]["final_episodes"],
         "note": "mean of correlated checkpoints on the same starting states, not independent samples",
     }
