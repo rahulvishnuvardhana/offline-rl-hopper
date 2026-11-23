@@ -49,6 +49,7 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12068768, 12068769 | 6 | short | none | 4, 8G | Completed; Failed (exit 4, as expected) | 0:02:26; 0:00:12 | 0.00 | dry run, lock test: the second job found the run locked and exited 4 without training |
 | 12068835 | 6 | short | none | 2, 4G | Completed | 0:00:40 | 0.00 | dry run, `sweep --check` and `--list` on both grids |
 | 12072515 | 6 | short | none | 2, 4G | Completed | 0:00:24 | 0.00 | dry-run evidence collected to `~/archive/` (`report/phase6/dryrun/`), with `sweep --check` rerun |
+| 12072591 | 6 | short | none | 2, 4G | Completed | 0:01:27 | 0.00 | spec Section 4 archive: the 25 final-grid and 4 new development mixtures copied to `~/archive/phase6_mixtures` (2.9 GB, `SHA256SUMS` match the source); `check_mixture_files.py` 29/29 against the committed manifests |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
