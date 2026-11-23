@@ -115,24 +115,47 @@ These Phase 5 figures were measured with a CORL partner and `log_every` 100, so 
 ## 9. Dry run (Explorer, development data)
 - **Grid files:** `configs/grid_dryrun_main.yaml` (the main grid's axes at seeds 100 and 101: 20 runs) and `configs/grid_dryrun_ablation.yaml` (the ablation's: 8 runs), `pin: dryrun`, no `final.yaml` (development evaluation seeds), and the overrides `train.steps=10000 train.eval_every=2000 train.checkpoint_every=2000 train.log_every=1000 eval.episodes=10 eval.final_episodes=10 eval.final_score_last_n=1` in their `extra_configs`. Two files, so the dry run uses two output directories as the real grids do. Checkpoints every 2,000 of 10,000 steps leave time to cancel after a checkpoint and before the end.
 - **Commit identity:** the dry run runs at commit X on the branch; the grids run at the merge commit M. Before the grid, `git diff --quiet X M -- . ':!docs' ':!ROADMAP.md' ':!README.md' ':!report/*.md'` must succeed (code, configs, Slurm scripts, manifests, `pyproject.toml`), and the test gate must pass at M; otherwise the dry run is repeated at M.
-- **Commit identity, amended (user, 2026-11-22, Option A of the final PR review):** commit `8051653`, after the dry run, added files no run reads, so the check above would fail between X = `a11dc28` and M for them alone: the 22 dry-run evidence files in `report/phase6/dryrun/` (listed below), `.pre-commit-config.yaml` (its `exclude` line only, so the hooks keep that evidence byte-for-byte for its `SHA256SUMS`), and the mode of `scripts/archive_runs.sh` (made executable, content unchanged). No code, config, Slurm script or test reads them. Only those exact files are excluded, each by a literal path, not a pattern; `archive_runs.sh` must have the same content at X and M, and `.pre-commit-config.yaml` at M must be the reviewed version from `8051653`. Any other difference still fails the check, and the dry run is then repeated at M. The check as run on Explorer, from the clone:
+- **Commit identity, amended (user, 2026-11-22, Option A of the final PR review):** commit `8051653`, after the dry run, added files no run reads, so the check above would fail between X = `a11dc28` and M for them alone: the 22 dry-run evidence files in `report/phase6/dryrun/` (listed below), `.pre-commit-config.yaml` (its `exclude` line only, so the hooks keep that evidence byte-for-byte for its `SHA256SUMS`), and the mode of `scripts/archive_runs.sh` (made executable, content unchanged). No code, config, Slurm script or test reads them. Only those exact files are excluded, each by a literal path, not a pattern (all 22 written out below); `archive_runs.sh` must have the same content at X and M and mode 100755 at M, and `.pre-commit-config.yaml` at M must be the reviewed version from `8051653`. Any other difference still fails the check, and the dry run is then repeated at M. The check runs in its own `bash` from the clone, with M set, and prints PASS or FAIL explicitly (so it does not depend on `set -e` in the operator's shell):
 
   ```bash
-  set -e
-  X=a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5 M=${M:?set M to the merge commit}
-  ev="SHA256SUMS cancel_watch.log locktest_iql_p0_s100_meta.json resume_check.txt resumed_iql_p1_s101_meta.json sacct.txt sweep_check.txt
-  logs/12068612_9_iql_p1_s101.log logs/12068733_9_iql_p1_s101.log logs/12068768_0_iql_p0_s100.log"
-  for j in 12068612_9 12068733_9 12068758_0 12068758_9 12068768_0 12068769_0; do
-      ev="$ev logs/offrl-dryrun_main-iql-a11dc28a285a_$j.err logs/offrl-dryrun_main-iql-a11dc28a285a_$j.out"
-  done
+  M=<merge commit> bash <<'EOF'
+  X=a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5
   ex=()
-  for f in $ev; do ex+=(":(exclude,literal)report/phase6/dryrun/$f"); done
-  test "${#ex[@]}" = 22
-  git diff --quiet "$X" "$M" -- . ':!docs' ':!ROADMAP.md' ':!README.md' ':!report/*.md' "${ex[@]}" \
-      ':(exclude,literal).pre-commit-config.yaml' ':(exclude,literal)scripts/archive_runs.sh'
-  test "$(git rev-parse "$X:scripts/archive_runs.sh")" = "$(git rev-parse "$M:scripts/archive_runs.sh")"
-  test "$(git rev-parse "$M:.pre-commit-config.yaml")" = "$(git rev-parse 8051653:.pre-commit-config.yaml)"
-  echo "commit identity: PASS"
+  for f in \
+      report/phase6/dryrun/SHA256SUMS \
+      report/phase6/dryrun/cancel_watch.log \
+      report/phase6/dryrun/locktest_iql_p0_s100_meta.json \
+      report/phase6/dryrun/logs/12068612_9_iql_p1_s101.log \
+      report/phase6/dryrun/logs/12068733_9_iql_p1_s101.log \
+      report/phase6/dryrun/logs/12068768_0_iql_p0_s100.log \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068612_9.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068612_9.out \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068733_9.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068733_9.out \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068758_0.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068758_0.out \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068758_9.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068758_9.out \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068768_0.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068768_0.out \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068769_0.err \
+      report/phase6/dryrun/logs/offrl-dryrun_main-iql-a11dc28a285a_12068769_0.out \
+      report/phase6/dryrun/resume_check.txt \
+      report/phase6/dryrun/resumed_iql_p1_s101_meta.json \
+      report/phase6/dryrun/sacct.txt \
+      report/phase6/dryrun/sweep_check.txt \
+  ; do ex+=(":(exclude,literal)$f"); done
+  if [ -n "${M:-}" ] && [ "${#ex[@]}" = 22 ] \
+      && git diff --quiet "$X" "$M" -- . ':!docs' ':!ROADMAP.md' ':!README.md' ':!report/*.md' "${ex[@]}" \
+          ':(exclude,literal).pre-commit-config.yaml' ':(exclude,literal)scripts/archive_runs.sh' \
+      && [ "$(git rev-parse "$X:scripts/archive_runs.sh")" = "$(git rev-parse "$M:scripts/archive_runs.sh")" ] \
+      && [ "$(git ls-tree "$M" scripts/archive_runs.sh | cut -c1-6)" = 100755 ] \
+      && [ "$(git rev-parse "$M:.pre-commit-config.yaml")" = "$(git rev-parse 8051653:.pre-commit-config.yaml)" ]; then
+      echo "commit identity: PASS"
+  else
+      echo "commit identity: FAIL"; exit 1
+  fi
+  EOF
   ```
 - **Steps:** (0) before the first wave, record Explorer's `KillWait` (`scontrol show config | grep -i KillWait`; at least 25 s required, since the sweep waits up to 20 s for its runs after SIGTERM) and `ProctrackType` (expected `proctrack/cgroup`, so a cancel signals every process of the job); run the guard's exact command once, `squeue -h -r -u $USER -t PD,R,CG,CF,S,ST,RQ,RH,RF,RS,SE,SO -n offrl-grid -o %K`: exit 0 and empty output (Explorer accepts the state names, and nothing runs under the old default name); every `sbatch` follows its `--sbatch-args` call at once, with nothing submitted in between; (1) test gate at X (creates the checkout); (2) the dry-run arrays, one per algorithm and grid, at the D1 configuration, submitted in the waves `sweep --submit-plan` prints for the dry-run grids (on a GPU the 28 runs exceed the submit limit of 8, so the dry run also tests the wave procedure; the lock test in step 6 takes two more slots); (3) plain `scancel <A>_<i>` (never `-s` or `--signal`: without `-b` those skip the batch step, so the sweep would not see SIGTERM) on one task after its first checkpoint; once `squeue` no longer lists the task, record the step of each of its runs' checkpoints (`python -c "import sys, torch; print(torch.load(sys.argv[1], map_location='cpu', weights_only=False)['step'])" <run>/ckpt/latest.pt`; nothing writes to it after the kill). **Lock release**, the criterion: no `<out>/locks/<run>.lock` remains for any run of that bundle (a lock left behind is a FAIL to report, even though a later job would break it as stale). Supporting evidence: the task's `.err` log holds the sweep's line `signal 15: runs stopped, releasing the bundle's locks, exit 143`, and `--list` shows the run `partial` (a status check only: it would show `partial` with a stale lock too); (4) `sweep --unfinished` after `squeue` is empty: only the cancelled bundle is listed; resubmit it; **correct resume** is checked: the last resume record in `meta.json` has `from_step` equal to the step recorded in (3), the commit and CPU model of the grid; `metrics.csv` has steps 1000 to 10000 each exactly once; `eval.csv` and `eval_episodes.csv` have evaluation steps 2000 to 10000 each exactly once (nothing duplicated after the resume truncates them; development data, so reading them is allowed); `final.json` exists, the run is `done`, no lock remains, and `sweep --check` passes for it; (5) **submit guard:** `sweep --sbatch-args --indices <i>` exits 3 naming bundle `i` both while its task is pending and while it is running (the guard reads the whole requested wave before the unfinished filter); then, once nothing is queued, submit 2 tasks again with the arguments printed for an earlier wave, `--job-name` kept and only `--array` changed to `0,<last>` (`--sbatch-args` itself exits 5 for done bundles): every run prints `DONE` and does not train, exit 0; `--list` shows all 28 `done`; (6) lock test: submit one bundle twice at once with the same printed arguments (bypassing the guard on purpose); the second reports `running` and exits 4 without training.
 - **Score-blind checker:** `sweep --check` on both dry-run grids (pin `dryrun`: 5 evaluations, the last at 10 episodes): 28 run directories with `config.yaml`, `meta.json` (one commit, clean, the checkout, the D1 hardware), `metrics.csv`, `ckpt/latest.pt`, `final.json`; the resumed run has a resume with `from_step` in 2000 to 8000 (step 3 is repeated if it missed); the skip-only resubmission added no `metrics.csv` rows. It reads file presence, row counts and metadata only. The dry-run directories are deleted afterwards and the deletion recorded in `report/compute.md`; the small evidence (the `--check` output, the cancel, resume and lock-test logs) is kept first in `~/archive/` and `report/phase6/dryrun/`.
