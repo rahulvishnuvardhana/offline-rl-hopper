@@ -1,0 +1,19 @@
+{
+  "run": "iql_p1_s101",
+  "score": 12.320507148158457,
+  "return_mean": 490.2317547295364,
+  "fall_rate": 1.0,
+  "sub_score": 12.320507148158457,
+  "steps": [
+    10000
+  ],
+  "per_eval": [
+    {
+      "score_mean": 12.320507148158457,
+      "return_mean": 490.2317547295364,
+      "fall_rate": 1.0
+    }
+  ],
+  "episodes_per_eval": 10,
+  "note": "mean of correlated checkpoints on the same starting states, not independent samples"
+}

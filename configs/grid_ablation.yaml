@@ -1,0 +1,12 @@
+# Phase 8 task 1, the tau ablation for H3 (Phase 6 spec Section 2; user decision D5: seeds match
+# the main grid): IQL at tau 0.5 and 0.9 x p in {0.05, 0.5} x seeds 0 to 4 = 20 runs, submitted
+# with the main grid at the same commit on the same hardware. tau 0.7 is the main grid's IQL.
+# A key "a,b" is a zipped axis: each value pairs the expectile with its run-name suffix.
+name: ablation
+pin: ablation
+extra_configs: [configs/final.yaml]
+axes:
+  algo: [iql]
+  algo.expectile,train.run_suffix: [[0.5, _tau0.5], [0.9, _tau0.9]]
+  data.p_expert: [0.05, 0.5]
+  seed: [0, 1, 2, 3, 4]

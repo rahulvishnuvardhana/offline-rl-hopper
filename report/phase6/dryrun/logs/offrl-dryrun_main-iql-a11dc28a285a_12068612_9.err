@@ -1,0 +1,2 @@
+slurmstepd: error: *** JOB 12068612 ON d0012 CANCELLED AT 2026-11-22T17:17:03 ***
+signal 15: runs stopped, releasing the bundle's locks, exit 143

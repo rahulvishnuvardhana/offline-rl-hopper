@@ -1,0 +1,41 @@
+# Golden pin (Phase 6 spec Section 2): the full resolved config of every ablation run of type iql_tau0.9,
+# minus the keys a run may set itself (seed, data.p_expert, train.run_suffix, train.device, train.num_threads, train.out_dir, data.mixture_dir).
+# sweep --check and tests/test_grids.py require exact equality. Generated from the grid files,
+# then reviewed; a change to it is a change to the experiment.
+algo:
+  beta: 3.0
+  discount: 0.99
+  exp_adv_max: 100.0
+  expectile: 0.9
+  name: iql
+  target_update_rate: 0.005
+data:
+  expert_id: mujoco/hopper/expert-v0
+  n_transitions: 900000
+  normalize_states: true
+  scale_rewards: true
+  simple_id: mujoco/hopper/simple-v0
+  state_std_eps: 0.001
+eval:
+  episodes: 10
+  final_episodes: 50
+  final_score_last_n: 5
+  seed_offset: 10000
+net:
+  hidden:
+  - 256
+  - 256
+  log_std_max: 2.0
+  log_std_min: -20.0
+score:
+  r_expert: 3857.803603002423
+  r_random: 17.02882347293913
+  r_simple: 1655.6250879864187
+train:
+  actor_cosine_lr: true
+  batch_size: 256
+  checkpoint_every: 25000
+  eval_every: 5000
+  log_every: 1000
+  lr: 0.0003
+  steps: 300000

@@ -1,0 +1,12 @@
+# Phase 6 dry run (spec Section 9): the grid path at 10,000 steps on development data. Checkpoints
+# every 2,000 steps leave time to cancel a task after its first checkpoint and before it ends.
+# Never used by a real grid (their pins fix train.steps at 300000).
+train:
+  steps: 10000
+  eval_every: 2000
+  checkpoint_every: 2000
+  log_every: 1000
+eval:
+  episodes: 10
+  final_episodes: 10
+  final_score_last_n: 1

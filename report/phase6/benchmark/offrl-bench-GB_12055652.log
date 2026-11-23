@@ -1,0 +1,38 @@
+QUEUE_WAIT_S=237 (submit 2026-11-21T22:44:04, eligible 2026-11-21T23:32:55, start 2026-11-21T23:36:52)
+config: algo=bc k=4 device=cuda cpus=16 mem=20480M threads/run=4
+NodeName=d1025 Arch=x86_64 CoresPerSocket=14
+   CPUAlloc=28 CPUEfctv=28 CPUTot=28 CPULoad=3.63
+   AvailableFeatures=ib,cascadelake,prod
+   ActiveFeatures=ib,cascadelake,prod
+   Gres=gpu:t4:4(S:0-1)
+   NodeAddr=d1025 NodeHostName=d1025 Version=23.11.6
+   OS=Linux 5.14.0-362.13.1.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Dec 13 14:07:45 UTC 2023
+   RealMemory=187000 AllocMem=83968 FreeMem=69636 Sockets=2 Boards=1
+   State=ALLOCATED ThreadsPerCore=1 TmpDisk=0 Weight=10 Owner=N/A MCS_label=N/A
+   Partitions=gpu,gpu-short,gpu-interactive
+   BootTime=2026-06-29T07:52:08 SlurmdStartTime=2026-11-20T14:15:46
+   LastBusyTime=2026-11-21T16:04:51 ResumeAfterTime=None
+   CfgTRES=cpu=28,mem=187000M,billing=428,gres/gpu=4
+   AllocTRES=cpu=28,mem=82G,gres/gpu=3
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
+
+Model name:                         Intel(R) Xeon(R) Gold 6240 CPU @ 2.60GHz
+Thread(s) per core:                 1
+Core(s) per socket:                 18
+Socket(s):                          2
+CPU_MODEL=Intel(R) Xeon(R) Gold 6240 CPU @ 2.60GHz
+name, memory.total [MiB]
+Tesla T4, 15360 MiB
+       gpu         4           8
+     short        50
+ gpu-short         2           8
+vishnuvar+
+bc_p1_s100_copy1         Tesla T4: 4.56 ms/update over 8 of 10 windows; 1.327 ms per eval env step over 19728 steps
+bc_p1_s100_copy2         Tesla T4: 4.58 ms/update over 8 of 10 windows; 1.328 ms per eval env step over 19728 steps
+bc_p1_s100_copy3         Tesla T4: 4.57 ms/update over 8 of 10 windows; 1.327 ms per eval env step over 19728 steps
+bc_p1_s100_copy4         Tesla T4: 4.53 ms/update over 8 of 10 windows; 1.330 ms per eval env step over 19728 steps
+model recorded by every run: Tesla T4
+model inputs (slowest run): u = 4.58 ms, e = 1.330 ms; h = 0.68 h per run, --time = 1.02 h
+memory.peak: 3753 MiB

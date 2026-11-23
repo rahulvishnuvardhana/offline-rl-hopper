@@ -1,0 +1,58 @@
+QUEUE_WAIT_S=50 (submit 2026-11-21T22:44:04, eligible 2026-11-21T23:32:55, start 2026-11-21T23:33:45)
+config: algo=bc k=1 device=cpu cpus=4 mem=8192M threads/run=4
+NodeName=d0036 Arch=x86_64 CoresPerSocket=28
+   CPUAlloc=52 CPUEfctv=56 CPUTot=56 CPULoad=0.00
+   AvailableFeatures=ib,cascadelake,prod
+   ActiveFeatures=ib,cascadelake,prod
+   Gres=(null)
+   NodeAddr=d0036 NodeHostName=d0036 Version=23.11.6
+   OS=Linux 5.14.0-362.13.1.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Dec 13 14:07:45 UTC 2023
+   RealMemory=186000 AllocMem=167936 FreeMem=86155 Sockets=2 Boards=1
+   State=MIXED ThreadsPerCore=1 TmpDisk=0 Weight=10 Owner=N/A MCS_label=N/A
+   Partitions=short,sharing
+   BootTime=2026-07-21T10:01:13 SlurmdStartTime=2026-11-20T14:15:46
+   LastBusyTime=2026-11-21T20:28:07 ResumeAfterTime=None
+   CfgTRES=cpu=56,mem=186000M,billing=56
+   AllocTRES=cpu=52,mem=164G
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/a ExtSensorsWatts=0 ExtSensorsTemp=n/a
+
+Model name:                         Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz
+Thread(s) per core:                 2
+Core(s) per socket:                 28
+Socket(s):                          2
+CPU_MODEL=Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz
+cascadelake nodes now (node, features, cores alloc/idle/other/total, free MB):
+d0002 ib,cascadelake,prod 54/2/0/56 38490
+d0003 ib,cascadelake,prod 40/16/0/56 67808
+d0004 ib,cascadelake,prod 56/0/0/56 36947
+d0005 ib,cascadelake,prod 56/0/0/56 40917
+d0012 ib,cascadelake,prod 56/0/0/56 21379
+d0013 ib,cascadelake,prod 55/1/0/56 32018
+d0014 ib,cascadelake,prod 56/0/0/56 16203
+d0020 ib,cascadelake,prod 56/0/0/56 22922
+d0023 ib,cascadelake,prod 52/4/0/56 10642
+d0024 ib,cascadelake,prod 48/8/0/56 8585
+d0026 ib,cascadelake,prod 34/22/0/56 24362
+d0027 ib,cascadelake,prod 50/6/0/56 46074
+d0028 ib,cascadelake,prod 52/4/0/56 18740
+d0029 ib,cascadelake,prod 56/0/0/56 76141
+d0030 ib,cascadelake,prod 55/1/0/56 80726
+d0031 ib,cascadelake,prod 56/0/0/56 38073
+d0032 ib,cascadelake,prod 54/2/0/56 31188
+d0033 ib,cascadelake,prod 56/0/0/56 35850
+d0034 ib,cascadelake,prod 52/4/0/56 30550
+d0035 ib,cascadelake,prod 56/0/0/56 11354
+d0036 ib,cascadelake,prod 52/4/0/56 86155
+d0037 ib,cascadelake,prod 48/8/0/56 18661
+d0038 ib,cascadelake,prod 48/8/0/56 22265
+d0039 ib,cascadelake,prod 0/0/56/56 N/A
+       gpu         4           8
+     short        50
+ gpu-short         2           8
+vishnuvar+
+bc_p1_s100_copy1         cpu: 1.88 ms/update over 8 of 10 windows; 0.267 ms per eval env step over 20906 steps
+model recorded by every run: Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz
+model inputs (slowest run): u = 1.88 ms, e = 0.267 ms; h = 0.22 h per run, --time = 0.32 h
+memory.peak: 1226 MiB

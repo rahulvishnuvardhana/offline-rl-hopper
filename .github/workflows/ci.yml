@@ -28,6 +28,13 @@ jobs:
         run: |
           pip install pre-commit
           pre-commit run --all-files --show-diff-on-failure
+      - name: Shell scripts (Phase 6 spec S10)
+        run: |
+          pip install shellcheck-py
+          for f in slurm/*.sbatch slurm/lib/common.sh slurm/grid_setup.sh scripts/archive_runs.sh; do
+            bash -n "$f"
+          done
+          shellcheck -S warning -x slurm/*.sbatch slurm/lib/common.sh slurm/grid_setup.sh scripts/archive_runs.sh
 
   test:
     runs-on: ubuntu-latest

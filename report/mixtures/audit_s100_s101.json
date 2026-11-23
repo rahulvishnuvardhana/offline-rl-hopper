@@ -1,7 +1,7 @@
 {
-  "generated_utc": "2026-11-18T00:37:54+00:00",
+  "generated_utc": "2026-11-22T03:48:46+00:00",
   "run": {
-    "git_commit": "cdf30a62e33297ff7ce0a8fe51e76c02c8a28808",
+    "git_commit": "d037a0da01ccc5866f5b0aefe404b86be2be5a5a",
     "git_dirty": false,
     "python": "3.11.18",
     "packages": {
@@ -13,11 +13,12 @@
       "pandas": "3.1.1",
       "matplotlib": "3.11.2"
     },
-    "hostname": "c0637",
+    "hostname": "c0239",
+    "cpu_model": "Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz",
     "gpu": null,
-    "slurm_job_id": "11958505",
+    "slurm_job_id": "12055648",
     "slurm_array_task_id": null,
-    "started_utc": "2026-11-18T00:36:59+00:00"
+    "started_utc": "2026-11-22T03:47:17+00:00"
   },
   "inputs_sha256_of_committed_blob": {
     "report/data_audit.json": "df2a5405716b6ef8a4f263ee12c3c0c1ac7bb827a72b82c550ecb14a69bb4d88",
@@ -25,7 +26,9 @@
   },
   "p": [
     0.0,
+    0.05,
     0.2,
+    0.5,
     1.0
   ],
   "seeds": [
@@ -34,10 +37,14 @@
   ],
   "content_sha256": {
     "mix_p0_s100": "b73cd50e4f1a9f8982f92a232ebae28c487eb52dd8e865ea85c40cfac548326d",
+    "mix_p0.05_s100": "b696d91f223f1e6163a44659f4f1622aabea27bac11b986d975af9934c23a023",
     "mix_p0.2_s100": "099eca23dfe52f8aeba739a8e788123b04f432eb1744425ee9eca29bbf3c81e4",
+    "mix_p0.5_s100": "362af777f6ec5ac894e4c78baf8ecc00706d2edfd04055e991e28d47237923f0",
     "mix_p1_s100": "0713c058cdc2ce46f63dd1b967d33735cc1eabcf2d50ce312f4a7bee19a43361",
     "mix_p0_s101": "97ea8cc128677a4a28d49be00ab303af5e6ab04b94394d05e5908aa33b129f58",
+    "mix_p0.05_s101": "0bd1d4e969072a9b648f88b56a3c05b91c4ef1bdf6c2ce5f1a06161e74d5855c",
     "mix_p0.2_s101": "f8fea4bddda7983a512ea2bc930258ddfcf469021ec34ee50c68b0be9322ed10",
+    "mix_p0.5_s101": "20cf85bc8f31eee1fbff72bfcd9909bbcd80afef63c223830d11c09a5df58f3a",
     "mix_p1_s101": "2069e6ea29075800ef0a9f35da7d9d39b5dfa1f62614cd2204b13d75c26c4d63"
   },
   "M9_replay_informational": {
@@ -87,6 +94,41 @@
       "detail": "content b73cd50e4f1a"
     },
     {
+      "name": "M1_size_and_p[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "900000 rows, 45000 expert (target 45000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "p=0.05: 45000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.05_s100]",
+      "passed": true,
+      "detail": "content b696d91f223f"
+    },
+    {
       "name": "M1_size_and_p[mix_p0.2_s100]",
       "passed": true,
       "detail": "900000 rows, 180000 expert (target 180000); guard"
@@ -120,6 +162,41 @@
       "name": "M7_rebuild_identical[mix_p0.2_s100]",
       "passed": true,
       "detail": "content 099eca23dfe5"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "900000 rows, 450000 expert (target 450000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "p=0.5: 450000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.5_s100]",
+      "passed": true,
+      "detail": "content 362af777f6ec"
     },
     {
       "name": "M1_size_and_p[mix_p1_s100]",
@@ -159,7 +236,7 @@
     {
       "name": "M7_distinct_within_seed[s100]",
       "passed": true,
-      "detail": "3 mixtures (guard)"
+      "detail": "5 mixtures (guard)"
     },
     {
       "name": "M1_size_and_p[mix_p0_s101]",
@@ -197,6 +274,41 @@
       "detail": "content 97ea8cc12867"
     },
     {
+      "name": "M1_size_and_p[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "900000 rows, 45000 expert (target 45000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "p=0.05: 45000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.05_s101]",
+      "passed": true,
+      "detail": "content 0bd1d4e96907"
+    },
+    {
       "name": "M1_size_and_p[mix_p0.2_s101]",
       "passed": true,
       "detail": "900000 rows, 180000 expert (target 180000); guard"
@@ -230,6 +342,41 @@
       "name": "M7_rebuild_identical[mix_p0.2_s101]",
       "passed": true,
       "detail": "content f8fea4bddda7"
+    },
+    {
+      "name": "M1_size_and_p[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "900000 rows, 450000 expert (target 450000); guard"
+    },
+    {
+      "name": "M2_pure_endpoints[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "p=0.5: 450000 expert rows"
+    },
+    {
+      "name": "M3_rows_equal_source[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "0 mismatching or invalid values"
+    },
+    {
+      "name": "M4_done_semantics[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "ok"
+    },
+    {
+      "name": "M5_picks_and_phase2[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "picks match; no Phase 2 preview for this (p, seed)"
+    },
+    {
+      "name": "M6_stored_normalizer_and_scale[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "mean, std, eps, reward_scale, float32 rows ok"
+    },
+    {
+      "name": "M7_rebuild_identical[mix_p0.5_s101]",
+      "passed": true,
+      "detail": "content 20cf85bc8f31"
     },
     {
       "name": "M1_size_and_p[mix_p1_s101]",
@@ -269,7 +416,7 @@
     {
       "name": "M7_distinct_within_seed[s101]",
       "passed": true,
-      "detail": "3 mixtures (guard)"
+      "detail": "5 mixtures (guard)"
     },
     {
       "name": "M7_distinct_across_seeds[p0]",
@@ -277,7 +424,17 @@
       "detail": "2 seeds (guard)"
     },
     {
+      "name": "M7_distinct_across_seeds[p0.05]",
+      "passed": true,
+      "detail": "2 seeds (guard)"
+    },
+    {
       "name": "M7_distinct_across_seeds[p0.2]",
+      "passed": true,
+      "detail": "2 seeds (guard)"
+    },
+    {
+      "name": "M7_distinct_across_seeds[p0.5]",
       "passed": true,
       "detail": "2 seeds (guard)"
     },
@@ -289,7 +446,7 @@
     {
       "name": "M8_clean_tree",
       "passed": true,
-      "detail": "git_dirty=False at commit cdf30a62e33297ff7ce0a8fe51e76c02c8a28808"
+      "detail": "git_dirty=False at commit d037a0da01ccc5866f5b0aefe404b86be2be5a5a"
     },
     {
       "name": "M8b_inputs_on_disk_equal_commit",

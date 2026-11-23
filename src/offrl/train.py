@@ -5,13 +5,15 @@
 
 ``run(cfg)`` is the importable form (Phase 6's sweep). A finished run (``final.json``) returns
 immediately and an interrupted one resumes from ``ckpt/latest.pt``, both only if the config
-and git commit are unchanged; a resume also needs a clean tree.
+and git commit are unchanged; a resume also needs a clean tree. ``run_status`` states which of
+these applies before anything is loaded; the sweep uses the same function (Phase 6 spec Section 6).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import shutil
@@ -67,19 +69,17 @@ def final_eval_steps(cfg: Config) -> list[int]:
     return [t - i * every for i in range(n - 1, -1, -1)]
 
 
-def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) -> dict[str, Any]:
-    """Refuse to train on the wrong data, a dead config key, or the wrong evaluation seeds."""
+def preflight_config(cfg: Config, manifest_dir: Path = MANIFEST_DIR) -> list[str]:
+    """The checks of ``preflight`` that need no mixture arrays, as a list of errors (empty: pass).
+    CI runs it on every planned config (Phase 6 spec S8)."""
     tr, ev, data, seed = cfg["train"], cfg["eval"], cfg["data"], cfg["seed"]
     name = mx.mixture_name(data["p_expert"], seed)
     errors: list[str] = []
     manifest_path = manifest_dir / f"{name}.json"
-    content = mx.content_sha256(arrays)
     if not manifest_path.exists():
         errors.append(f"no committed manifest {manifest_path.name}")
     else:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest["content_sha256"] != content:
-            errors.append(f"content_sha256 {content[:12]} != manifest {manifest['content_sha256'][:12]}")
         if manifest["p_target"] != data["p_expert"] or manifest["seed"] != seed:
             errors.append(f"manifest is p={manifest['p_target']} s={manifest['seed']}, config {name}")
     algo = cfg["algo"]["name"]
@@ -89,9 +89,6 @@ def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) ->
         errors.append(f"data.scale_rewards must be {str(SCALE_REWARDS[algo]).lower()} for {algo}")
     if not data["normalize_states"]:
         errors.append("data.normalize_states must be true (the buffer always normalizes)")
-    eps = float(arrays["state_std_eps"])
-    if eps != data["state_std_eps"]:
-        errors.append(f"data.state_std_eps {data['state_std_eps']} != mixture {eps}")
     used = set(eval_seeds(ev)) | set(eval_seeds(ev, ev["final_episodes"]))
     if any(s in r for s in used for r in COLLECTION_SEEDS.values()):
         errors.append("evaluation seeds overlap the data collection seeds")
@@ -106,6 +103,22 @@ def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) ->
         errors.append("checkpoint_every and eval_every must be multiples of log_every")
     if tr["steps"] < ev["final_score_last_n"] * tr["eval_every"]:
         errors.append("too few steps for the final-score evaluations")
+    return errors
+
+
+def preflight(cfg: Config, arrays: dict[str, np.ndarray], manifest_dir: Path) -> dict[str, Any]:
+    """Refuse to train on the wrong data, a dead config key, or the wrong evaluation seeds."""
+    name = mx.mixture_name(cfg["data"]["p_expert"], cfg["seed"])
+    errors = preflight_config(cfg, manifest_dir)
+    content = mx.content_sha256(arrays)
+    manifest_path = manifest_dir / f"{name}.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest["content_sha256"] != content:
+            errors.append(f"content_sha256 {content[:12]} != manifest {manifest['content_sha256'][:12]}")
+    eps = float(arrays["state_std_eps"])
+    if eps != cfg["data"]["state_std_eps"]:
+        errors.append(f"data.state_std_eps {cfg['data']['state_std_eps']} != mixture {eps}")
     if errors:
         raise PreflightError("; ".join(errors))
     return {"mixture": name, "content_sha256": content, "passed": True}
@@ -162,7 +175,15 @@ def load_checkpoint(path: Path) -> dict[str, Any]:
 
 
 def write_json(path: Path, obj: Any) -> None:
-    path.write_text(json.dumps(obj, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
+    """Atomic, as ``save_checkpoint``: a kill mid-write leaves the previous file (or none), never a
+    truncated ``final.json`` that would read as a finished run."""
+    text = json.dumps(obj, indent=2, allow_nan=False) + "\n"
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
 
 
 def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
@@ -177,8 +198,13 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
     if any(int(r["n_episodes"]) != cfg["eval"]["final_episodes"] for r in sel):
         raise RuntimeError("a final evaluation does not have eval.final_episodes episodes")
 
-    def mean(key: str) -> float:
-        return float(np.mean([float(r[key]) for r in sel]))
+    def finite(x: float) -> float | str:
+        """A non-finite value is written as a string ("nan", "inf"), so ``final.json`` can always
+        be written: a finished run is a result whatever its score (Phase 6 spec Section 2)."""
+        return x if math.isfinite(x) else str(x)
+
+    def mean(key: str) -> float | str:
+        return finite(float(np.mean([float(r[key]) for r in sel])))
 
     return {
         "run": run_name(cfg),
@@ -187,7 +213,9 @@ def final_result(cfg: Config, run_dir: Path) -> dict[str, Any]:
         "fall_rate": mean("fall_rate"),
         "sub_score": mean("sub_score_mean"),
         "steps": steps,
-        "per_eval": [{k: float(r[k]) for k in ("score_mean", "return_mean", "fall_rate")} for r in sel],
+        "per_eval": [
+            {k: finite(float(r[k])) for k in ("score_mean", "return_mean", "fall_rate")} for r in sel
+        ],
         "episodes_per_eval": cfg["eval"]["final_episodes"],
         "note": "mean of correlated checkpoints on the same starting states, not independent samples",
     }
@@ -206,32 +234,99 @@ def pick_device(name: str) -> torch.device:
     return torch.device(name)
 
 
+def _read_json(path: Path) -> Any:
+    """The parsed file, or None if it is missing or does not parse."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def run_status(
+    cfg: Config, device: str, threads: int, meta_now: dict[str, Any] | None = None
+) -> tuple[str, str]:
+    """What ``run`` would do with this run, from its files only (Phase 6 spec Section 6):
+    ``("new" | "started" | "partial" | "done" | "conflict", reason)``. ``started`` restarts from
+    scratch, ``partial`` resumes, ``done`` is reused, ``conflict`` is refused. ``device`` and
+    ``threads`` are the setup a resume would run with; a finished run is reused on any setup.
+    Locks are the sweep's business, never read here."""
+    run_dir = resolve_path(cfg["train"]["out_dir"]) / run_name(cfg)
+    if not run_dir.exists():
+        return "new", ""
+    now = collect_metadata() if meta_now is None else meta_now
+    # Config and commit are checked before a finished run is reused, so a resubmitted sweep never
+    # silently returns a result from another config or another commit.
+    if (run_dir / "config.yaml").exists():
+        import yaml
+
+        saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
+        if _comparable(saved) != _comparable(cfg):
+            return "conflict", f"{run_dir} holds a run with a different config; use a new run_suffix"
+    finished = (run_dir / "final.json").exists()
+    if not finished and not (run_dir / "ckpt" / "latest.pt").exists():
+        return "started", "no checkpoint yet: restarts from scratch"
+    if not (run_dir / "config.yaml").exists():  # nothing to compare: reuse or resume would be blind
+        return "conflict", f"{run_dir}: config.yaml missing"
+    meta = _read_json(run_dir / "meta.json")
+    if not isinstance(meta, dict):
+        return "conflict", f"{run_dir}: meta.json missing or unreadable"
+    if now["git_commit"] is None or meta.get("git_commit") != now["git_commit"]:
+        return "conflict", f"{run_dir} was started at commit {meta.get('git_commit')}; code has changed"
+    if meta.get("git_dirty") is not False:
+        return "conflict", f"{run_dir} was trained on a dirty tree"
+    if finished:
+        final = _read_json(run_dir / "final.json")
+        if (
+            not isinstance(final, dict)
+            or final.get("run") != run_name(cfg)
+            or final.get("steps") != final_eval_steps(cfg)
+        ):
+            return "conflict", f"{run_dir}: final.json unreadable or for another run"
+        return "done", ""
+    if now["git_dirty"] is not False:  # None: git failed, so cleanliness is unknown
+        return "conflict", f"{run_dir}: refusing to resume on a dirty tree; uncommitted code would mix in"
+    was = {k: meta.get(k) for k in ("device", "torch_threads")}
+    setup = {"device": device, "torch_threads": threads}
+    if was != setup:  # another device or thread count breaks the bitwise continuation
+        return "conflict", f"{run_dir} was started with {was}, now {setup}; resume on the same setup"
+    return "partial", ""
+
+
+def check_checkout(out_dir: Path) -> None:
+    """A grid's ``sweep.json`` names the checkout its runs must come from (Phase 6 spec Section 7):
+    an install pointing elsewhere would take code, manifests and configs from another tree."""
+    path = out_dir / "sweep.json"
+    if not path.exists():
+        return
+    record = _read_json(path)
+    if not isinstance(record, dict) or not isinstance(record.get("repo_root"), str):
+        raise PreflightError(f"{path} unreadable or without repo_root")
+    if Path(record["repo_root"]).resolve() != REPO_ROOT.resolve():
+        raise PreflightError(
+            f"code imported from {REPO_ROOT}, but {out_dir} belongs to checkout {record['repo_root']}"
+        )
+
+
 def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path = MANIFEST_DIR) -> Path:
     """Train one run to ``train.steps`` (or resume it). ``stop_at`` returns after that step, as a
     kill would: anything logged after the last checkpoint is discarded on resume. ``env``
     replaces the recovered env (tests)."""
     tr, ev = cfg["train"], cfg["eval"]
     run_dir = resolve_path(tr["out_dir"]) / run_name(cfg)
+    check_checkout(resolve_path(tr["out_dir"]))
     meta_now = collect_metadata()
     ckpt_path = run_dir / "ckpt" / "latest.pt"
-    finished = (run_dir / "final.json").exists()
-    resuming = not finished and ckpt_path.exists()
-    # Checked before a finished run is reused, so a resubmitted sweep never silently returns a
-    # result from another config or another commit.
-    if (run_dir / "config.yaml").exists():
-        import yaml
-
-        saved = yaml.safe_load((run_dir / "config.yaml").read_text(encoding="utf-8"))
-        if _comparable(saved) != _comparable(cfg):
-            raise PreflightError(f"{run_dir} holds a run with a different config; use a new run_suffix")
-    if finished or resuming:
-        meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
-        if meta_now["git_commit"] is None or meta["git_commit"] != meta_now["git_commit"]:
-            raise PreflightError(f"{run_dir} was started at commit {meta['git_commit']}; code has changed")
-    if finished:
+    if tr["num_threads"]:
+        torch.set_num_threads(int(tr["num_threads"]))
+    device = pick_device(tr["device"])
+    status, reason = run_status(cfg, str(device), torch.get_num_threads(), meta_now)
+    if status == "conflict":
+        raise PreflightError(reason)
+    if status == "done":
         return run_dir
-    if resuming and meta_now["git_dirty"] is not False:  # None: git failed, so cleanliness is unknown
-        raise PreflightError(f"{run_dir}: refusing to resume on a dirty tree; uncommitted code would mix in")
+    resuming = status == "partial"
+    if resuming:
+        meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
 
     name = mx.mixture_name(cfg["data"]["p_expert"], cfg["seed"])
     path = resolve_path(cfg["data"]["mixture_dir"]) / f"{name}.npz"
@@ -240,14 +335,6 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
     arrays = mx.load_mixture(path)
     audit = preflight(cfg, arrays, manifest_dir)
 
-    if tr["num_threads"]:
-        torch.set_num_threads(int(tr["num_threads"]))
-    device = pick_device(tr["device"])
-    if resuming:  # another device or thread count breaks the bitwise continuation
-        now = {"device": str(device), "torch_threads": torch.get_num_threads()}
-        was = {k: meta[k] for k in now}
-        if was != now:
-            raise PreflightError(f"{run_dir} was started with {was}, now {now}; resume on the same setup")
     init_seed, buffer_seed, _diag_seed = derive_seeds(cfg["seed"])
     seed_everything(init_seed)
     buffer = ReplayBuffer.from_mixture(arrays, cfg["data"]["scale_rewards"], device, buffer_seed)
@@ -275,6 +362,7 @@ def run(cfg: Config, *, stop_at: int | None = None, env=None, manifest_dir: Path
             **meta_now,
             "torch_threads": torch.get_num_threads(),
             "device": str(device),
+            "repo_root": str(REPO_ROOT),
             "seeds": {"run": cfg["seed"], "init": init_seed, "buffer": buffer_seed},
             "preflight": audit,
             "reward_scale": scale,
@@ -340,11 +428,12 @@ def main(argv: list[str] | None = None) -> Path:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("args", nargs="+", help="algo YAML file(s), then key.sub=value overrides")
-    args = parser.parse_args(argv).args
-    files = [a for a in args if "=" not in a]
-    overrides = [a for a in args if "=" in a]
+    parser.add_argument("--manifest-dir", default=None, help=argparse.SUPPRESS)  # tests (spec S7)
+    parsed = parser.parse_args(argv)
+    files = [a for a in parsed.args if "=" not in a]
+    overrides = [a for a in parsed.args if "=" in a]
     cfg = load_checked(BASE_CONFIG, *files, overrides=overrides)
-    run_dir = run(cfg)
+    run_dir = run(cfg, manifest_dir=Path(parsed.manifest_dir) if parsed.manifest_dir else MANIFEST_DIR)
     print(json.dumps(json.loads((run_dir / "final.json").read_text(encoding="utf-8")), indent=2))
     return run_dir
 

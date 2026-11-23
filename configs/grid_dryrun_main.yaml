@@ -1,0 +1,10 @@
+# Phase 6 dry run of the main grid's path (spec Section 9; user decision D4: development data
+# only): the main grid's axes at development mixture seeds 100 and 101 = 20 runs, development
+# evaluation seeds (no final.yaml), 10,000 steps (dryrun.yaml). Its scores are never read.
+name: dryrun_main
+pin: dryrun
+extra_configs: [configs/dryrun.yaml]
+axes:
+  algo: [bc, iql]
+  data.p_expert: [0.0, 0.05, 0.2, 0.5, 1.0]
+  seed: [100, 101]

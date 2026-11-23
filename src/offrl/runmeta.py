@@ -37,8 +37,22 @@ def _package_version(name: str) -> str | None:
         return None
 
 
+def cpu_model(cpuinfo: Path = Path("/proc/cpuinfo")) -> str | None:
+    """The CPU's model name, e.g. ``Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz``: from
+    ``/proc/cpuinfo`` on Linux (the cluster), else what ``platform`` reports. A CPU-only grid
+    requires one model across its runs, as a GPU grid requires one GPU (Phase 6 spec D1)."""
+    try:
+        for line in cpuinfo.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition(":")
+            if key.strip() == "model name":
+                return value.strip()
+    except OSError:
+        pass
+    return platform.processor() or None
+
+
 def collect_metadata() -> dict[str, Any]:
-    """Git commit and dirty flag, package versions, host, GPU and Slurm job id."""
+    """Git commit and dirty flag, package versions, host, CPU and GPU model and Slurm job id."""
     status = _git("status", "--porcelain")
     return {
         "git_commit": _git("rev-parse", "HEAD"),
@@ -46,6 +60,7 @@ def collect_metadata() -> dict[str, Any]:
         "python": platform.python_version(),
         "packages": {name: _package_version(name) for name in PACKAGES},
         "hostname": platform.node(),
+        "cpu_model": cpu_model(),
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
         "slurm_array_task_id": os.environ.get("SLURM_ARRAY_TASK_ID"),
