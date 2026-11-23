@@ -1,0 +1,58 @@
+{
+  "git_commit": "a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5",
+  "git_dirty": false,
+  "python": "3.11.18",
+  "packages": {
+    "torch": "2.11.0+cu128",
+    "numpy": "2.4.6",
+    "gymnasium": "1.4.0",
+    "mujoco": "3.2.3",
+    "minari": "0.5.4",
+    "pandas": "3.1.1",
+    "matplotlib": "3.11.2"
+  },
+  "hostname": "d0012",
+  "cpu_model": "Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz",
+  "gpu": null,
+  "slurm_job_id": "12068612",
+  "slurm_array_task_id": "9",
+  "started_utc": "2026-11-22T22:16:20+00:00",
+  "torch_threads": 4,
+  "device": "cpu",
+  "repo_root": "/scratch/vishnuvardhana.r/src/a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5",
+  "seeds": {
+    "run": 101,
+    "init": 453755088,
+    "buffer": 468633995
+  },
+  "preflight": {
+    "mixture": "mix_p1_s101",
+    "content_sha256": "2069e6ea29075800ef0a9f35da7d9d39b5dfa1f62614cd2204b13d75c26c4d63",
+    "passed": true
+  },
+  "reward_scale": 0.27050401908007543,
+  "beta_eff": 3.2305416291410287,
+  "resumes": [
+    {
+      "from_step": 2000,
+      "git_commit": "a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5",
+      "git_dirty": false,
+      "python": "3.11.18",
+      "packages": {
+        "torch": "2.11.0+cu128",
+        "numpy": "2.4.6",
+        "gymnasium": "1.4.0",
+        "mujoco": "3.2.3",
+        "minari": "0.5.4",
+        "pandas": "3.1.1",
+        "matplotlib": "3.11.2"
+      },
+      "hostname": "d0036",
+      "cpu_model": "Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz",
+      "gpu": null,
+      "slurm_job_id": "12068733",
+      "slurm_array_task_id": "9",
+      "started_utc": "2026-11-22T22:24:43+00:00"
+    }
+  ]
+}

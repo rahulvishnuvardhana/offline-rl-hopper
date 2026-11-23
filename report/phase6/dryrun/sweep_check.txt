@@ -1,0 +1,24 @@
+# sweep --check, run 2026-11-22 20:59 EST on d0002, commit a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5
+## dryrun_main --check
+FLAG bc_p1_s100: high-fall (fall rate 0.90)
+FLAG bc_p1_s101: high-fall (fall rate 0.90)
+FLAG iql_p0_s100: high-fall (fall rate 1.00)
+FLAG iql_p0_s101: high-fall (fall rate 0.60)
+FLAG iql_p0.05_s100: high-fall (fall rate 1.00)
+FLAG iql_p0.05_s101: high-fall (fall rate 0.60)
+FLAG iql_p0.2_s101: high-fall (fall rate 0.90)
+FLAG iql_p1_s100: high-fall (fall rate 1.00)
+FLAG iql_p1_s101: high-fall (fall rate 1.00)
+all 20 runs done and consistent (9 flagged)
+exit=0
+## dryrun_main --summary
+done 20  running 0  partial 0  started 0  new 0  conflict 0
+## dryrun_ablation --check
+FLAG iql_p0.5_s100_tau0.5: high-fall (fall rate 1.00)
+FLAG iql_p0.05_s100_tau0.9: high-fall (fall rate 1.00)
+FLAG iql_p0.5_s100_tau0.9: high-fall (fall rate 1.00)
+FLAG iql_p0.5_s101_tau0.9: high-fall (fall rate 0.60)
+all 8 runs done and consistent (4 flagged)
+exit=0
+## dryrun_ablation --summary
+done 8  running 0  partial 0  started 0  new 0  conflict 0

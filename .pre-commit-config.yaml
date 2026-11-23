@@ -1,4 +1,4 @@
-exclude: ^src/offrl/_vendor/  # vendored, kept byte-for-byte (tests/test_corl.py, I12)
+exclude: ^(src/offrl/_vendor/|report/phase6/dryrun/)  # kept byte-for-byte: vendored (tests/test_corl.py, I12); archived dry-run evidence (SHA256SUMS)
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.5

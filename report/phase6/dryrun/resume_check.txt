@@ -1,0 +1,11 @@
+# resume checks on iql_p1_s101 (cancelled at checkpoint step 2000)
+PASS resume record exists n=1
+PASS from_step equals recorded checkpoint step 2000 vs 2000
+PASS resume commit a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5
+PASS resume cpu_model Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz
+PASS metrics.csv steps 1000..10000 each once [(1000, 1), (2000, 1), (3000, 1), (4000, 1), (5000, 1), (6000, 1), (7000, 1), (8000, 1), (9000, 1), (10000, 1)]
+PASS eval.csv steps 2000..10000 each once [(2000, 1), (4000, 1), (6000, 1), (8000, 1), (10000, 1)]
+PASS eval_episodes.csv steps 2000..10000, n_episodes each [(2000, 10), (4000, 10), (6000, 10), (8000, 10), (10000, 10)]
+PASS eval_episodes.csv no duplicate (step, seed) 
+PASS final.json exists 
+ALL PASS

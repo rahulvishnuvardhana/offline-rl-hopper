@@ -1,0 +1,36 @@
+{
+  "git_commit": "a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5",
+  "git_dirty": false,
+  "python": "3.11.18",
+  "packages": {
+    "torch": "2.11.0+cu128",
+    "numpy": "2.4.6",
+    "gymnasium": "1.4.0",
+    "mujoco": "3.2.3",
+    "minari": "0.5.4",
+    "pandas": "3.1.1",
+    "matplotlib": "3.11.2"
+  },
+  "hostname": "d0013",
+  "cpu_model": "Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz",
+  "gpu": null,
+  "slurm_job_id": "12068768",
+  "slurm_array_task_id": "0",
+  "started_utc": "2026-11-22T22:27:57+00:00",
+  "torch_threads": 4,
+  "device": "cpu",
+  "repo_root": "/scratch/vishnuvardhana.r/src/a11dc28a285a35a8ec53159d8b1d7e29b2f42ac5",
+  "seeds": {
+    "run": 100,
+    "init": 2691894709,
+    "buffer": 996667667
+  },
+  "preflight": {
+    "mixture": "mix_p0_s100",
+    "content_sha256": "b73cd50e4f1a9f8982f92a232ebae28c487eb52dd8e865ea85c40cfac548326d",
+    "passed": true
+  },
+  "reward_scale": 0.3673694114449996,
+  "beta_eff": 4.387373544327225,
+  "resumes": []
+}

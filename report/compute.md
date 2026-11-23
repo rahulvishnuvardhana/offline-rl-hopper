@@ -37,10 +37,22 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12055654 | 6 | gpu-short | V100-PCIE | 16, 20G | Failed | 0:01:17 | 0.02 | benchmark GVB: same failure as GV |
 | 12055655 | 6 | short | none | 4, 8G | Completed | 0:02:23 | 0.00 | benchmark C1: IQL k=1 on cascadelake (Xeon Platinum 8276), 10.99 ms/update, 0.366 ms per eval step |
 | 12055656 | 6 | short | none | 4, 8G | Completed | 0:01:01 | 0.00 | benchmark CB: BC k=1 on cascadelake (Xeon Platinum 8276), 1.88 ms/update, 0.267 ms per eval step |
+| 12064513 | 6 | gpu-short | T4 | 4, 8G | Timeout | 0:30:09 | 0.50 | test gate at `88cdccc`: the Slurm-lib tests inherited the gate job's own Slurm variables, the sweep test grid's `auto` device picked CUDA, and S7 left out the grid's config files, so its children trained 300k steps; fixed in `2373a24` |
+| 12065803 | 6 | gpu-short | T4 | 4, 8G | Failed (tests) | 0:02:58 | 0.05 | test gate at `67c9d94`: 324 passed, 1 failed (a provenance test assumed a CPU run records no GPU; fixed in `f026524` and `a11dc28`) |
+| 12067471 | 6 | gpu-short | T4 | 4, 8G | Completed | 0:03:10 | 0.05 | test gate at `a11dc28`: 325 passed; dry-run grids initialised |
+| 12068556 | 6 | short | none | 4, 8G | Completed (9 tasks) | 0:01:38 to 0:03:23 | 0.00 | dry run, main IQL bundles 0 to 8 (10k steps) |
+| 12068558 | 6 | short | none | 4, 8G | Completed (8 tasks) | 0:01:31 to 0:03:14 | 0.00 | dry run, ablation IQL bundles 0 to 7 |
+| 12068562 | 6 | short | none | 4, 8G | Completed (10 tasks) | 0:00:43 to 0:00:59 | 0.00 | dry run, main BC bundles 0 to 9 |
+| 12068612 | 6 | short | none | 4, 8G | Cancelled by the user's `scancel` | 0:00:54 | 0.00 | dry run, cancel test (main IQL bundle 9, after its step-2000 checkpoint) |
+| 12068733 | 6 | short | none | 4, 8G | Completed | 0:01:18 | 0.00 | dry run, resume of bundle 9 from step 2000 |
+| 12068758 | 6 | short | none | 4, 8G | Completed (2 tasks) | 0:00:07 | 0.00 | dry run, skip-only resubmission of bundles 0 and 9 |
+| 12068768, 12068769 | 6 | short | none | 4, 8G | Completed; Failed (exit 4, as expected) | 0:02:26; 0:00:12 | 0.00 | dry run, lock test: the second job found the run locked and exited 4 without training |
+| 12068835 | 6 | short | none | 2, 4G | Completed | 0:00:40 | 0.00 | dry run, `sweep --check` and `--list` on both grids |
+| 12072515 | 6 | short | none | 2, 4G | Completed | 0:00:24 | 0.00 | dry-run evidence collected to `~/archive/` (`report/phase6/dryrun/`), with `sweep --check` rerun |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
-**Total from 2026-11-16: 5.54 GPU-hours (T4), 11.99 GPU-hours (A100) and 0.03 GPU-hours (V100).**
+**Total from 2026-11-16: 6.14 GPU-hours (T4), 11.99 GPU-hours (A100) and 0.03 GPU-hours (V100).**
 
 The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
 
@@ -75,6 +87,31 @@ Benchmark jobs 12055649 to 12055656 at `d037a0d` (spec Section 5; logs in `repor
 | 9/9/7 | 3.00 | 3.00 to 3.66 | 3.00 to 3.66 | 3.44 to 4.00 |
 
 At its best submission order 10/8/7 ties or beats every split except 13/10/2 at `C` = 25 (2.86 h, 8 minutes faster); 13/10/2 loses up to 1.9 h at any smaller `C`. Only 10/8/7 and 11/9/5 have no spread at `C` of 22 or more, and 10/8/7 is faster than 11/9/5 at `C` = 20 (3.00 against 3.10) and at `C` = 16 (3.44 against 3.54). Submitting main IQL, then ablation IQL, then BC gives 3.00, 3.00, 3.00 and 3.44 h. The split is kept; the arrays go in that order. Durations are the benchmark means with no spread, so these are planning figures, not guarantees.
+
+## Phase 6 dry run (development data, commit `a11dc28`, 2026-11-22)
+
+Spec Section 9, on the D1 hardware (CPU `short`, cascadelake, every task on `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz`, checked in each run's `meta.json` by `sweep --check`), grids `dryrun_main` (20 runs) and `dryrun_ablation` (8 runs) at 10k steps. Evidence, copied to `~/archive/phase6_dryrun_a11dc28a285a/` on Explorer and to `report/phase6/dryrun/` (with `SHA256SUMS`):
+
+| Step | Result | Evidence |
+|---|---|---|
+| (0) `KillWait`, `ProctrackType`, the guard's `squeue` | 600 s, `proctrack/cgroup`; the command exits 0 with empty output | terminal |
+| (1) test gate | 12067471, 325 passed | table above |
+| (2) arrays, main IQL, ablation IQL, BC | 27 tasks, all exit 0 | `sacct.txt` |
+| (3) cancel and lock release | plain `scancel` on 12068612_9 at 54 s, after its step-2000 checkpoint; no lock left (terminal); the sweep's line `signal 15: runs stopped, releasing the bundle's locks, exit 143`; `--list` showed `partial` (terminal) | `logs/*12068612*`, `cancel_watch.log` |
+| (4) resume | only bundle 9 unfinished (terminal); 12068733 resumed from step 2000 with the grid's commit and CPU model; `metrics.csv` steps 1000 to 10000 once each, `eval.csv` and `eval_episodes.csv` steps 2000 to 10000 once each; `final.json`, `done`, no lock | `resume_check.txt` (all PASS), `resumed_iql_p1_s101_meta.json`, `logs/*12068733*` |
+| (5) submit guard and skip-only resubmission | `--sbatch-args` exited 3 naming the bundle while it was pending and while it was running (terminal); 12068758 (`--array=0,9`) printed `DONE`, exit 0, no rows added | `logs/*12068758*` |
+| (6) lock test | 12068769 printed `RUNNING` and exited 4 after 12 s; 12068768 trained and finished | `logs/*12068768*`, `logs/*12068769*`, `locktest_iql_p0_s100_meta.json` |
+| `sweep --check` | 20 and 8 runs, all done and consistent, exit 0 (the high-fall flags are expected at 10k steps; development data, and no score was used for any decision) | `sweep_check.txt` (rerun in 12072515, same result as 12068835) |
+
+"terminal" marks what was observed interactively at the time and is not in the archive.
+
+**Timing against the cost model.** The benchmark predicts at most about 128 s of training and evaluation for a 10k-step IQL run (10,000 x 10.99 ms + at most 50,000 eval steps x 0.366 ms; episodes end early on falls) and at most 32 s for BC. Job elapsed times, startup included, were 1:31 to 3:23 for IQL (at most 1.6 times the prediction; the slowest were two tasks sharing a node) and 0:43 to 0:59 for BC (at most 1.8 times), consistent with the `--time` factors of 2.0 and 2.3, though startup weighs more at 10k steps than at 300k, and with fewer eval steps the true ratios are higher.
+
+**Deleted (approved by the user, 2026-11-22):** after the evidence copy, the run directories `/scratch/$USER/runs_grid/dryrun_main/a11dc28a285a` and `dryrun_ablation/a11dc28a285a` (78 MB), their logs under `/scratch/$USER/logs/`, and the checkout `/scratch/$USER/src/a11dc28...`. `archive_runs.sh --remove-checkout` deregistered the checkout but stopped on "Directory not empty" with 200 files left; they were checked against the commit (132 unchanged tracked files and 68 `__pycache__` files) and removed by hand.
+
+**Observations.**
+- **Login node:** several `python -m offrl.sweep` calls on `explorer-01` were killed (exit 137) with their peak memory at 32 to 515 MB, under the 6 GiB per-user limit and with no out-of-memory event (terminal). The cause is not confirmed. Submissions run with `OMP_NUM_THREADS=1 MKL_NUM_THREADS=1` were not killed, and inspection commands ran in a small `srun` job on `short` (spec Section 9).
+- **Clocks:** the login node's clock ran about 1.5 minutes ahead of Slurm's and the compute node's, which agree with each other (`scancel` logged at 17:17:03 by Slurm, 17:18:30 by the watcher on the login node). The login node was also seen (terminal) to list a new file about 20 s after it was written.
 
 ## Measured throughput (Phase 6 input)
 
