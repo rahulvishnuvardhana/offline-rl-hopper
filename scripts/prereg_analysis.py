@@ -68,7 +68,7 @@ def load_run(d: Path, commit: str) -> dict:
     elif any((by_step[s]["n_episodes"], by_step[s]["sub_n_episodes"]) != ("50", "10") for s in FINAL_STEPS):
         errs.append("a final evaluation is not 50 episodes with a 10-episode subset")
     elif any(by_step[s]["n_episodes"] != "10" for s in range(255000, 275001, 5000)):
-        errs.append("evaluations 51 to 55 are not 10 episodes (the plateau's shared seeds)")
+        errs.append("evaluations 51 to 55 are not 10 episodes")
     if errs:
         raise SystemExit(f"{d.name}: provenance FAIL: {'; '.join(errs)}")
     first = [float(by_step[s]["score_mean"]) for s in range(255000, 275001, 5000)]  # evals 51 to 55
