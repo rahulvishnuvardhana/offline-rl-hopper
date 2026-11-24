@@ -50,10 +50,21 @@ Usage log required by the responsible-use rules (ROADMAP 4.2.1, rule 7). Source:
 | 12068835 | 6 | short | none | 2, 4G | Completed | 0:00:40 | 0.00 | dry run, `sweep --check` and `--list` on both grids |
 | 12072515 | 6 | short | none | 2, 4G | Completed | 0:00:24 | 0.00 | dry-run evidence collected to `~/archive/` (`report/phase6/dryrun/`), with `sweep --check` rerun |
 | 12072591 | 6 | short | none | 2, 4G | Completed | 0:01:27 | 0.00 | spec Section 4 archive: the 25 final-grid and 4 new development mixtures copied to `~/archive/phase6_mixtures` (2.9 GB, `SHA256SUMS` match the source); `check_mixture_files.py` 29/29 against the committed manifests |
+| 12072875 | 6 | gpu-short | Tesla T4 | 4, 8G | Completed | 0:03:08 | 0.05 | test gate at the merge commit `ea11e14` (d1025): 325 passed; initialised both grids' `sweep.json`, then checked against D1 and D3 (17/17) |
+| 12092405 | 7, 8 | short | none | 2, 4G | Completed | 0:00:39 | 0.00 | grid submission from inside an `srun` job (deviation, spec Section 9, 2026-11-23): `--submit-plan` one wave, then the three arrays below |
+| 12092428 | 7 | short | none | 4, 8G | Completed (25 tasks) | 0:46:25 to 1:06:31 | 0.00 | main grid, IQL `tau = 0.7`, 25 runs, `%10`, `--time` 2:00, 11 cascadelake nodes |
+| 12092429 | 8 | short | none | 4, 8G | Completed (20 tasks) | 0:41:43 to 1:08:53 | 0.00 | ablation, IQL `tau` 0.5 and 0.9, 20 runs, `%8`, `--time` 2:00, 7 nodes |
+| 12092441 | 7 | short | none | 4, 8G | Completed (25 tasks) | 0:15:34 to 0:27:22 | 0.00 | main grid, BC, 25 runs, `%7`, `--time` 0:30, 9 nodes |
+| 12092466 | 7, 8 | short | none | 2, 4G | Cancelled while pending | 0:00:00 | 0.00 | `--summary` in `srun`; its SSH session dropped while it was queued, so it was cancelled and replaced by batch jobs |
+| 12092848, 12093238 | 7, 8 | short | none | 2, 4G | Completed | 0:00:12; 0:00:22 | 0.00 | progress, `sweep --summary` only (score-blind) |
+| 12107680 | 7, 8 | short | none | 2, 4G | Completed | 0:00:54 | 0.00 | `--summary` (done 50 and done 20), then `sweep --check`: both grids "done and consistent", 12 and 19 runs flagged |
+| 12114018 | 7, 8 | short | none | 2, 4G | Completed | 0:00:38 | 0.00 | both grids' runs, `sweep.json`, Slurm logs, `--check` output and operator logs copied to `~/archive/phase6_grid_ea11e14d4ab7` (857 files, 210 MB, `SHA256SUMS` match the source); second copy on the laptop, every hash checked |
 
 Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not itemized.
 
-**Total from 2026-11-16: 6.14 GPU-hours (T4), 11.99 GPU-hours (A100) and 0.03 GPU-hours (V100).**
+**Total from 2026-11-16: 6.19 GPU-hours (T4), 11.99 GPU-hours (A100) and 0.03 GPU-hours (V100).**
+
+**Grids at `ea11e14` (2026-11-23):** 70 runs, all completed on the first submission with no time-out, refusal or rerun; wall clock 3:04 (first task 18:55:43, last 21:59:48 EST), 194.8 CPU-hours (4 CPUs per task), 0 GPU-hours. Every task ran on an `Intel(R) Xeon(R) Platinum 8276` cascadelake node (all 70 `meta.json` files record that model).
 
 The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
 
