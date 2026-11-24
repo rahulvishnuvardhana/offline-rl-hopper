@@ -592,7 +592,7 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 **Goal:** the course report, plus a repo you would show a recruiter.
 
 **Tasks**
-1. Report: problem, method, setup (dataset table, mixture method, normalization, hyperparameters, compute), results, hypothesis verdicts, limitations (Minari vs. D4RL, 3 seeds, single environment), related work.
+1. Report: problem, method, setup (dataset table, mixture method, normalization, hyperparameters, compute), results, hypothesis verdicts, limitations (Minari vs. D4RL, ~~3 seeds~~ 5 seeds (D2), single environment; (user, 2026-11-24) the Phase 5 comparison with CORL's IQL shared our preprocessing, our state normalization and our reward scaling (`1000 / (max_return - min_return)` over complete episodes, without CORL's 1000-step episode closing; job configs and `reward_scale` in `meta.json` identical to ours), so it validates the update code only, not CORL's full pipeline), related work.
 2. README: one-paragraph summary, headline figure, how to reproduce (install, download, build mixtures, run grid, plot), compute cost, citation list.
 3. Tag a release `v1.0` matching the commit that produced the results.
 4. Optional: a short blog-style results section or a GitHub Pages figure page.
