@@ -1,0 +1,7 @@
+     JobID              JobName  Partition  AllocCPUS     ReqMem        NodeList               Start                 End    Elapsed                State ExitCode
+---------- -------------------- ---------- ---------- ---------- --------------- ------------------- ------------------- ---------- -------------------- --------
+  12092466       offrl-progress      short          0         4G   None assigned                None 2026-11-23T19:09:17   00:00:00  CANCELLED by 105423      0:0
+  12092848       offrl-progress      short          2         4G           d0004 2026-11-23T19:17:15 2026-11-23T19:17:27   00:00:12            COMPLETED      0:0
+  12093238       offrl-progress      short          2         4G           d0014 2026-11-23T19:30:33 2026-11-23T19:30:55   00:00:22            COMPLETED      0:0
+  12107680    offrl-final-check      short          2         4G           d0038 2026-11-24T10:01:59 2026-11-24T10:02:53   00:00:54            COMPLETED      0:0
+  12114018   offrl-archive-grid      short          2         4G           c0643 2026-11-24T16:08:58 2026-11-24T16:09:36   00:00:38            COMPLETED      0:0
