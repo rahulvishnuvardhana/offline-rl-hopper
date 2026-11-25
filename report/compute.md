@@ -64,6 +64,8 @@ Earlier: Phase 0 smoke job 11863650 (Tesla T4, 2026-11-13), a few minutes; not i
 
 **Total from 2026-11-16: 6.19 GPU-hours (T4), 11.99 GPU-hours (A100) and 0.03 GPU-hours (V100).**
 
+**Deleted (approved by the user, 2026-11-24):** after the archive and its hash check passed (job 12114018, laptop copy 857/857), the checkout `/scratch/$USER/src/ea11e14...`, by `archive_runs.sh --remove-checkout` ("removed checkout", no leftovers); the clone's worktree list then held only the clone. The run directories and logs stay on /scratch until the purge; their copies are in `~/archive/phase6_grid_ea11e14d4ab7`.
+
 **Grids at `ea11e14` (2026-11-23):** 70 runs, all completed on the first submission with no time-out, refusal or rerun; wall clock 3:04 (first task 18:55:43, last 21:59:48 EST), 194.8 CPU-hours (4 CPUs per task), 0 GPU-hours. Every task ran on an `Intel(R) Xeon(R) Platinum 8276 CPU @ 2.20GHz` cascadelake node (all 70 `meta.json` files record that model). The arrays' accounting is in the archive's `ops/sacct.txt`; the helper jobs' (12092466, 12092848, 12093238, 12107680, 12114018) in `report/phase7/sacct_helpers.txt`.
 
 The A100 (user's choice for Phase 5) is not faster per update than Phase 4's T4 for these small networks (BC 6.39 vs. 2.58 ms): the step is bound by kernel launches and CPU overhead, not GPU compute. Packing helps: two IQL runs on one A100 each slow by about 17%.
