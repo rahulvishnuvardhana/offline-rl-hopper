@@ -337,6 +337,8 @@ Dates assume a deadline around **Fri Dec 4, 2026**; adjust when confirmed. Thank
 | 9 | Analysis and figures (from the archive; /scratch purged Dec 1) | Nov 28 to Dec 1 | Figures final |
 | 10 | Report + portfolio packaging | Dec 1 to 4 | Submitted |
 
+**Status (2026-11-24):** Phases 0 to 6 merged (PRs #1 to #5). Phases 7 and 8: both grids ran at `ea11e14` on 2026-11-23 (70/70 completed, archived and hash-checked on Explorer and the laptop), pre-registered analysis done (H1 supported, H2 not supported, H3 inconclusive); merged in PR #6. Phase 8 extras (CQL, extra `p`, reweighting) not run, listed in the report. Phase 9: `python -m offrl.analysis.plots` regenerates the score-vs-`p` figure and the learning curves from committed data. Phase 10: report, poster and demo video in `report/`; README results section; release tag `v1.0` and course submission remain.
+
 (2026-11-21, Phase 6 D2, D5, D6) Rows 6 to 9 replaced; they were: 6, Nov 23, "Cost model + dry run"; 7, "Main grid (30 runs)", Nov 24 to 27, "All runs complete"; 8, "Ablations (+ optional CQL / reweighting)", Nov 27 to 29, "Ablation complete"; 9, Nov 30 to Dec 1, "Figures final".
 
 ---

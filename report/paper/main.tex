@@ -73,6 +73,15 @@ Offline RL learns a policy from a fixed dataset without interacting with the env
 
 \textbf{IQL's collapse comes with falls.} Pre-registered flags mark a run \emph{high-fall} if it falls in at least half of its final episodes and \emph{collapsed} if it scores below 10; flagged runs stay in every statistic. Every IQL run at $p=0.05$ is high-fall (fall rate 0.88 to 1.00 per cell) and 11 of 15 collapsed; at $p=0.2$ and $0.5$, 4 and 3 of 5 $\tau=0.7$ runs are high-fall. BC never falls below $p=1$, and at $p=1$ its fall rate is 0.03 on average (one seed 0.14). With scarce expert data, IQL's policies fall; at $p=0$ (simple data only) it is nearly stable (fall rate 0.02). We did not test why; one candidate is that advantage weighting concentrates the policy on the few high-return expert transitions without enough coverage of the states that follow, but this is a hypothesis, not a finding. A side-by-side video of each $p=0.05$ cell's median-scoring run (final policies, evaluation seed 10000, the logged episode replayed exactly) is in the repository: BC hops for all 1,000 steps, IQL falls after 27.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{../figures/learning_curves.pdf}
+  \caption{Learning curves (descriptive): score on the 10 evaluation seeds shared by every evaluation, every 5k steps; thin lines are seeds, thick lines their mean; dashed: 90.}
+  \label{fig:curves}
+\end{figure}
+
+\textbf{Learning curves (Fig.~\ref{fig:curves}, descriptive).} IQL's failure at low $p$ develops during training: at $p=0.05$ and $0.2$ its seed mean is highest at the first evaluation (57.4 and 68.4 at 5k steps) and falls to 9.5 and 29.4 by 300k (curve values on 10 seeds; Table~\ref{tab:scores} uses the last 5 evaluations, 250 episodes), while BC is near 82 by 50k steps and stays there apart from brief single-seed dips. At $p=0$ IQL drops to about 16 within 10k steps and recovers to 81.7 by 300k; at $p=0.5$ it is still rising at 300k (Limitations); at $p=1$ it rises more slowly than BC (39.2 vs.\ 103.5 at 50k).
+
 \textbf{Takeaway.} On this dataset pair, BC gains nothing from expert data up to $p=0.5$ (no $p$ between 0.5 and 1 was run), and IQL does not match BC at any $p>0$: it trails by 5.7 points even at $p=1$. The low-quality data is strong enough that imitating it is hard to beat. The value of value learning on mixtures is therefore not visible here, with these hyperparameters, and the main open question is why IQL becomes unstable when expert data is scarce.
 
 \begin{table}[t]
@@ -118,7 +127,7 @@ Each change is dated in the repository; ``Decided'' gives when, relative to the 
     300k steps; 200k as a fallback (proposal), 500k if still climbing (later plan) & 300k only & before \\
     Validation against CORL's curves & Step-for-step tests and real-data runs; CORL's runs used our preprocessing (see Limitations) & before \\
     GPU (Explorer or Colab) & CPU, chosen by a pre-fixed benchmark rule (faster wall clock for 70 small runs) & before \\
-    Optional CQL [2]; learning curves; extra $p$ and reweighting (later plan) & Not run; extra $p\in\{0.01,0.02\}$ not needed (gap visible at 0.05); reweighting not run; curves omitted for space & after (write-up) \\
+    Optional CQL [2]; learning curves; extra $p$ and reweighting (later plan) & Not run; extra $p\in\{0.01,0.02\}$ not needed (gap visible at 0.05); reweighting not run; learning curves in Fig.~\ref{fig:curves} & after (write-up) \\
     Sanity checks: BC near 0 at $p=0$, near 100 at $p=1$; IQL near 100 at $p=1$ & Score bands on the new scale; IQL within 10 of BC at $p=1$ (missed; Limitations) & before \\
     \bottomrule
   \end{tabular}

@@ -67,6 +67,7 @@ def series(ax, x, cells, color, marker, label, offset, line=True):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--analysis", type=Path, default=Path("report/phase7/prereg_analysis.json"))
+    ap.add_argument("--curves", type=Path, default=Path("report/phase7/learning_curves.json"))
     ap.add_argument("--out-dir", type=Path, default=Path("report/figures"))
     args = ap.parse_args()
     cells = json.loads(args.analysis.read_text(encoding="utf-8"))["cells"]
@@ -105,8 +106,44 @@ def main() -> None:
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):
-        fig.savefig(args.out_dir / f"score_vs_p.{ext}", dpi=300)
+        fig.savefig(
+            args.out_dir / f"score_vs_p.{ext}",
+            dpi=300,
+            metadata={"CreationDate": None} if ext == "pdf" else None,
+        )
     print(f"wrote {args.out_dir / 'score_vs_p.pdf'} and .png")
+    curves(args.curves, args.out_dir)
+
+
+def curves(path: Path, out_dir: Path) -> None:
+    """Learning curves (proposal item ii): BC and IQL (tau = 0.7) at each p, score on the 10 shared
+    evaluation seeds every 5k steps; thin lines are seeds, the thick line their mean."""
+    runs = json.loads(path.read_text(encoding="utf-8"))["runs"]
+    fig, axes = plt.subplots(1, len(P_GRID), figsize=(5.5, 1.75), sharey=True, layout="constrained")
+    for ax, p in zip(axes, P_GRID, strict=True):
+        for algo, color, label in (("bc", BLUE, "BC"), ("iql", ORANGE, r"IQL ($\tau$ = 0.7)")):
+            sel = [
+                r for r in runs.values() if r["grid"] == "main" and r["algo"] == algo and f"{r['p']:g}" == p
+            ]
+            steps = np.asarray(sel[0]["step"]) / 1000
+            ys = np.asarray([r["score"] for r in sel])
+            for y in ys:
+                ax.plot(steps, y, color=color, lw=0.4, alpha=0.3)
+            ax.plot(steps, ys.mean(axis=0), color=color, lw=1.3, label=label)
+        ax.axhline(NEAR_EXPERT, color=MUTED, lw=0.6, ls=(0, (3, 2)))
+        ax.set_title(f"$p$ = {p}", fontsize=7.5, color=INK)
+        ax.set_xticks([0, 150, 300])
+        ax.set_ylim(-5, 115)
+    axes[0].set_ylabel("normalized score")
+    fig.supxlabel("gradient steps (thousands)", fontsize=7.5, color=INK)
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="outside upper center", ncol=2, fontsize=7)
+    for ext in ("pdf", "png"):
+        fig.savefig(
+            out_dir / f"learning_curves.{ext}",
+            dpi=300,
+            metadata={"CreationDate": None} if ext == "pdf" else None,
+        )
+    print(f"wrote {out_dir / 'learning_curves.pdf'} and .png")
 
 
 if __name__ == "__main__":

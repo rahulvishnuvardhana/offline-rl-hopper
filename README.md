@@ -3,6 +3,41 @@
 Behavior Cloning vs. Implicit Q-Learning on mixed-quality Minari Hopper datasets (CS 5180 project).
 Plan and architecture: [ROADMAP.md](ROADMAP.md).
 
+## Results
+
+We mix expert and low-quality Hopper data at expert fractions `p` in {0, 0.05, 0.2, 0.5, 1} and train BC and IQL on each: 5 seeds, 300k steps, one commit (`ea11e14`), one CPU type, 70 runs, with hypotheses and tests [pre-registered](docs/preregistration.md) before any grid result.
+
+![Final score vs. expert fraction](report/figures/score_vs_p.png)
+
+| Hypothesis | Test (exact one-sided sign-flip, 5 seeds) | Verdict |
+|---|---|---|
+| H1: BC's score rises with `p` | BC(`p` = 1) minus BC(`p` = 0) = +23.2, all 5 seeds, P = 0.031 | **Supported** |
+| H2: IQL reaches near-expert (90) at a much lower `p` than BC | both cross 90 only at `p` = 1; IQL minus BC there = -5.7 | **Not supported** |
+| H3: higher `tau` helps IQL more at `p` = 0.05 than at 0.5 | contrast -35.0, P = 0.969 | **Inconclusive** (observed the other way) |
+
+BC stays at about 82 from `p` = 0 to 0.5 and reaches 105.4 at `p` = 1. IQL collapses when expert data is scarce: at `p` = 0.05 it scores 6.7 and falls in 98% of final episodes, and its learning curves show the failure developing during training. No correction across H1 to H3; the per-`p` "BC leads" tests are exploratory.
+
+![Learning curves](report/figures/learning_curves.png)
+
+- **Report:** [report/paper/main.pdf](report/paper/main.pdf) (NeurIPS 2026 style, preprint option)
+- **Poster:** [report/poster/poster.pdf](report/poster/poster.pdf)
+- **Demo:** [BC vs. IQL at `p` = 0.05](report/demo/bc_vs_iql_p0.05_seed10000.mp4), each cell's median-scoring run on evaluation seed 10000 (BC hops for all 1,000 steps; IQL falls after 27)
+- **Numbers:** [report/phase7/prereg_analysis.json](report/phase7/prereg_analysis.json); compute log [report/compute.md](report/compute.md) (70 runs, 3.1 h wall clock, 195 CPU-hours)
+
+### Reproduce the results
+On Explorer, from a clean clone at the grid commit (procedure in [docs/specs/phase-6-compute.md](docs/specs/phase-6-compute.md) Sections 7 to 9, including the login-node workaround; the exact submission script run is [report/phase7/submission/grid_submit.sh](report/phase7/submission/grid_submit.sh)). Outline:
+```bash
+sbatch --export=ALL,EXPECTED_COMMIT=<sha>,GRIDS="main ablation" slurm/tests_gate.sbatch   # tests, checkout, sweep --init
+bash report/phase7/submission/grid_submit.sh                                              # --sbatch-args, then sbatch slurm/grid.sbatch per array
+```
+The run directories are not in this repository (`runs/` is ignored): they are archived on Explorer in `~/archive/phase6_grid_ea11e14d4ab7` with a laptop copy, both checked against its `SHA256SUMS`. From that archive:
+```bash
+python scripts/prereg_analysis.py --runs <archive>/runs --commit ea11e14d4ab7d0c6d2dc5eaabff6b41049fe17c3
+python scripts/learning_curves.py --runs <archive>/runs
+python -m offrl.analysis.plots          # report/figures/score_vs_p.* and learning_curves.*
+```
+Without the archive, `python -m offrl.analysis.plots` still regenerates both figures from the committed JSON in `report/phase7/`.
+
 ## Setup
 
 ### Laptop (Windows, CPU)
@@ -31,7 +66,7 @@ python scripts/bc_sanity.py          # Phase 4 sanity runs and checks (on Explor
 ```
 A run writes `config.yaml`, `meta.json` (commit, packages, GPU, mixture hash), CSV logs, TensorBoard events, a resumable checkpoint and `final.json` to `runs/{algo}_p{p}_s{seed}/`. Pre-flight refuses a mixture whose hash differs from its committed manifest and evaluation seeds that overlap data collection or the reserved final-grid seeds.
 
-## Results so far
+## Development results (Phases 4 and 5)
 
 **Phase 4, BC sanity (development data, 100k steps, Tesla T4):** all 15 plumbing checks pass ([report](report/phase4/bc_sanity.json), [spec](docs/specs/phase-4-bc-eval.md)).
 
