@@ -1,0 +1,67 @@
+<!--
+Hopper-v5 restyled for the demo video only (scripts/render_showcase.py). Physics is the stock
+gymnasium hopper.xml unchanged: same bodies, joints, geom sizes and positions, contacts, actuators
+and options; render_showcase.py checks every non-visual model and option field against the stock
+model before use.
+Visual changes only: offscreen quality, lights, sky and floor textures, materials (a white shell,
+orange accents and graphite leg), and joint markers as sites (no mass, no collision). The floor
+plane is drawn 400 m wide (size is a half-extent); planes collide as infinite planes.
+-->
+<mujoco model="hopper">
+  <compiler angle="degree" inertiafromgeom="true"/>
+  <default>
+    <joint armature="1" damping="1" limited="true"/>
+    <geom conaffinity="1" condim="1" contype="1" margin="0.001" material="geom" rgba="0.8 0.6 .4 1" solimp=".8 .8 .01" solref=".02 1"/>
+    <motor ctrllimited="true" ctrlrange="-.4 .4"/>
+  </default>
+  <option integrator="RK4" timestep="0.002"/>
+  <visual>
+    <map znear="0.02" haze="0.4"/>
+    <global offwidth="1280" offheight="960"/>
+    <quality shadowsize="8192" offsamples="8" numslices="64" numstacks="32"/>
+    <headlight ambient="0.32 0.32 0.34" diffuse="0.45 0.45 0.45" specular="0.15 0.15 0.15"/>
+  </visual>
+  <worldbody>
+    <light cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" pos="0 0 1.3" specular=".1 .1 .1"/>
+    <light directional="true" castshadow="false" dir="0.4 0.6 -0.5" diffuse="0.25 0.27 0.3" specular="0 0 0"/>
+    <geom conaffinity="1" condim="3" name="floor" pos="0 0 0" rgba="1 1 1 1" size="200 200 .125" type="plane" material="MatPlane"/>
+    <body name="torso" pos="0 0 1.25">
+      <camera name="track" mode="trackcom" pos="0 -3 -0.25" xyaxes="1 0 0 0 0 1"/>
+      <joint armature="0" axis="1 0 0" damping="0" limited="false" name="rootx" pos="0 0 -1.25" stiffness="0" type="slide"/>
+      <joint armature="0" axis="0 0 1" damping="0" limited="false" name="rootz" pos="0 0 -1.25" ref="1.25" stiffness="0" type="slide"/>
+      <joint armature="0" axis="0 1 0" damping="0" limited="false" name="rooty" pos="0 0 0" stiffness="0" type="hinge"/>
+      <geom friction="0.9" name="torso_geom" size="0.05 0.19999999999999996" type="capsule" material="shell" rgba="0.95 0.94 0.91 1"/>
+      <site name="visor" pos="0.045 0 0.12" size="0.022" rgba="0.1 0.75 0.95 1"/>
+      <body name="thigh" pos="0 0 -0.19999999999999996">
+        <joint axis="0 -1 0" name="thigh_joint" pos="0 0 0" range="-150 0" type="hinge"/>
+        <site name="hip" pos="0 0 0" size="0.062" rgba="0.12 0.13 0.15 1"/>
+        <geom friction="0.9" pos="0 0 -0.22500000000000009" name="thigh_geom" size="0.05 0.22500000000000003" type="capsule" material="accent" rgba="0.95 0.45 0.12 1"/>
+        <body name="leg" pos="0 0 -0.70000000000000007">
+          <joint axis="0 -1 0" name="leg_joint" pos="0 0 0.25" range="-150 0" type="hinge"/>
+          <site name="knee" pos="0 0 0.25" size="0.055" rgba="0.12 0.13 0.15 1"/>
+          <geom friction="0.9" name="leg_geom" size="0.04 0.25" type="capsule" material="graphite" rgba="0.2 0.22 0.25 1"/>
+          <body name="foot" pos="0.13 0 -0.35">
+            <joint axis="0 -1 0" name="foot_joint" pos="-0.13 0 0.1" range="-45 45" type="hinge"/>
+            <site name="ankle" pos="-0.13 0 0.1" size="0.05" rgba="0.12 0.13 0.15 1"/>
+            <geom friction="2.0" pos="-0.065 0 0.1" quat="0.70710678118654757 0 -0.70710678118654746 0" name="foot_geom" size="0.06 0.195" type="capsule" material="accent" rgba="0.95 0.45 0.12 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" gear="200.0" joint="thigh_joint"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" gear="200.0" joint="leg_joint"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" gear="200.0" joint="foot_joint"/>
+  </actuator>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.86 0.91 0.96" rgb2="0.42 0.55 0.7" width="512" height="512"/>
+    <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+    <texture builtin="checker" height="512" name="texplane" rgb1="0.80 0.82 0.80" rgb2="0.56 0.60 0.58" mark="edge" markrgb="0.5 0.53 0.51" type="2d" width="512"/>
+    <material name="MatPlane" reflectance="0.12" shininess="0.2" specular="0.2" texrepeat="600 600" texture="texplane"/>
+    <material name="geom" texture="texgeom" texuniform="true"/>
+    <material name="shell" rgba="0.95 0.94 0.91 1" specular="0.6" shininess="0.7"/>
+    <material name="accent" rgba="0.95 0.45 0.12 1" specular="0.5" shininess="0.6"/>
+    <material name="graphite" rgba="0.2 0.22 0.25 1" specular="0.4" shininess="0.5"/>
+  </asset>
+</mujoco>
