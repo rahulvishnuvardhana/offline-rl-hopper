@@ -1,0 +1,4 @@
+mix_p0.05_s0.npz: ours 0.25121, corl-style 0.25121, ratio 1.0000
+mix_p0.2_s0.npz: ours 0.25121, corl-style 0.24305, ratio 0.9675
+mix_p0.5_s0.npz: ours 0.25121, corl-style 0.22897, ratio 0.9114
+mix_p0_s0.npz: ours 0.36707, corl-style 0.36707, ratio 1.0000
