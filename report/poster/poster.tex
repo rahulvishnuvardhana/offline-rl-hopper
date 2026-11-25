@@ -95,7 +95,7 @@ Real logs mix good and poor behavior. We make the \textbf{fraction of expert dat
   \item Pre-registered flags: \emph{high-fall} if a run falls in at least half of its 250 final episodes, \emph{collapsed} if it scores below 10. Flagged runs stay in every statistic.
   \item At $p=0.05$ every IQL run is high-fall (cell fall rates 0.88 to 1.00) and 11 of its 15 runs (all three $\tau$) collapsed.
   \item BC never falls below $p=1$; at $p=0$ (simple data only) IQL is stable too (fall rate 0.02).
-  \item Why IQL becomes unstable with scarce expert data was not tested; one candidate is advantage weighting concentrating the policy on few expert transitions.
+  \item Post hoc (not pre-registered, few runs): IQL's critic clips the expert first action to maximum weight, and IQL then follows the expert gait worse than BC.
 \end{itemize}
 }
 
@@ -132,7 +132,7 @@ Evaluation seed 10000, each cell's median-scoring run, final policies (300k). Th
 \begin{itemize}
   \item BC gains nothing from expert data up to $p=0.5$, then reaches 105 at $p=1$ (no $p$ between 0.5 and 1 run).
   \item IQL does not match BC at any $p>0$ (it trails by 5.7 even at $p=1$); with scarce expert data it falls (98\% of episodes at $p=0.05$).
-  \item Limits: 5 seeds (low power), one environment and dataset pair, untuned $\beta$; CORL check shared our preprocessing; two IQL cells still climbing at 300k.
+  \item Limits: 5 seeds (low power), one environment and dataset pair, untuned $\beta$; CORL check shared our preprocessing; two IQL cells swing between late checkpoints (fragility, not continued learning).
 \end{itemize}
 
 {\small References: IQL (Kostrikov et al., ICLR 2022); Minari (Farama, 2024); CORL (Tarasov et al., 2023); MuJoCo; Gymnasium.}

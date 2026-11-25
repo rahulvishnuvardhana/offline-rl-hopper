@@ -13,3 +13,16 @@ __pycache__/
 .claude/
 CLAUDE.md
 slurm-*.out
+# LaTeX build files
+/report/paper/*.aux
+/report/paper/*.fdb_latexmk
+/report/paper/*.fls
+/report/paper/*.log
+/report/paper/*.out
+/report/paper/*.synctex.gz
+/report/poster/*.aux
+/report/poster/*.fdb_latexmk
+/report/poster/*.fls
+/report/poster/*.log
+/report/poster/*.out
+/report/poster/*.synctex.gz
