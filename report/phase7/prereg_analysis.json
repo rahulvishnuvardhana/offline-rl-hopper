@@ -1,0 +1,1086 @@
+{
+  "commit": "ea11e14d4ab7d0c6d2dc5eaabff6b41049fe17c3",
+  "runs": 70,
+  "note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only. Each verdict's false-positive rate (1/32) is per hypothesis, uncorrected for the family of three.",
+  "H1": {
+    "verdict": "supported",
+    "test": "BC(p=1) - BC(p=0)",
+    "comparison": {
+      "per_seed": [
+        23.219288216264545,
+        21.28205824857632,
+        24.08176759035959,
+        22.99266676705072,
+        24.430619724820914
+      ],
+      "mean": 23.20128010941442,
+      "median": 23.219288216264545,
+      "sd": 1.2261515468889133,
+      "iqm": 23.43124085789162,
+      "iqm_bootstrap_95": [
+        21.852261088067788,
+        24.31433568000047
+      ],
+      "bootstrap_95": [
+        22.184121820627855,
+        24.07325870637461
+      ],
+      "t_95": [
+        21.679055951466633,
+        24.723504267362205
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 0.03125,
+      "p_less": 1.0,
+      "prob_improvement": 1.0,
+      "prob_improvement_bootstrap_95": [
+        1.0,
+        1.0
+      ]
+    },
+    "spearman_per_seed": [
+      0.3,
+      0.09999999999999999,
+      0.39999999999999997,
+      0.49999999999999994,
+      0.9999999999999999
+    ],
+    "spearman_mean": 0.45999999999999996,
+    "spearman_nan_seeds": [],
+    "dips": [
+      {
+        "p": 0.05,
+        "mean": 82.17494883529578,
+        "per_seed": [
+          82.37296499596293,
+          81.97021088170285,
+          82.1306745448679,
+          82.2383561560732,
+          82.16253759787199
+        ]
+      },
+      {
+        "p": 0.5,
+        "mean": 82.10255266357481,
+        "per_seed": [
+          82.21624360672088,
+          81.78567749738966,
+          81.99281843019081,
+          82.18642201826482,
+          82.33160176530791
+        ]
+      }
+    ],
+    "adjacent_drops": [
+      {
+        "from": 0.0,
+        "to": 0.05,
+        "drop_mean": 0.007376145609154605,
+        "p_drop": 0.5,
+        "per_seed": [
+          -0.05745353902406691,
+          0.30396524427892757,
+          -0.0984592672902096,
+          -0.07051625473674505,
+          -0.04065545518213298
+        ]
+      },
+      {
+        "from": 0.05,
+        "to": 0.2,
+        "drop_mean": -0.051813220406327784,
+        "p_drop": 0.78125,
+        "per_seed": [
+          0.03371435893983232,
+          -0.25817079533771903,
+          -0.055549557543074,
+          0.1437660830081029,
+          -0.12282619109878112
+        ]
+      },
+      {
+        "from": 0.2,
+        "to": 0.5,
+        "drop_mean": 0.12420939212728684,
+        "p_drop": 0.15625,
+        "per_seed": [
+          0.12300703030221882,
+          0.44270417965091724,
+          0.19340567222016602,
+          -0.09183194519972915,
+          -0.046237976337138775
+        ]
+      },
+      {
+        "from": 0.5,
+        "to": 1.0,
+        "drop_mean": -23.28105242674453,
+        "p_drop": 1.0,
+        "per_seed": [
+          -23.31855606648253,
+          -21.770556877168445,
+          -24.121164437746472,
+          -22.97408465012235,
+          -24.22090010220286
+        ]
+      }
+    ],
+    "shape": "monotone (as far as 5 seeds show)"
+  },
+  "H2": {
+    "bc_means": {
+      "0.0": 82.18232498090492,
+      "0.05": 82.17494883529578,
+      "0.2": 82.2267620557021,
+      "0.5": 82.10255266357481,
+      "1.0": 105.38360509031934
+    },
+    "iql_means": {
+      "0.0": 82.02789052867142,
+      "0.05": 6.743356713694432,
+      "0.2": 27.959604384278958,
+      "0.5": 54.06343307542867,
+      "1.0": 99.71259237307285
+    },
+    "bc_crossing_p": 1.0,
+    "iql_crossing_p": 1.0,
+    "comparison": {
+      "per_seed": [
+        -4.365158295174041,
+        -0.07071674192454225,
+        -2.1916424707239486,
+        -19.392521216303336,
+        -2.3350248621066783
+      ],
+      "mean": -5.6710127172465095,
+      "median": -2.3350248621066783,
+      "sd": 7.8195779706223485,
+      "iqm": -2.963941876001556,
+      "iqm_bootstrap_95": [
+        -14.383400242593572,
+        -0.7776919848576777
+      ],
+      "bootstrap_95": [
+        -12.569522674624674,
+        -1.3537901983343232
+      ],
+      "t_95": [
+        -15.378744622033683,
+        4.0367191875406645
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 1.0,
+      "p_less": 0.03125,
+      "prob_improvement": 0.08,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.24
+      ]
+    },
+    "much_lower": false,
+    "test": "IQL(p=1) - BC(p=1)",
+    "verdict": "not supported (IQL's crossing p is not below BC's)"
+  },
+  "H3": {
+    "verdict": "inconclusive",
+    "test": "[tau0.9 - tau0.5](p=0.05) - [tau0.9 - tau0.5](p=0.5)",
+    "contrast": {
+      "per_seed": [
+        -61.61333142143336,
+        -22.58049881598867,
+        -57.19499364310114,
+        -38.19195981596637,
+        4.5685381425273865
+      ],
+      "mean": -35.002449110792426,
+      "median": -38.19195981596637,
+      "sd": 27.06930434106444,
+      "iqm": -39.322484091685396,
+      "iqm_bootstrap_95": [
+        -60.140552161989284,
+        -4.481140843644631
+      ],
+      "bootstrap_95": [
+        -55.161721989007084,
+        -13.213975606301528
+      ],
+      "t_95": [
+        -68.60804143040335,
+        -1.3968567911814986
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 0.96875,
+      "p_less": 0.0625
+    },
+    "simple_effects_tau0.9_minus_tau0.5": {
+      "0.05": {
+        "per_seed": [
+          -9.301754056697344,
+          5.589500978846031,
+          -48.732140270643285,
+          -8.695872091181723,
+          0.5554646568318297
+        ],
+        "mean": -12.116960156568899,
+        "median": -8.695872091181723,
+        "sd": 21.415005021673768,
+        "iqm": -5.814053830349079,
+        "iqm_bootstrap_95": [
+          -35.58867819932797,
+          3.9114888715079643
+        ],
+        "bootstrap_95": [
+          -30.988542042359075,
+          1.563326190887151
+        ],
+        "t_95": [
+          -38.70293810462614,
+          14.469017791488346
+        ],
+        "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+        "p_greater": 0.90625,
+        "p_less": 0.125,
+        "prob_improvement": 0.24,
+        "prob_improvement_bootstrap_95": [
+          0.0,
+          0.8
+        ]
+      },
+      "0.5": {
+        "per_seed": [
+          52.31157736473601,
+          28.1699997948347,
+          8.462853372457857,
+          29.49608772478465,
+          -4.013073485695557
+        ],
+        "mean": 22.885488954223533,
+        "median": 28.1699997948347,
+        "sd": 21.616346988632337,
+        "iqm": 22.042980297359065,
+        "iqm_bootstrap_95": [
+          0.14556880035558115,
+          44.70641415141889
+        ],
+        "bootstrap_95": [
+          5.9676680008271745,
+          38.978734638290106
+        ],
+        "t_95": [
+          -3.950447986986479,
+          49.72142589543354
+        ],
+        "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+        "p_greater": 0.0625,
+        "p_less": 0.96875,
+        "prob_improvement": 0.92,
+        "prob_improvement_bootstrap_95": [
+          0.52,
+          1.0
+        ]
+      }
+    },
+    "tau0.7_means_beside": {
+      "0.05": 6.743356713694432,
+      "0.5": 54.06343307542867
+    }
+  },
+  "cells": {
+    "bc p=0": {
+      "per_seed": [
+        82.31551145693886,
+        82.27417612598178,
+        82.03221527757769,
+        82.16783990133645,
+        82.12188214268986
+      ],
+      "mean": 82.18232498090492,
+      "median": 82.16783990133645,
+      "sd": 0.11464221245341652,
+      "iqm": 82.18796605666937,
+      "iqm_bootstrap_95": [
+        82.06210423261508,
+        82.3017330132865
+      ],
+      "bootstrap_95": [
+        82.0952069483743,
+        82.26944301343555
+      ],
+      "t_95": [
+        82.04000069337296,
+        82.32464926843689
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "return_mean": 3173.466834570495,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 0.004022902661927219,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "bc p=0.05": {
+      "per_seed": [
+        82.37296499596293,
+        81.97021088170285,
+        82.1306745448679,
+        82.2383561560732,
+        82.16253759787199
+      ],
+      "mean": 82.17494883529578,
+      "median": 82.16253759787199,
+      "sd": 0.14770136209784074,
+      "iqm": 82.1771894329377,
+      "iqm_bootstrap_95": [
+        82.02369876942454,
+        82.32809538266635
+      ],
+      "bootstrap_95": [
+        82.05593266920994,
+        82.29219969202909
+      ],
+      "t_95": [
+        81.99158277249742,
+        82.35831489809414
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "return_mean": 3173.1835334302364,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -0.006129468012241545,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "bc p=0.2": {
+      "per_seed": [
+        82.3392506370231,
+        82.22838167704057,
+        82.18622410241097,
+        82.09459007306509,
+        82.28536378897077
+      ],
+      "mean": 82.2267620557021,
+      "median": 82.22838167704057,
+      "sd": 0.09381261361647267,
+      "iqm": 82.2333231894741,
+      "iqm_bootstrap_95": [
+        82.12513474951372,
+        82.32128835433899
+      ],
+      "bootstrap_95": [
+        82.1510716221154,
+        82.29553758212505
+      ],
+      "t_95": [
+        82.11029698486354,
+        82.34322712654065
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "return_mean": 3175.1735625320653,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 0.027775167411843427,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "bc p=0.5": {
+      "per_seed": [
+        82.21624360672088,
+        81.78567749738966,
+        81.99281843019081,
+        82.18642201826482,
+        82.33160176530791
+      ],
+      "mean": 82.10255266357481,
+      "median": 82.18642201826482,
+      "sd": 0.21498526876017832,
+      "iqm": 82.13182801839217,
+      "iqm_bootstrap_95": [
+        81.85472447499005,
+        82.2931490457789
+      ],
+      "bootstrap_95": [
+        81.91321890581614,
+        82.25642255246449
+      ],
+      "t_95": [
+        81.8356559895544,
+        82.36944933759523
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "return_mean": 3170.4029595254333,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -0.06247752715152899,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "bc p=1": {
+      "per_seed": [
+        105.53479967320341,
+        103.5562343745581,
+        106.11398286793728,
+        105.16050666838717,
+        106.55250186751077
+      ],
+      "mean": 105.38360509031934,
+      "median": 105.53479967320341,
+      "sd": 1.152354959891969,
+      "iqm": 105.60309640317597,
+      "iqm_bootstrap_95": [
+        104.09099180583446,
+        106.40632886765293
+      ],
+      "bootstrap_95": [
+        104.38863853199976,
+        106.18639902777136
+      ],
+      "t_95": [
+        103.95299680790167,
+        106.814213372737
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.0,
+        0.136,
+        0.004,
+        0.024,
+        0.008
+      ],
+      "return_mean": 4064.5757495408748,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 0.19323433728708608,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.5 p=0.05": {
+      "per_seed": [
+        17.782088933511933,
+        0.3398863374630241,
+        49.025216234970394,
+        8.947352027068858,
+        0.31805214859389863
+      ],
+      "mean": 15.282519136321621,
+      "median": 8.947352027068858,
+      "sd": 20.200057835020313,
+      "iqm": 9.02310909934794,
+      "iqm_bootstrap_95": [
+        0.3253302115502738,
+        38.610840467817575
+      ],
+      "bootstrap_95": [
+        2.0526457998365406,
+        33.0351579574034
+      ],
+      "t_95": [
+        -9.795144474207703,
+        40.360182746850946
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.8959999999999999,
+        1.0,
+        0.5760000000000001,
+        0.924,
+        1.0
+      ],
+      "return_mean": 603.995964137547,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 6.720822280050903,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": true,
+      "collapsed_seeds": [
+        1,
+        3,
+        4
+      ],
+      "high_fall_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.5 p=0.5": {
+      "per_seed": [
+        22.801192132759798,
+        26.3665322507163,
+        42.36780986414094,
+        23.727718231715365,
+        35.90496494173867
+      ],
+      "mean": 30.233643484214213,
+      "median": 26.3665322507163,
+      "sd": 8.542903876689206,
+      "iqm": 28.66640514139011,
+      "iqm_bootstrap_95": [
+        23.110034165744988,
+        40.213528223340184
+      ],
+      "bootstrap_95": [
+        23.884870595933325,
+        37.34722255317537
+      ],
+      "t_95": [
+        19.62792782604994,
+        40.839359142378484
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.9640000000000001,
+        0.9879999999999999,
+        0.772,
+        0.8880000000000001,
+        0.908
+      ],
+      "return_mean": 1178.2349773474978,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -4.815565226903294,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.7 p=0": {
+      "per_seed": [
+        81.76518038371887,
+        81.84857805475892,
+        81.97335720313437,
+        82.43603011921586,
+        82.11630688252913
+      ],
+      "mean": 82.02789052867142,
+      "median": 81.97335720313437,
+      "sd": 0.2638838968917079,
+      "iqm": 81.97941404680748,
+      "iqm_bootstrap_95": [
+        81.79297960739889,
+        82.32945570698695
+      ],
+      "bootstrap_95": [
+        81.84017481601799,
+        82.25096095278326
+      ],
+      "t_95": [
+        81.70028792215744,
+        82.3554931351854
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.092,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "return_mean": 3167.5353550782056,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 0.05418764937526817,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.7 p=0.05": {
+      "per_seed": [
+        14.156798026397729,
+        2.1168026491087817,
+        16.889667309726047,
+        0.2631242576058002,
+        0.2903913256338019
+      ],
+      "mean": 6.743356713694432,
+      "median": 2.1168026491087817,
+      "sd": 8.107803468033534,
+      "iqm": 5.5213306670467714,
+      "iqm_bootstrap_95": [
+        0.27221328028180075,
+        15.978710881949942
+      ],
+      "bootstrap_95": [
+        0.6447667631175972,
+        13.023238256241934
+      ],
+      "t_95": [
+        -3.3221970412621094,
+        16.80891046865097
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.9199999999999999,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "return_mean": 276.0259674262231,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -0.46195605484572305,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [
+        1,
+        3,
+        4
+      ],
+      "high_fall_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.7 p=0.2": {
+      "per_seed": [
+        52.46147658262662,
+        30.097932585951163,
+        52.06226139196228,
+        4.2937986931351215,
+        0.8825526677196125
+      ],
+      "mean": 27.959604384278958,
+      "median": 30.097932585951163,
+      "sd": 24.89522721439021,
+      "iqm": 28.817997557016188,
+      "iqm_bootstrap_95": [
+        2.019634676191449,
+        52.328404852405164
+      ],
+      "bootstrap_95": [
+        8.090127061532128,
+        47.74923866889293
+      ],
+      "t_95": [
+        -2.9469474033013547,
+        58.866156171859274
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.43600000000000005,
+        0.9480000000000001,
+        0.512,
+        0.968,
+        1.0
+      ],
+      "return_mean": 1090.894257120545,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -1.4335381886084102,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [
+        3,
+        4
+      ],
+      "high_fall_seeds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.7 p=0.5": {
+      "per_seed": [
+        75.49754918916548,
+        50.39544650147781,
+        24.1672454162619,
+        58.993521482018686,
+        61.263402788219466
+      ],
+      "mean": 54.06343307542867,
+      "median": 58.993521482018686,
+      "sd": 18.992122256332028,
+      "iqm": 56.88412359057198,
+      "iqm_bootstrap_95": [
+        32.90997911133387,
+        70.75283372218347
+      ],
+      "bootstrap_95": [
+        38.09775584256461,
+        67.17632311019858
+      ],
+      "t_95": [
+        30.485379136957715,
+        77.64148701389962
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.34800000000000003,
+        0.728,
+        0.9800000000000001,
+        0.36000000000000004,
+        0.628
+      ],
+      "return_mean": 2093.483525981805,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 5.350901710065566,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": true,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [
+        1,
+        2,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.7 p=1": {
+      "per_seed": [
+        101.16964137802937,
+        103.48551763263356,
+        103.92234039721333,
+        85.76798545208383,
+        104.21747700540409
+      ],
+      "mean": 99.71259237307285,
+      "median": 103.48551763263356,
+      "sd": 7.887109466961576,
+      "iqm": 102.8591664692921,
+      "iqm_bootstrap_95": [
+        90.90187076073234,
+        104.11909813600717
+      ],
+      "bootstrap_95": [
+        92.53821494793699,
+        103.95303048757368
+      ],
+      "t_95": [
+        89.92102248315997,
+        109.50416226298573
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.032,
+        0.0,
+        0.012,
+        0.43200000000000005,
+        0.004
+      ],
+      "return_mean": 3846.7649233529605,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 1.4636494244229907,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.9 p=0.05": {
+      "per_seed": [
+        8.480334876814588,
+        5.929387316309056,
+        0.29307596432710764,
+        0.2514799358871348,
+        0.8735168054257283
+      ],
+      "mean": 3.165558979752723,
+      "median": 0.8735168054257283,
+      "sd": 3.8040130975931308,
+      "iqm": 2.365326695353964,
+      "iqm_bootstrap_95": [
+        0.2653452787004591,
+        7.630019023312744
+      ],
+      "bootstrap_95": [
+        0.3925257211708426,
+        6.3326935822159856
+      ],
+      "t_95": [
+        -1.556989916424349,
+        7.888107875929794
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.9960000000000001,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "return_mean": 138.61081439841254,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": 0.7635439927800249,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "high_fall_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    },
+    "iql tau=0.9 p=0.5": {
+      "per_seed": [
+        75.1127694974958,
+        54.536532045551,
+        50.830663236598795,
+        53.223805956500016,
+        31.891891456043112
+      ],
+      "mean": 53.11913243843776,
+      "median": 53.223805956500016,
+      "sd": 15.342529943669819,
+      "iqm": 52.86366707954994,
+      "iqm_bootstrap_95": [
+        38.204815382895006,
+        68.25402368018088
+      ],
+      "bootstrap_95": [
+        40.68720247403606,
+        66.14110075492744
+      ],
+      "t_95": [
+        34.07191940547378,
+        72.16634547140174
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "fall_rate_per_seed": [
+        0.41600000000000004,
+        0.808,
+        0.74,
+        0.732,
+        0.932
+      ],
+      "return_mean": 2057.215065273321,
+      "return_mean_left_out_nonfinite": 0,
+      "plateau": -1.5639393999052138,
+      "plateau_left_out_nonfinite": 0,
+      "still_climbing": false,
+      "collapsed_seeds": [],
+      "high_fall_seeds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "nonfinite_seeds": []
+    }
+  },
+  "iql_minus_bc_descriptive": {
+    "0": {
+      "per_seed": [
+        -0.5503310732199935,
+        -0.42559807122286486,
+        -0.058858074443321584,
+        0.26819021787940756,
+        -0.005575260160725293
+      ],
+      "mean": -0.15443445223349955,
+      "median": -0.058858074443321584,
+      "sd": 0.33172630194786595,
+      "iqm": -0.1633438019423039,
+      "iqm_bootstrap_95": [
+        -0.5087534058876173,
+        0.17693505853269662
+      ],
+      "bootstrap_95": [
+        -0.4021432726658077,
+        0.09327436819880859
+      ],
+      "t_95": [
+        -0.5662610261451428,
+        0.2573921216781437
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 0.875,
+      "p_less": 0.15625,
+      "prob_improvement": 0.24,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.6
+      ]
+    },
+    "0.05": {
+      "per_seed": [
+        -68.21616696956521,
+        -79.85340823259408,
+        -65.24100723514185,
+        -81.9752318984674,
+        -81.87214627223818
+      ],
+      "mean": -75.43159212160135,
+      "median": -79.85340823259408,
+      "sd": 8.05857923999132,
+      "iqm": -76.64724049146582,
+      "iqm_bootstrap_95": [
+        -81.94087002305766,
+        -66.2327271466163
+      ],
+      "bootstrap_95": [
+        -81.50963291480105,
+        -69.1622669894458
+      ],
+      "t_95": [
+        -85.43603572319039,
+        -65.42714852001232
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 1.0,
+      "p_less": 0.03125,
+      "prob_improvement": 0.0,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.0
+      ]
+    },
+    "0.2": {
+      "per_seed": [
+        -29.877774054396482,
+        -52.13044909108941,
+        -30.123962710448694,
+        -77.80079137992998,
+        -81.40281112125116
+      ],
+      "mean": -54.267157671423135,
+      "median": -52.13044909108941,
+      "sd": 24.862004260390567,
+      "iqm": -53.35173439382269,
+      "iqm_bootstrap_95": [
+        -80.2021378741441,
+        -29.95983693974722
+      ],
+      "bootstrap_95": [
+        -74.10753081869034,
+        -34.476022255366395
+      ],
+      "t_95": [
+        -85.13246432637285,
+        -23.401851016473422
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 1.0,
+      "p_less": 0.03125,
+      "prob_improvement": 0.0,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.0
+      ]
+    },
+    "0.5": {
+      "per_seed": [
+        -6.7186944175553975,
+        -31.39023099591185,
+        -57.82557301392891,
+        -23.192900536246135,
+        -21.068198977088443
+      ],
+      "mean": -28.03911958814615,
+      "median": -23.192900536246135,
+      "sd": 18.875267270114417,
+      "iqm": -25.21711016974881,
+      "iqm_bootstrap_95": [
+        -49.013792341256554,
+        -11.501862604066412
+      ],
+      "bootstrap_95": [
+        -43.9725040228558,
+        -14.947842956964834
+      ],
+      "t_95": [
+        -51.472102158034296,
+        -4.6061370182580035
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 1.0,
+      "p_less": 0.03125,
+      "prob_improvement": 0.0,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.0
+      ]
+    },
+    "1": {
+      "per_seed": [
+        -4.365158295174041,
+        -0.07071674192454225,
+        -2.1916424707239486,
+        -19.392521216303336,
+        -2.3350248621066783
+      ],
+      "mean": -5.6710127172465095,
+      "median": -2.3350248621066783,
+      "sd": 7.8195779706223485,
+      "iqm": -2.963941876001556,
+      "iqm_bootstrap_95": [
+        -14.383400242593572,
+        -0.7776919848576777
+      ],
+      "bootstrap_95": [
+        -12.569522674624674,
+        -1.3537901983343232
+      ],
+      "t_95": [
+        -15.378744622033683,
+        4.0367191875406645
+      ],
+      "interval_note": "5 seeds: the bootstrap has 126 distinct resamples, so its intervals are coarse and narrow; the t-interval assumes roughly normal per-seed values; both indicative only",
+      "p_greater": 1.0,
+      "p_less": 0.03125,
+      "prob_improvement": 0.08,
+      "prob_improvement_bootstrap_95": [
+        0.0,
+        0.24
+      ]
+    }
+  }
+}

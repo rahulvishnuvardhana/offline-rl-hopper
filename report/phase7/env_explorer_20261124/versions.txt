@@ -1,0 +1,1 @@
+python 3.11.18 torch 2.11.0+cu128 numpy 2.4.6 gymnasium 1.4.0 minari 0.5.4

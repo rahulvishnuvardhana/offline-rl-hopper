@@ -1,0 +1,4 @@
+main: run dirs 50, final.json 50, sweep.json 1
+ablation: run dirs 20, final.json 20, sweep.json 1
+archived 857 files from /scratch/vishnuvardhana.r/archive_stage_grid_ea11e14d4ab7 to /home/vishnuvardhana.r/archive/phase6_grid_ea11e14d4ab7; every one matches
+210M	/home/vishnuvardhana.r/archive/phase6_grid_ea11e14d4ab7
