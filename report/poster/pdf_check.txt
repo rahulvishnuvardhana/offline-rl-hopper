@@ -1,0 +1,28 @@
+Poster PDF check (Poppler 26.09.0): one A0 page, every font embedded as TrueType (no Type 3); the four robot stills are the only raster images (JPEG), all charts are vector SVG.
+
+Producer:        Skia/PDF m158
+Pages:           1
+Page size:       3370.08 x 2383.92 pts (A0)
+File size:       447389 bytes
+
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+AAAAAA+IBMPlexMono-Medium            CID TrueType      Identity-H       yes yes yes      4  0
+BAAAAA+ArchivoNarrow-Bold            CID TrueType      Identity-H       yes yes yes      5  0
+CAAAAA+IBMPlexSans-Regular           CID TrueType      Identity-H       yes yes yes      6  0
+DAAAAA+IBMPlexSans-Regular           CID TrueType      Identity-H       yes yes yes      7  0
+EAAAAA+IBMPlexSans-Medium            CID TrueType      Identity-H       yes yes yes      8  0
+FAAAAA+IBMPlexSans-Medium            CID TrueType      Identity-H       yes yes yes      9  0
+GAAAAA+IBMPlexMono-SemiBold          CID TrueType      Identity-H       yes yes yes     12  0
+HAAAAA+IBMPlexSans-SemiBold          CID TrueType      Identity-H       yes yes yes     13  0
+IAAAAA+IBMPlexSans-SemiBold          CID TrueType      Identity-H       yes yes yes     14  0
+JAAAAA+IBMPlexSans-Italic            CID TrueType      Identity-H       yes yes yes     15  0
+KAAAAA+IBMPlexMono-Regular           CID TrueType      Identity-H       yes yes yes     16  0
+
+--- pdfimages -list
+page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio
+--------------------------------------------------------------------------------------------
+   1     0 image     800   600  icc     3   8  jpeg   no       157  0   190   190 41.3K 2.9%
+   1     1 image     800   600  icc     3   8  jpeg   no       159  0   190   190 39.6K 2.8%
+   1     2 image     800   600  icc     3   8  jpeg   no       160  0   190   190 41.7K 3.0%
+   1     3 image     800   600  icc     3   8  jpeg   no       161  0   190   190 42.4K 3.0%

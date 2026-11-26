@@ -6,12 +6,13 @@ Every Table 2 row, the H1 to H3 values and the other headline numbers in report/
 recomputed from report/phase7/prereg_analysis.json and must appear in the paper as printed. Then every
 decimal number in the README's Results section and in the poster must also appear in the paper. Two
 things are left out of that cross-check on purpose: the README's other sections (development results,
-cluster notes, software versions), which hold numbers that are not grid results, and the poster's layout
-arguments (column and title widths such as ``\\column{0.50}`` or ``0.95\\linewidth``). Exits 1 on any
-FAIL."""
+cluster notes, software versions), which hold numbers that are not grid results, and everything in the
+poster (report/poster/poster.html) that is not its visible text: its CSS, and its SVG charts, which
+scripts/build_poster.py draws straight from the analysis files. Exits 1 on any FAIL."""
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import statistics
@@ -41,17 +42,18 @@ def readme_results(text: str) -> str:
 
 
 def poster_content(text: str) -> str:
-    """The poster without layout arguments (column widths, title width)."""
-    text = re.sub(r"\\column\{[\d.]+\}", "", text)
-    text = re.sub(r"[\d.]+\\(?:linewidth|textwidth|columnwidth|paperwidth)", "", text)
-    return text
+    """The poster's visible text: no CSS, no SVG charts, no tags or attributes."""
+    text = re.sub(r"<style>.*?</style>", " ", text, flags=re.S)
+    text = re.sub(r"<svg\b.*?</svg>", " ", text, flags=re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return html.unescape(text)
 
 
 def main() -> int:
     d = json.loads((ROOT / "report/phase7/prereg_analysis.json").read_text(encoding="utf-8"))
     paper = (ROOT / "report/paper/main.tex").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    poster = (ROOT / "report/poster/poster.tex").read_text(encoding="utf-8")
+    poster = (ROOT / "report/poster/poster.html").read_text(encoding="utf-8")
     rows: list[tuple[str, str, str]] = []
 
     def check(name: str, cond: bool, detail: str = "") -> None:
