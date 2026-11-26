@@ -21,8 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "report/poster/poster.html"
 P_GRID = ["0", "0.05", "0.2", "0.5", "1"]
 P_LABEL = {"0": "0%", "0.05": "5%", "0.2": "20%", "0.5": "50%", "1": "100%"}
-BC, IQL, IQL_LO, IQL_HI = "#2a78d6", "#eb6834", "#f29a72", "#a8441a"
-INK, INK2, INK3, GRID, PANEL = "#171a17", "#4c524b", "#7a8078", "#e6e8e2", "#ffffff"
+BC, IQL, IQL_LO, IQL_HI = "#21a1c4", "#d02940", "#7d4dbe", "#c68427"  # cyan, crimson (validated, dark)
+BC_TXT, IQL_TXT = "#5cc8e6", "#f47a7d"  # lighter steps of the same hues, for chart text
+INK, INK2, INK3, PANEL = "#e9eef5", "#b3bfcd", "#7d8a9a", "#121a24"
 MONO = "'IBM Plex Mono', 'IBM Plex Sans', Consolas, monospace"
 
 
@@ -75,8 +76,8 @@ def polyline(pts: str, color: str, width: float, opacity: float = 1.0) -> str:
 
 
 def y_axis(svg: Svg, y, x0, x1, ticks, size=26) -> None:
+    """Tick labels only; the poster draws no gridlines."""
     for t in ticks:
-        svg.line(x0, y(t), x1, y(t), GRID, 2)
         svg.text(x0 - 16, y(t) + size * 0.35, str(t), size=size, anchor="end", color=INK3)
 
 
@@ -101,14 +102,14 @@ def cell_marks(svg: Svg, x, y, c, color, shape, rng, dot=9, bar=16, r=17) -> Non
     """Seed dots, t whisker, bootstrap bar, mean marker (as in the report's Figure 1)."""
     for s in c["per_seed"]:
         cx = x + rng.uniform(-22, 22)
-        svg.add(f'<circle cx="{cx:.1f}" cy="{y(s):.1f}" r="{dot}" fill="{color}" opacity="0.32"/>')
+        svg.add(f'<circle cx="{cx:.1f}" cy="{y(s):.1f}" r="{dot}" fill="{color}" opacity="0.45"/>')
     svg.line(x, y(c["t_95"][0]), x, y(c["t_95"][1]), color, 4)
     svg.line(x, y(c["bootstrap_95"][0]), x, y(c["bootstrap_95"][1]), color, bar)
     marker(svg, x, y(c["mean"]), color, shape, r)
 
 
 def main_chart(cells: dict) -> str:
-    w, h, ml, mr, mt, mb = 1660, 960, 100, 70, 30, 118
+    w, h, ml, mr, mt, mb = 1700, 860, 100, 70, 30, 118
     svg = Svg(w, h, "Final normalized score versus expert share for BC and IQL")
     y = lambda v: mt + (h - mt - mb) * (1 - (v + 12) / 127)  # noqa: E731
     x = lambda i: ml + 100 + i * (w - ml - mr - 200) / 4  # noqa: E731
@@ -124,22 +125,22 @@ def main_chart(cells: dict) -> str:
             cell_marks(svg, x(i) + off, y, c, color, shape, rng)
     for i, p in enumerate(P_GRID):  # mean labels: BC above its line, IQL beside its marker
         b, q = cells[f"bc p={p}"]["mean"], cells[f"iql tau=0.7 p={p}"]["mean"]
-        svg.text(x(i) - 28, y(b) - 30, f1(b), size=31, color=BC, weight=600, halo=True)
+        svg.text(x(i) - 28, y(b) - 30, f1(b), size=31, color=BC_TXT, weight=600, halo=True)
         if p == "0":
-            svg.text(x(i) + 28, y(q) + 58, f1(q), size=31, color=IQL, weight=600, halo=True)
-        elif p == "1":
-            svg.text(x(i) + 58, y(q) + 40, f1(q), size=31, color=IQL, weight=600, anchor="start", halo=True)
-        else:
-            svg.text(x(i) + 58, y(q) + 11, f1(q), size=31, color=IQL, weight=600, anchor="start", halo=True)
+            svg.text(x(i) + 28, y(q) + 58, f1(q), size=31, color=IQL_TXT, weight=600, halo=True)
+        else:  # beside the marker; at p = 1, below it, clear of BC's line
+            dy = 40 if p == "1" else 11
+            svg.text(x(i) + 58, y(q) + dy, f1(q), 31, "start", IQL_TXT, 600, halo=True)
         svg.text(x(i), h - mb + 50, P_LABEL[p], size=34, color=INK, weight=500)
         svg.text(x(i), h - mb + 88, f"p = {p}", size=26, color=INK3)
-    svg.text(x(2), y(cells["bc p=0.2"]["mean"]) + 66, "BC", size=42, color=BC, weight=600, halo=True)
-    svg.text(x(1) + 34, y(64), "IQL (τ = 0.7)", size=42, color=IQL, weight=600, anchor="start", halo=True)
+    svg.text(x(2), y(cells["bc p=0.2"]["mean"]) + 66, "BC", size=42, color=BC_TXT, weight=600, halo=True)
+    # centred in the gap between the 5% and 20% columns, clear of both IQL whiskers
+    svg.text(x(1) + 146, y(50), "IQL (τ = 0.7)", size=42, color=IQL_TXT, weight=600, halo=True)
     return str(svg)
 
 
 def tau_chart(cells: dict) -> str:
-    w, h, ml, mr, mt, mb = 1000, 420, 86, 20, 60, 66
+    w, h, ml, mr, mt, mb = 1000, 350, 86, 20, 56, 62
     svg = Svg(w, h, "IQL score by expectile tau at 5% and 50% expert share")
     y = lambda v: mt + (h - mt - mb) * (1 - (v + 12) / 112)  # noqa: E731
     y_axis(svg, y, ml, w - mr, [0, 50, 100], size=24)

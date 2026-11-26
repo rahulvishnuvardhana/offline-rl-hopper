@@ -17,248 +17,255 @@
 @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/ibm-plex-sans-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Archivo Narrow"; src: url("assets/fonts/archivo-narrow-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-style: normal; }
 @font-face { font-family: "Archivo Narrow"; src: url("assets/fonts/archivo-narrow-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
-/* Layout: A0 landscape (1189 x 841 mm = 4494 x 3179 CSS px). A dark title band, then three columns of
-   numbered panels read like slides: setup (left), results (centre), evidence and reasons (right). */
+/* Layout: A0 landscape (1189 x 841 mm = 4494 x 3179 CSS px), read as a five-act story. The header carries
+   the story line (five steps); below it three lanes follow the same order left to right: setup and bet,
+   the result (widest), then the reasons and the verdict. Each act opens with its takeaway as the headline. */
 @page { size: 1189mm 841mm; margin: 0; }
 :root {
-  --bg: #f4f5f2; --panel: #ffffff; --ink: #171a17; --ink-2: #4c524b; --ink-3: #7a8078;
-  --rule: #d9dcd5; --grid: #e6e8e2; --bc: #2a78d6; --iql: #eb6834; --iql-hi: #a8441a;
-  --ok: #1d7a3e; --warn: #9a6200; --no: #b3261e; --band: #171a17; --band-ink: #f4f5f2;
+  /* Control-room palette: near-black steel, cyan (BC), crimson (IQL), violet-crimson-gold (tau), lime signal.
+     BC/IQL and the tau ramp pass the dataviz palette validator on the panel colour (dark mode). */
+  --bg: #0a0f16; --panel: #121a24; --inset: #18222f; --ink: #e9eef5; --ink-2: #b3bfcd; --ink-3: #7d8a9a;
+  --rule: #243142; --bc: #21a1c4; --bc-hi: #5cc8e6; --iql: #d02940; --iql-hi: #f47a7d;
+  --tau-lo: #7d4dbe; --tau-lo-hi: #b597ff; --tau-hi: #c68427;
+  --signal: #c4f23a; --ok: #39d98a; --no: #ff9a3c; --neutral: #9aa7b5;
   --display: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
   --mono: "IBM Plex Mono", "IBM Plex Sans", Consolas, monospace;
-  --pad: 88px; --gap: 44px;
+  --pad: 88px; --gap: 40px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 4494px; height: 3179px; }
-body { background: var(--bg); color: var(--ink); font: 400 33px/1.42 var(--body);
+body { background: var(--bg); color: var(--ink); font: 400 32px/1.42 var(--body);
   -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden;
   display: grid; grid-template-rows: auto 1fr auto; }
-b, strong { font-weight: 600; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+b, strong { font-weight: 600; color: var(--ink); }
+i { font-style: italic; }
+.bc { color: var(--bc-hi) !important; } .iql { color: var(--iql-hi) !important; }
 
-header { background: var(--band); color: var(--band-ink); padding: 64px var(--pad) 60px;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 72px; align-items: center; }
-.eyebrow { font: 500 28px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: #a9b0a6; }
-header h1 { font: 700 132px/0.98 var(--display); letter-spacing: -0.01em; margin-top: 22px; }
-header h1 em { font-style: normal; color: var(--iql); }
-header .sub { font: 400 46px/1.25 var(--body); color: #d5dad2; margin-top: 22px; }
-header .by { font: 500 32px/1.3 var(--body); color: #a9b0a6; margin-top: 26px; }
-.headline { display: grid; grid-template-columns: auto auto; gap: 18px 40px; align-items: end;
-  border-left: 3px solid #3a403a; padding-left: 64px; }
-.headline .k { font: 500 26px/1.1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: #a9b0a6; grid-column: 1 / -1; }
-.big { font: 700 150px/0.9 var(--display); font-variant-numeric: tabular-nums; }
-.big.bc { color: #6aa8f0; } .big.iql { color: var(--iql); }
-.headline .cap { font: 500 28px/1.3 var(--body); color: #d5dad2; }
-.qr { display: grid; justify-items: center; gap: 14px; }
-.qr .code { background: #fff; padding: 22px; border-radius: 10px; width: 300px; height: 300px; }
+/* Header: title, the result in two numbers, QR; then the story line. */
+header { padding: 60px var(--pad) 0; display: grid; gap: 40px; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 80px; align-items: end; }
+.eyebrow { font: 500 27px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font: 700 138px/0.96 var(--display); letter-spacing: -0.005em; margin-top: 20px; }
+h1 em { font-style: normal; color: var(--signal); }
+.sub { font: 400 44px/1.25 var(--body); color: var(--ink-2); margin-top: 18px; }
+.by { font: 500 30px/1.3 var(--body); color: var(--ink-3); margin-top: 18px; }
+.result { display: grid; grid-template-columns: auto auto; gap: 10px 48px; padding: 30px 44px; border: 0; border-radius: 18px; background: var(--panel); }
+.result .k { grid-column: 1 / -1; font: 500 25px/1.1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.result .big { font: 700 156px/0.9 var(--display); font-variant-numeric: tabular-nums; }
+.result .cap { font: 500 27px/1.3 var(--body); color: var(--ink-2); }
+.qr { display: grid; justify-items: center; gap: 12px; }
+.qr .code { background: #fff; padding: 20px; border-radius: 12px; width: 270px; height: 270px; }
 .qr .code svg { width: 100%; height: 100%; display: block; }
-.qr span { font: 500 24px/1.3 var(--mono); color: #a9b0a6; text-align: center; }
+.qr span { font: 500 23px/1.3 var(--mono); color: var(--ink-3); text-align: center; }
 
-main { padding: var(--gap) var(--pad); display: grid; gap: var(--gap);
-  grid-template-columns: 1fr 1.5fr 1.18fr; min-height: 0; }
-.col { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
-.panel.grow { flex: 1; }
-.panel.grow.spread { justify-content: space-between; }
-.panel { background: var(--panel); border: 2px solid var(--rule); border-radius: 14px; padding: 40px 44px;
-  display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-.ph { display: flex; align-items: baseline; gap: 22px; }
-.ph .n { font: 600 28px/1 var(--mono); color: var(--iql); border: 2px solid var(--rule); border-radius: 6px; padding: 8px 12px; }
-.ph h2 { font: 700 56px/1.05 var(--display); }
-.lede { color: var(--ink-2); }
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid var(--rule); border-radius: 10px; overflow: hidden; }
-.tiles div { padding: 22px 22px; display: grid; gap: 6px; }
-.tiles div + div { border-left: 2px solid var(--rule); }
-.tiles b { font: 600 56px/1 var(--mono); font-variant-numeric: tabular-nums; }
-.tiles span { font-size: 26px; line-height: 1.25; color: var(--ink-2); }
+.storyline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 0; }
+.step { position: relative; padding: 26px 40px 26px 0; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
+.step + .step { padding-left: 56px; }
+.step + .step::before { content: ""; position: absolute; left: 0; top: 50%; width: 22px; height: 22px; border-top: 4px solid var(--signal); border-right: 4px solid var(--signal); transform: translate(-6px, -50%) rotate(45deg); }
+.step .no { font: 700 64px/1 var(--display); color: var(--signal); }
+.step .t { display: grid; gap: 6px; }
+.step .t span { font: 500 24px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.step .t b { font: 600 32px/1.2 var(--body); }
 
-.dial { display: grid; grid-template-columns: 150px 1fr 1fr; gap: 12px 22px; align-items: center; font-size: 28px; }
-.dial .hd { font: 500 24px/1.2 var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
-.dial .p { font: 600 34px/1 var(--mono); }
-.bar { height: 40px; background: #eef1ec; border-radius: 6px; position: relative; overflow: hidden; }
-.bar i { position: absolute; inset: 0 auto 0 0; background: var(--iql); border-radius: 6px 0 0 6px; }
-.bar.starts i { background: var(--iql-hi); }
-.bar em.on { color: #fff; }
-.bar em { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: 600 24px/1 var(--mono); font-style: normal; color: var(--ink-2); }
-.note { font-size: 27px; line-height: 1.38; color: var(--ink-2); }
+/* Acts */
+main { padding: var(--gap) var(--pad); display: grid; gap: 64px; min-height: 0;
+  grid-template-columns: 1fr 1.42fr 1fr; }
+.lane { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; position: relative; }
+.lane + .lane::before { content: ""; position: absolute; left: -44px; top: 50%; width: 26px; height: 26px;
+  border-top: 5px solid var(--signal); border-right: 5px solid var(--signal); transform: translateY(-50%) rotate(45deg); }
+.lane > .act { flex: 1 1 auto; }
+.act { background: var(--panel); border: 0; border-radius: 18px; padding: 36px 44px 40px; display: flex; flex-direction: column; gap: 24px; min-width: 0; min-height: 0; }
+.ah { display: grid; grid-template-columns: auto 1fr; gap: 6px 26px; align-items: baseline; }
+.ah .no { grid-row: span 2; font: 700 96px/0.85 var(--display); color: var(--signal); }
+.ah .lab { font: 500 25px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.ah h2 { font: 700 58px/1.04 var(--display); }
+.cols { display: grid; gap: 40px; min-height: 0; }
+.cols.two { grid-template-columns: 1fr 1fr; }
+.stack { display: grid; gap: 18px; align-content: start; }
+.note { font-size: 28px; line-height: 1.38; color: var(--ink-2); }
+.lede { font-size: 31px; color: var(--ink-2); }
 
-.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-.who { border: 2px solid var(--rule); border-radius: 10px; padding: 26px 28px; display: grid; gap: 12px; align-content: start; }
-.who h3 { font: 700 38px/1.1 var(--display); display: flex; gap: 14px; align-items: center; }
-.sw { width: 26px; height: 26px; border-radius: 4px; flex: none; }
-.eq { font: 500 30px/1.3 var(--mono); background: var(--bg); border-radius: 6px; padding: 12px 16px; }
-.who p { font-size: 28px; line-height: 1.35; color: var(--ink-2); }
-.one { font-size: 29px; text-align: center; color: var(--ink); background: var(--bg); border-radius: 8px; padding: 16px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.tile { background: var(--inset); border-radius: 12px; padding: 20px 22px; display: grid; gap: 6px; align-content: start; }
+.tile b { font: 600 54px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 25px; line-height: 1.25; color: var(--ink-2); }
 
-ul.h { list-style: none; display: grid; gap: 14px; }
-ul.h li { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: baseline; }
-ul.h li b.tag { font: 700 40px/1 var(--display); }
-.facts2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 30px; font-size: 27px; color: var(--ink-2); }
-.facts2 b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.dial { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 12px 22px; align-items: center; }
+.dial .hd { font: 500 23px/1.2 var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.dial .p { font: 600 32px/1 var(--mono); }
+.bar { height: 38px; background: var(--inset); border-radius: 6px; position: relative; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: #3c5a78; border-radius: 6px 0 0 6px; }
+.bar.starts i { background: var(--signal); }
+.bar em { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: 600 23px/1 var(--mono); font-style: normal; color: var(--ink-2); }
+.bar.starts em.on { color: var(--bg); }
+.bar em.on { color: var(--ink); }
 
-.chart { width: 100%; }
-.legend { display: flex; gap: 40px; flex-wrap: wrap; font-size: 28px; color: var(--ink-2); align-items: center; }
+.who { background: var(--inset); border-radius: 12px; padding: 24px 28px; display: grid; gap: 12px; align-content: start; border-top: 6px solid; }
+.who.b { border-color: var(--bc); } .who.q { border-color: var(--iql); }
+.who h3 { font: 700 40px/1.1 var(--display); }
+.eq { font: 500 29px/1.3 var(--mono); color: var(--ink); }
+.who p { font-size: 27px; line-height: 1.35; color: var(--ink-2); }
+.same { font-size: 28px; color: var(--ink-2); }
+.same b { color: var(--signal); }
+ul.h { list-style: none; display: grid; gap: 16px; }
+ul.h li { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: baseline; font-size: 30px; }
+ul.h b.tag { font: 700 44px/1 var(--display); color: var(--signal); }
+.meta { display: flex; flex-wrap: wrap; gap: 10px 34px; font: 400 24px/1.3 var(--mono); color: var(--ink-3); }
+.meta b { color: var(--ink-2); }
+
+/* Act 3 */
+.spread { justify-content: space-between; }
+.legend { display: flex; gap: 36px; flex-wrap: wrap; font-size: 27px; color: var(--ink-2); align-items: center; }
 .legend span { display: inline-flex; gap: 12px; align-items: center; }
-.keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-.key { border-radius: 10px; padding: 24px 28px; display: grid; gap: 8px; background: var(--bg); }
-.key b { font: 700 82px/0.95 var(--display); font-variant-numeric: tabular-nums; }
-.key span { font-size: 27px; line-height: 1.3; color: var(--ink-2); }
-.curves { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
-
-.case { display: grid; gap: 16px; }
-.case .row { display: grid; gap: 12px; }
-.case .row.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.frame { position: relative; border-radius: 8px; overflow: hidden; border: 2px solid var(--rule); background: #dfe6ee; }
+.sw { width: 24px; height: 24px; flex: none; display: inline-block; }
+.side { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.sub-h { font: 600 30px/1.2 var(--body); color: var(--ink); display: flex; justify-content: space-between; gap: 20px; align-items: baseline; }
+.sub-h span { font: 400 24px/1.2 var(--mono); color: var(--ink-3); }
+.frames { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.frame { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 4 / 3; border: 0; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.four .frame { aspect-ratio: 1 / 1; }
-.frame .lab { position: absolute; left: 14px; top: 14px; font: 600 24px/1 var(--mono); background: rgba(255,255,255,0.92); color: var(--ink); padding: 8px 10px; border-radius: 5px; }
-.frame .lab.bc { color: var(--bc); } .frame .lab.iql { color: var(--iql-hi); }
-.frame .badge { position: absolute; right: 14px; bottom: 14px; font: 600 24px/1 var(--mono); color: #fff; padding: 9px 12px; border-radius: 5px; letter-spacing: 0.04em; }
-.badge.fall { background: var(--no); } .badge.ok { background: var(--ok); }
+.frame .lab { position: absolute; left: 12px; top: 12px; font: 600 23px/1 var(--mono); background: rgba(10, 15, 22, 0.84); padding: 8px 10px; border-radius: 6px; }
+.frame .badge { position: absolute; right: 12px; bottom: 12px; font: 600 22px/1 var(--mono); padding: 8px 11px; border-radius: 6px; letter-spacing: 0.04em; color: var(--bg); }
+.badge.ok { background: var(--ok); } .badge.fall { background: var(--iql); color: var(--ink); }
+.keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.key { background: var(--inset); border-radius: 12px; padding: 22px 26px; display: grid; gap: 8px; align-content: start; }
+.key b { font: 700 84px/0.92 var(--display); font-variant-numeric: tabular-nums; }
+.key span { font-size: 25px; line-height: 1.3; color: var(--ink-2); }
+.curves { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 
-.verdicts { display: grid; gap: 14px; }
-.v { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 20px; align-items: start; border: 2px solid var(--rule); border-radius: 10px; padding: 20px 24px; }
-.v .h { font: 700 52px/1 var(--display); }
-.v .c { display: grid; gap: 4px; font-size: 29px; line-height: 1.3; }
-.v .c small { font: 400 24px/1.35 var(--mono); color: var(--ink-2); }
-.pill { font: 600 24px/1 var(--mono); padding: 10px 16px; border-radius: 99px; border: 3px solid currentColor; white-space: nowrap; }
-.pill.ok { color: var(--ok); } .pill.no { color: var(--no); } .pill.warn { color: var(--warn); }
+/* Act 4 */
+.reasons { display: grid; gap: 18px; }
+.reason { background: var(--inset); border-radius: 12px; padding: 22px 28px; display: grid; grid-template-columns: 330px 1fr; gap: 6px 28px; border-left: 6px solid; align-items: start; }
+.reason .fig { grid-row: span 3; }
+.reason.a { border-color: var(--bc); } .reason.b { border-color: var(--iql); } .reason.c { border-color: var(--tau-lo); }
+.reason .fig { font: 700 70px/0.95 var(--display); font-variant-numeric: tabular-nums; }
+.reason .fig small { font: 500 26px/1.2 var(--body); color: var(--ink-2); display: block; margin-top: 8px; }
+.reason.c .fig { color: var(--tau-lo-hi); }
+.reason h3 { font: 700 38px/1.1 var(--display); }
+.reason p { font-size: 26px; line-height: 1.36; color: var(--ink-2); }
+.flag { font: 600 21px/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--signal); }
 
-.why { display: grid; gap: 18px; }
-.why .r { display: grid; grid-template-columns: 1fr; gap: 6px; border-left: 6px solid var(--rule); padding-left: 22px; }
-.why .r.a { border-color: var(--bc); } .why .r.b { border-color: var(--iql); } .why .r.c { border-color: var(--iql-hi); }
-.why h3 { font: 700 34px/1.15 var(--display); }
-.why p { font-size: 28px; line-height: 1.36; color: var(--ink-2); }
-.flag { font: 600 22px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--warn); }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-.two h3 { font: 700 34px/1.15 var(--display); margin-bottom: 8px; }
-.two ul { padding-left: 1.1em; display: grid; gap: 8px; font-size: 27px; line-height: 1.34; color: var(--ink-2); }
+/* Act 5 */
+.verdicts { display: grid; gap: 14px; align-content: start; }
+.v { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 18px; align-items: center; background: var(--inset); border-radius: 12px; padding: 18px 24px; }
+.v .h { font: 700 50px/1 var(--display); }
+.v .c { display: grid; gap: 4px; font-size: 27px; line-height: 1.3; }
+.v .c small { font: 400 22px/1.35 var(--mono); color: var(--ink-3); }
+.pill { font: 600 22px/1 var(--mono); padding: 10px 14px; border-radius: 99px; border: 3px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.no { color: var(--no); } .pill.ne { color: var(--neutral); }
+.next { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.next h3 { font: 700 34px/1.1 var(--display); margin-bottom: 8px; }
+.next h3.go { color: var(--signal); }
+.next ul { padding-left: 1.1em; display: grid; gap: 6px; font-size: 25px; line-height: 1.33; color: var(--ink-2); }
 
-footer { padding: 0 var(--pad) 46px; display: flex; justify-content: space-between; gap: 40px; font: 400 24px/1.4 var(--mono); color: var(--ink-3); }
+footer { padding: 0 var(--pad) 44px; display: flex; justify-content: space-between; gap: 40px; font: 400 23px/1.4 var(--mono); color: var(--ink-3); }
 </style>
 </head>
 <body>
 <header>
-  <div>
-    <div class="eyebrow">CS 5180 Reinforcement Learning &middot; Final project &middot; Northeastern University</div>
-    <h1>How much <em>expert data</em> does offline RL need?</h1>
-    <div class="sub">Behavior cloning vs. Implicit Q-Learning on mixed-quality Hopper datasets</div>
-    <div class="by">Rahul Vishnuvardhana &middot; Khoury College of Computer Sciences</div>
+  <div class="top">
+    <div>
+      <div class="eyebrow">CS 5180 Reinforcement Learning &middot; Final project &middot; Northeastern University</div>
+      <h1>How much <em>expert data</em> does offline RL need?</h1>
+      <div class="sub">Behavior cloning vs. Implicit Q-Learning on mixed-quality Hopper datasets</div>
+      <div class="by">Rahul Vishnuvardhana &middot; Khoury College of Computer Sciences</div>
+    </div>
+    <div class="result">
+      <span class="k">Score with 5% expert data (expert = 100)</span>
+      <span class="big bc">{bc005}</span><span class="big iql">{iql005}</span>
+      <span class="cap"><b class="bc">BC</b>: never falls</span><span class="cap"><b class="iql">IQL</b>: falls in {iqlfall}% of episodes</span>
+    </div>
+    <div class="qr"><div class="code">{qr}</div><span>Watch the robots in 3D<br>rahulvishnuvardhana.github.io<br>/offline-rl-hopper</span></div>
   </div>
-  <div class="headline">
-    <span class="k">With 5% expert data</span>
-    <span class="big bc">{bc005}</span><span class="big iql">{iql005}</span>
-    <span class="cap">BC: never falls</span><span class="cap">IQL: falls in {iqlfall}% of episodes</span>
+  <div class="storyline" aria-label="The story in five steps">
+    <div class="step"><span class="no">1</span><div class="t"><span>Setup</span><b>A robot learns only from recordings</b></div></div>
+    <div class="step"><span class="no">2</span><div class="t"><span>The bet</span><b>A value-based learner should use rare expert data</b></div></div>
+    <div class="step"><span class="no">3</span><div class="t"><span>What happened</span><b>It collapsed; plain imitation held steady</b></div></div>
+    <div class="step"><span class="no">4</span><div class="t"><span>Why</span><b>Imitation rarely falls; IQL locks onto one move</b></div></div>
+    <div class="step"><span class="no">5</span><div class="t"><span>Verdict</span><b>The bet failed; fix IQL's policy step next</b></div></div>
   </div>
-  <div class="qr"><div class="code">{qr}</div><span>Interactive 3D replays<br>rahulvishnuvardhana.github.io<br>/offline-rl-hopper</span></div>
 </header>
 
 <main>
-  <div class="col">
-    <section class="panel">
-      <div class="ph"><span class="n">01</span><h2>The question</h2></div>
-      <p>A one-legged robot learns to hop only from <b>recorded examples</b>, never by practising (offline RL). Real logs mix good and poor behavior. If a few expert examples are mixed into a weak pile, which learner makes better use of them?</p>
-      <div class="tiles">
-        <div><b>3</b><span>joints: hip, knee, ankle</span></div>
-        <div><b>1,000</b><span>steps per episode; a fall ends it</span></div>
-        <div><b>42.7</b><span>weak data's score (expert = 100)</span></div>
-        <div><b>70</b><span>training runs, 5 seeds each</span></div>
-      </div>
-    </section>
-    <section class="panel">
-      <div class="ph"><span class="n">02</span><h2>The dial: expert share <i>p</i></h2></div>
-      <p class="note">Each training set holds 900k moves, a share <i>p</i> from whole expert episodes. Weak episodes are shorter (about 510 vs. 920 steps), so expert episodes are a smaller share of <b>starts</b> than of moves.</p>
-      <div class="dial">
-        <span class="hd">p</span><span class="hd">share of moves</span><span class="hd">share of episode starts</span>
-        {dial}
-      </div>
-    </section>
-    <section class="panel">
-      <div class="ph"><span class="n">03</span><h2>Two learners, one difference</h2></div>
-      <div class="duo">
-        <div class="who"><h3><span class="sw" style="background:var(--bc)"></span>Behavior cloning</h3>
-          <div class="eq">max log &pi;(a | s)</div><p>Copies every recorded move equally.</p></div>
-        <div class="who"><h3><span class="sw" style="background:var(--iql)"></span>Implicit Q-Learning</h3>
-          <div class="eq">weight e<sup>&beta;A(s,a)</sup></div><p>Learns which moves lead to more reward and copies those more (&beta; = 3, &tau; = 0.7, weights clipped at 100).</p></div>
-      </div>
-      <p class="one">Same network, data, normalization and 300k steps. <b>BC is IQL with &beta; = 0.</b></p>
-    </section>
-    <section class="panel grow">
-      <div class="ph"><span class="n">04</span><h2>Fixed in advance</h2></div>
-      <ul class="h">
-        <li><b class="tag">H1</b><span>BC's score rises with <i>p</i>.</span></li>
-        <li><b class="tag">H2</b><span>IQL reaches near-expert (90) at a much lower <i>p</i> than BC.</span></li>
-        <li><b class="tag">H3</b><span>A pickier IQL (higher &tau;) helps more at 5% than at 50%.</span></li>
-      </ul>
-      <p class="note">Pre-registered 2026-11-21, before any grid result; development runs had already hinted that H2 might fail. Exact one-sided sign-flip test on 5 seeds: it passes only if <b>all 5 agree</b> (<i>P</i> = 1/32 = 0.031). No correction across H1 to H3.</p>
-      <div class="facts2">
-        <span>One commit <b>ea11e14</b></span><span>Runs <b>70</b>, no failures</span>
-        <span>Wall clock <b>3.1 h</b></span><span>CPU-hours <b>195</b></span>
-      </div>
-    </section>
+  <div class="lane">
+  <section class="act spread">
+    <div class="ah"><span class="no">1</span><span class="lab">The setup</span><h2>A one-legged robot learns to hop from recordings: a few expert, most weak.</h2></div>
+    <p class="lede">No practice, no trial and error: the robot only studies <b>900k recorded moves</b> (offline RL). We turn one dial, the expert share <i>p</i>, and train two learners at each setting.</p>
+    <div class="tiles">
+      <div class="tile"><b>3</b><span>joints: hip, knee, ankle</span></div>
+      <div class="tile"><b>1,000</b><span>steps per episode; a fall ends it</span></div>
+      <div class="tile"><b>42.7</b><span>weak data's score (expert = 100)</span></div>
+      <div class="tile"><b>70</b><span>training runs, 5 seeds each</span></div>
+    </div>
+    <div class="dial">
+      <span class="hd">p</span><span class="hd">share of moves</span><span class="hd">share of episode starts</span>
+      {dial}
+    </div>
+    <p class="note">Weak episodes are shorter (about 510 vs. 920 steps), so expert episodes are a smaller share of <b>starts</b> than of moves.</p>
+  </section>
+  <section class="act spread">
+    <div class="ah"><span class="no">2</span><span class="lab">The bet</span><h2>IQL weighs moves by value, so it should find the rare expert moves. BC copies everything.</h2></div>
+    <div class="cols two" style="gap:16px">
+      <div class="who b"><h3 class="bc">Behavior cloning</h3><div class="eq">max log &pi;(a | s)</div><p>Copies every recorded move equally.</p></div>
+      <div class="who q"><h3 class="iql">Implicit Q-Learning</h3><div class="eq">weight e<sup>&beta;A(s,a)</sup></div><p>Copies moves with higher learned value more (&beta; = 3, &tau; = 0.7, weights clipped at 100).</p></div>
+    </div>
+    <p class="same">Same network, data and 300k steps: <b>BC is IQL with &beta; = 0</b>, so any gap comes from the value weighting.</p>
+    <ul class="h">
+      <li><b class="tag">H1</b><span>BC's score rises with <i>p</i>.</span></li>
+      <li><b class="tag">H2</b><span>IQL reaches near-expert (90) at a much lower <i>p</i> than BC.</span></li>
+      <li><b class="tag">H3</b><span>A pickier IQL (higher &tau;) helps more at 5% than at 50%.</span></li>
+    </ul>
+    <p class="note">Fixed on 2026-11-21, before any grid result. A test passes only if <b>all 5 seeds agree</b> (<i>P</i> = 1/32 = 0.031); no correction across H1 to H3.</p>
+    <div class="meta"><span>commit <b>ea11e14</b></span><span><b>70</b> runs, no failures</span><span><b>3.1 h</b> wall clock</span><span><b>195</b> CPU-hours</span></div>
+  </section>
   </div>
 
-  <div class="col">
-    <section class="panel grow spread">
-      <div class="ph"><span class="n">05</span><h2>Expert data helps BC only at 100%. IQL breaks down in between.</h2></div>
-      <div class="legend"><span><i class="sw" style="background:var(--bc);border-radius:50%"></i>BC</span><span><i class="sw" style="background:var(--iql)"></i>IQL (&tau; = 0.7)</span><span>dots: seeds &middot; thin line: 95% t-interval &middot; thick bar: 95% bootstrap &middot; label: seed mean</span></div>
-      <div class="chart">{main_chart}</div>
-      <div class="keys">
-        <div class="key"><b class="num" style="color:var(--bc)">+23.2</b><span>BC from 0% to 100% expert, all 5 seeds; flat at about 82 until then</span></div>
-        <div class="key"><b class="num" style="color:var(--iql)">{d005}</b><span>IQL minus BC at 5% expert; also {d02} at 20% and {d05} at 50%</span></div>
-        <div class="key"><b class="num" style="color:var(--iql-hi)">&minus;5.7</b><span>IQL minus BC at 100% expert: behind on all 5 seeds</span></div>
-      </div>
-    </section>
-    <section class="panel">
-      <div class="ph"><span class="n">06</span><h2>Training makes IQL worse, not just unhelpful</h2></div>
-      <div class="curves">{curves}</div>
-      <p class="note">Score every 5k steps on 10 shared test episodes (thin: seeds, thick: mean). At 5% and 20% expert, IQL is best at its <b>first</b> evaluation (57.4 and 68.4) and declines to 9.5 and 29.4 by 300k. BC settles near 82 by 50k and stays.</p>
-    </section>
-    <section class="panel">
-      <div class="ph"><span class="n">10</span><h2>Limits and next steps</h2></div>
-      <div class="two">
-        <div><h3>Limits</h3><ul>
-          <li>One robot, one dataset pair; the weak data is strong (BC scores 82 on it).</li>
-          <li>IQL at its standard MuJoCo settings, 300k steps; late policies are fragile.</li>
-          <li>5 seeds: a test passes only if all 5 agree.</li></ul></div>
-        <div><h3>Next</h3><ul>
-          <li>Keep IQL's critic, change extraction (DDPG+BC, weight floor or clip).</li>
-          <li>Add filtered and return-weighted BC baselines.</li>
-          <li>Win = 5+ points over BC on every seed at 20% and 50%.</li></ul></div>
-      </div>
-    </section>
+  <div class="lane">
+  <section class="act spread">
+    <div class="ah"><span class="no">3</span><span class="lab">What happened</span><h2>Adding expert data broke IQL. BC ignored it until the data was 100% expert.</h2></div>
+    <div class="legend"><span><i class="sw" style="background:var(--bc);border-radius:50%"></i>BC</span><span><i class="sw" style="background:var(--iql)"></i>IQL (&tau; = 0.7)</span><span>dots: seeds &middot; thin line: 95% t-interval &middot; thick bar: 95% bootstrap &middot; number: seed mean</span></div>
+    <div>{main_chart}</div>
+    <div class="keys">
+      <div class="key"><b class="bc">+23.2</b><span>BC from 0% to 100% expert, all 5 seeds; flat at about 82 until then</span></div>
+      <div class="key"><b class="iql">{d005}</b><span>IQL minus BC at 5% expert; {d02} at 20%, {d05} at 50%</span></div>
+      <div class="key"><b class="iql">&minus;5.7</b><span>IQL minus BC even at 100% expert, all 5 seeds</span></div>
+    </div>
+    <div class="sub-h">One test episode at 5% expert <span>median runs, logged episode replayed</span></div>
+    <div class="frames">
+      <div class="frame"><img src="assets/bc_500.jpg" alt="BC hopping at step 500"><span class="lab bc">BC &middot; step 500</span><span class="badge ok">HOPS ALL 1,000</span></div>
+      <div class="frame"><img src="assets/iql_0.jpg" alt="IQL at step 0"><span class="lab iql">IQL &middot; step 0</span></div>
+      <div class="frame"><img src="assets/iql_14.jpg" alt="IQL at step 14"><span class="lab iql">step 14</span></div>
+      <div class="frame"><img src="assets/iql_27.jpg" alt="IQL falling at step 27"><span class="lab iql">step 27</span><span class="badge fall">FALLS</span></div>
+    </div>
+    <div class="sub-h">Training makes IQL worse <span>score every 5k steps, 10 test episodes</span></div>
+    <div class="curves">{curves}</div>
+    <p class="note">At 5% and 20% expert, IQL is best at its <b>first</b> evaluation (57.4 and 68.4) and ends at 9.5 and 29.4. BC settles near 82 by 50k steps.</p>
+  </section>
   </div>
 
-  <div class="col">
-    <section class="panel">
-      <div class="ph"><span class="n">07</span><h2>Case study: 5% expert, one test episode</h2></div>
-      <div class="case">
-        <div class="row four">
-          <div class="frame"><img src="assets/bc_500.jpg" alt="BC hopping at step 500"><span class="lab bc">BC &middot; step 500</span><span class="badge ok">HOPS ALL 1,000</span></div>
-          <div class="frame"><img src="assets/iql_0.jpg" alt="IQL at step 0"><span class="lab iql">IQL &middot; step 0</span></div>
-          <div class="frame"><img src="assets/iql_14.jpg" alt="IQL at step 14"><span class="lab iql">step 14</span></div>
-          <div class="frame"><img src="assets/iql_27.jpg" alt="IQL falling at step 27"><span class="lab iql">step 27</span><span class="badge fall">FALLS</span></div>
-        </div>
-      </div>
-      <p class="note">Each method's median-scoring run on test episode 10000, the logged episode replayed exactly: BC hops for all 1,000 steps, IQL falls after 27.</p>
-    </section>
-    <section class="panel">
-      <div class="ph"><span class="n">08</span><h2>Verdicts</h2></div>
-      <div class="verdicts">
-        <div class="v"><span class="h">H1</span><div class="c"><span>BC rises with <i>p</i>, but as a step at 100%.</span><small>+23.2 on all 5 seeds, P = 0.031</small></div><span class="pill ok">Supported</span></div>
-        <div class="v"><span class="h">H2</span><div class="c"><span>Both reach 90 only at 100%; IQL trails there.</span><small>&minus;5.7 on all 5 seeds</small></div><span class="pill no">Not supported</span></div>
-        <div class="v"><span class="h">H3</span><div class="c"><span>Observed the other way: higher &tau; hurt at 5% (&minus;12.1) and helped at 50% (+22.9).</span><small>contrast &minus;35.0, P = 0.969; 4 of 5 seeds</small></div><span class="pill warn">Inconclusive</span></div>
-      </div>
-      <div class="chart">{tau_chart}</div>
-    </section>
-    <section class="panel grow">
-      <div class="ph"><span class="n">09</span><h2>Why?</h2></div>
-      <div class="why">
-        <div class="r a"><h3>BC is hard to beat here</h3><p>Its deterministic action rarely falls, while the data falls in 66% (weak) and 28% (expert) of episodes; when it doesn't fall, BC returns what the data does. So BC scores 82 on 42.7-point data.</p></div>
-        <div class="r b"><span class="flag">Post hoc, a few runs, not a finding</span><h3>At 5%: first-action lock-in</h3><p>IQL's critic rates the 49 expert first steps far above the 1,681 weak ones (advantage about 10 vs. &minus;0.8): 48 of 49 weights hit the clip, so IQL copies the expert's first move but can't follow the expert gait with so few episodes. Giving IQL BC's first action lifts it from about 0.4 to 71 to 83 (3 runs).</p></div>
-        <div class="r c"><h3>From 20% up: weaker gait-following</h3><p>Started on the same expert move, BC follows the expert gait better (by 36 and 40 points); IQL's action error on expert moves is 11 to 17% higher, only 3.5% at 100%.</p></div>
-      </div>
-    </section>
+  <div class="lane">
+  <section class="act spread">
+    <div class="ah"><span class="no">4</span><span class="lab">Why</span><h2>BC rarely falls. IQL locks onto the expert's first move, then can't follow the gait.</h2></div>
+    <div class="reasons">
+      <div class="reason a"><div class="fig bc">66% &rarr; 0%<small>falls: weak data vs. BC below 100% expert</small></div><h3>Imitation is hard to beat here</h3><p>BC's deterministic action rarely falls; when it doesn't fall, it returns what the data does. So it scores 82 on 42.7-point data.</p></div>
+      <div class="reason b"><div class="fig iql">48 of 49<small>expert first steps hit the weight clip at 5%</small></div><span class="flag">Post hoc &middot; few runs</span><h3>First-move lock-in</h3><p>IQL copies the expert's first move (advantage about 10 vs. &minus;0.8) but has only 49 episodes to learn the rest. Given BC's first move, it rises from about 0.4 to 71 to 83 (3 runs).</p></div>
+      <div class="reason c"><div class="fig">36 and 40<small>points BC gains over IQL from the same expert start</small></div><span class="flag">Post hoc &middot; few runs</span><h3>Weaker gait-following from 20% up</h3><p>IQL's action error on expert moves is 11 to 17% higher than BC's, only 3.5% at 100%.</p></div>
+    </div>
+  </section>
+  <section class="act spread">
+    <div class="ah"><span class="no">5</span><span class="lab">Verdict</span><h2>The bet failed: IQL never scored above BC. Next, fix IQL's policy step.</h2></div>
+    <div class="verdicts">
+      <div class="v"><span class="h">H1</span><div class="c"><span>BC rises, as a step at 100%.</span><small>+23.2, all 5 seeds, P = 0.031</small></div><span class="pill ok">Supported</span></div>
+      <div class="v"><span class="h">H2</span><div class="c"><span>Both reach 90 only at 100%.</span><small>IQL &minus;5.7 there, all 5 seeds</small></div><span class="pill no">Not supported</span></div>
+      <div class="v"><span class="h">H3</span><div class="c"><span>Opposite way: higher &tau; hurt at 5% (&minus;12.1), helped at 50% (+22.9).</span><small>contrast &minus;35.0, P = 0.969</small></div><span class="pill ne">Inconclusive</span></div>
+    </div>
+    <div>{tau_chart}</div>
+    <div class="next">
+      <div><h3>Limits</h3><ul><li>One robot, one dataset pair; the weak data is strong (BC scores 82 on it).</li><li>Standard IQL settings, 300k steps; 5 seeds per test.</li></ul></div>
+      <div><h3 class="go">Next</h3><ul><li>Keep IQL's critic, change extraction (DDPG+BC, weight floor or clip); add filtered BC.</li><li>A win = 5+ points over BC on every seed at 20% and 50%.</li></ul></div>
+    </div>
+  </section>
   </div>
 </main>
 
