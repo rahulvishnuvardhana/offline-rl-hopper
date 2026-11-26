@@ -74,7 +74,7 @@ jobs:
               "$OWNER_EMAIL"|*rahulvishnuvardhana@users.noreply.github.com) ;;
               *) echo "::error::$c authored by $author (expected $OWNER_EMAIL)"; fail=1 ;;
             esac
-            if git log -1 --format='%B' "$c" | grep -qiE '^co-authored-by:|generated with \[?claude'; then
+            if git log -1 --format='%B' "$c" | grep -qiE '^co-authored-by:|(^|[^a-z])generated with '; then
               echo "::error::$c contains a co-author or generated-with line"; fail=1
             fi
           done

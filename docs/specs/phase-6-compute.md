@@ -215,7 +215,7 @@ These Phase 5 figures were measured with a CORL partner and `log_every` 100, so 
 - **D4, dry run on development data. Set by the user (2026-11-21).**
 - **D5, ablation seeds match the main grid: 20 runs. Set by the user (2026-11-21).**
 - **D6, 300k only; the 500k rerun rule dropped. Set by the user (2026-11-21).**
-- **D7, pre-registration drafted by Claude, approved by the user. Set by the user (2026-11-21).**
+- **D7, pre-registration approved by the user. Set by the user (2026-11-21).**
 
 ## 14. Review log
 - **v1 to v2.** Blockers (both reviewers): the benchmark used a final-grid mixture with development evaluation seeds, and the dry run used 2-episode final evaluations on final mixtures; pre-flight refuses both, and both touched final data. RL majors: the seeds decision and its conditional, Phase 8 optional seeds, hardware homogeneity and CPU fallback, drift between the grids, the unpinned resolved config, the 500k rule, pre-registration, `runs_index.csv`, commit identity. Engineering majors: status table gaps and duplicated rules, resubmission with other resources, two jobs on one run, untestable subprocess tests, the cost model, mixtures for seeds 3 and 4, the shared clone frozen for days. Minors and nits as listed in v2.

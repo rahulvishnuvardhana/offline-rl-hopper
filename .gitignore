@@ -10,8 +10,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
-.claude/
-CLAUDE.md
 slurm-*.out
 # LaTeX build files
 /report/paper/*.aux
