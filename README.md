@@ -2,6 +2,7 @@
 
 Behavior Cloning vs. Implicit Q-Learning on mixed-quality Minari Hopper datasets (CS 5180 project).
 Plan and architecture: [ROADMAP.md](ROADMAP.md).
+Detailed overview: [One Leg, Two Teachers](https://claude.ai/artifact/TT1ATHyBdmQUFu5iGy5gZr), an interactive story page with 3D replays of the runs, the results charts and the verdicts in plain language.
 
 ![BC (left) hops for all 1,000 steps; IQL (right) falls after 27](report/demo/bc_vs_iql_p0.05_seed10000.webp)
 
