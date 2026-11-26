@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<title>One Leg, Two Teachers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook read top to bottom. One reading column, wide figures that break out of it,
+   a measuring-tape rule on the left edge of each chapter. */
+:root {
+  --bg: #f4f5f2;
+  --panel: #ffffff;
+  --ink: #171a17;
+  --ink-2: #4c524b;
+  --ink-3: #7a8078;
+  --rule: #d9dcd5;
+  --grid: #e6e8e2;
+  --bc: #2a78d6;
+  --iql: #eb6834;
+  --iql-lo: #f29a72;
+  --iql-hi: #a8441a;
+  --ok: #1d7a3e;
+  --warn: #9a6200;
+  --no: #b3261e;
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121512; --panel: #1a1e1a; --ink: #eceee9; --ink-2: #b7bdb4; --ink-3: #8b9288;
+    --rule: #2f352f; --grid: #262b26; --bc: #3987e5; --iql: #d95926; --iql-lo: #e98a62; --iql-hi: #f2b08f;
+    --ok: #57c27e; --warn: #e0a640; --no: #ef7a70; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121512; --panel: #1a1e1a; --ink: #eceee9; --ink-2: #b7bdb4; --ink-3: #8b9288;
+  --rule: #2f352f; --grid: #262b26; --bc: #3987e5; --iql: #d95926; --iql-lo: #e98a62; --iql-hi: #f2b08f;
+  --ok: #57c27e; --warn: #e0a640; --no: #ef7a70; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+main { max-width: 1040px; margin: 0 auto; }
+.col { max-width: 680px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-weight: 800; font-stretch: 75%; font-size: clamp(2.6rem, 7vw, 4.6rem); line-height: 0.98; letter-spacing: -0.01em; }
+h2 { font-weight: 700; font-stretch: 85%; font-size: clamp(1.6rem, 3.6vw, 2.2rem); line-height: 1.1; }
+h3 { font-weight: 600; font-size: 1.05rem; }
+p { margin: 0; }
+.eyebrow { font: 500 0.78rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.lede { font-size: 1.2rem; color: var(--ink-2); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+a { color: var(--bc); }
+
+header.hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: end; padding-block: 56px 40px; border-bottom: 1px solid var(--rule); }
+.hero .text { display: grid; gap: 18px; min-width: 0; }
+.hero3d { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1 / 1; justify-self: center; }
+.hero3d canvas { width: 100%; height: 100%; display: block; -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 46%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 60% at 50% 46%, #000 62%, transparent 100%); }
+.hero3d .hero-labels text { fill: var(--ink); stroke: none; font: 600 13px var(--mono); letter-spacing: 0.02em; }
+.hero3d .hero-labels line { stroke: var(--ink-2); stroke-width: 1.4; opacity: 1; }
+.hero3d .hero-labels circle { fill: var(--iql); stroke: var(--bg); stroke-width: 1.5; }
+@media (max-width: 760px) { header.hero { grid-template-columns: 1fr; } .hero3d { max-width: 300px; } }
+
+section.chapter { display: grid; gap: 20px; padding-block: 48px 8px; position: relative; }
+section.chapter > .col { display: grid; gap: 14px; }
+.tape { display: flex; align-items: baseline; gap: 12px; }
+.tape .mark { font: 500 0.78rem/1 var(--mono); color: var(--iql); border: 1px solid var(--rule); padding: 4px 8px; border-radius: 3px; white-space: nowrap; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.facts div { background: var(--panel); padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.facts b { font: 600 1.5rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.facts span { color: var(--ink-2); font-size: 0.92rem; }
+
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+.teacher { background: var(--panel); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 8px; min-width: 0; }
+.teacher h3 { display: flex; gap: 8px; align-items: center; }
+.swatch { width: 14px; height: 14px; border-radius: 2px; display: inline-block; flex: none; }
+
+figure { margin: 0; background: var(--panel); border: 1px solid var(--rule); padding: 18px 18px 12px; display: grid; gap: 10px; min-width: 0; }
+figcaption { color: var(--ink-2); font-size: 0.9rem; }
+.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--ink-2); font: 12px var(--mono); }
+.chart .axis line, .chart .axis path { stroke: var(--rule); }
+.chart .gridline { stroke: var(--grid); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.9rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--rule); box-shadow: 0 4px 14px rgb(0 0 0 / 0.12); padding: 8px 10px; font: 12.5px/1.45 var(--mono); border-radius: 4px; z-index: 20; max-width: 260px; }
+.multiples { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .multiples { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+
+.verdicts { display: grid; gap: 12px; }
+.verdict { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; align-items: center; background: var(--panel); border: 1px solid var(--rule); padding: 14px 16px; }
+@media (max-width: 600px) { .verdict { grid-template-columns: 48px minmax(0, 1fr); } .verdict .pill { grid-column: 2; justify-self: start; } }
+.verdict .h { font: 800 1.6rem/1 var(--display); font-stretch: 75%; }
+.verdict .claim { display: grid; gap: 2px; min-width: 0; }
+.verdict .claim small { color: var(--ink-2); font-family: var(--mono); font-size: 0.8rem; }
+.pill { font: 600 0.8rem/1 var(--mono); padding: 6px 10px; border-radius: 99px; border: 1.5px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.no { color: var(--no); } .pill.warn { color: var(--warn); }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font: 600 0.78rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); }
+td.status { white-space: nowrap; font-family: var(--mono); font-size: 0.85rem; }
+.s-done { color: var(--ok); } .s-changed { color: var(--warn); } .s-skip { color: var(--ink-3); }
+tbody tr:last-child td { border-bottom: 0; }
+ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.player { display: grid; gap: 14px; }
+.screens { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .screens { grid-template-columns: 1fr; } }
+.screen { background: var(--panel); border: 1px solid var(--rule); display: grid; min-width: 0; }
+.screen-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+.screen-head .who { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; }
+.screen-head .tag { font: 0.8rem var(--mono); color: var(--ink-3); }
+.badge { position: absolute; top: 10px; left: 10px; font: 600 0.8rem/1 var(--mono); padding: 6px 9px; border-radius: 3px; background: var(--panel); color: var(--ink); }
+.badge.fall { background: var(--no); color: #fff; }
+.readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--rule); }
+.readout div { padding: 8px 12px; display: grid; gap: 2px; min-width: 0; }
+.readout div + div { border-left: 1px solid var(--grid); }
+.readout dt { font: 500 0.7rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.readout dd { margin: 0; font: 600 1rem/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; background: var(--panel); border: 1px solid var(--rule); padding: 12px; }
+.controls button { font: 500 0.9rem var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 8px 12px; cursor: pointer; }
+.controls button:hover { border-color: var(--ink-3); }
+.controls button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; min-width: 128px; }
+.speeds { display: inline-flex; }
+.speeds button { border-radius: 0; margin-left: -1px; font-family: var(--mono); }
+.speeds button:first-child { border-radius: 4px 0 0 4px; margin-left: 0; }
+.speeds button:last-child { border-radius: 0 4px 4px 0; }
+.speeds button.on { background: var(--iql); color: #fff; border-color: var(--iql); position: relative; }
+.scrub { display: grid; gap: 4px; flex: 1 1 220px; min-width: 0; }
+.scrub span { font-size: 0.8rem; color: var(--ink-3); }
+.scrub input { width: 100%; accent-color: var(--iql); }
+.note { color: var(--ink-2); font-size: 0.88rem; max-width: 760px; }
+.explore { display: grid; gap: 14px; }
+.ex-top { display: grid; gap: 10px; }
+.ex-target, .ex-presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ex-target span { font: 500 0.78rem var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.ex-target button, .ex-presets button { font: 500 0.88rem var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 99px; padding: 7px 13px; cursor: pointer; }
+.ex-target button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ex-presets button.on { border-color: var(--iql); box-shadow: inset 0 0 0 1px var(--iql); }
+.ex-preset-label { font: 0.85rem var(--mono); color: var(--ink-2); min-height: 1.2em; }
+.ex-grid { display: grid; grid-template-columns: minmax(130px, 1.4fr) repeat(5, minmax(56px, 1fr)); gap: 3px; padding: 10px; min-width: 520px; }
+.gh { font: 500 0.72rem/1 var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 2px; }
+.gl { font-size: 0.85rem; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.gc { position: relative; border: 0; border-radius: 3px; padding: 6px 4px; font: 600 0.85rem/1.1 var(--mono); cursor: pointer; display: grid; place-items: center; min-height: 38px; }
+.gc small { font: 500 0.62rem var(--mono); opacity: 0.85; }
+.gc:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.gc[data-mark]:not([data-mark=""])::after { content: attr(data-mark); position: absolute; top: -6px; right: -4px; background: var(--iql); color: #fff; font: 700 0.62rem/1 var(--mono); padding: 3px 4px; border-radius: 3px; }
+.slot { background: var(--panel); border: 1px solid var(--rule); display: grid; min-width: 0; }
+.slot-k { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; background: var(--ink); color: var(--bg); font: 700 0.8rem var(--mono); }
+.frame3d { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: #1a2129; }
+.frame3d canvas { width: 100%; height: 100%; display: block; }
+.eps-row { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--rule); flex-wrap: wrap; }
+.eps-label { font: 500 0.72rem var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.eps { display: flex; gap: 6px; flex-wrap: wrap; }
+.ep { display: grid; place-items: center; min-width: 46px; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; font: 600 0.78rem/1.1 var(--mono); }
+.ep small { font: 500 0.68rem var(--mono); color: var(--ink-2); }
+.ep.fell small { color: var(--no); }
+.ep.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.jlabels { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.jlabels text { font: 600 12px var(--mono); fill: #f3f5f7; paint-order: stroke; stroke: rgb(10 12 15 / 0.75); stroke-width: 3px; }
+.jlabels line { stroke: #f3f5f7; stroke-width: 1.2; opacity: 0.9; }
+.jlabels circle { fill: #ffb27a; stroke: #0b0d10; stroke-width: 1; }
+.verdict { align-items: start; }
+.verdict .pill { margin-top: 2px; }
+details.why { margin-top: 8px; font-size: 0.92rem; color: var(--ink-2); }
+details.why summary { cursor: pointer; font: 600 0.8rem var(--mono); color: var(--ink); list-style: none; display: inline-flex; gap: 6px; align-items: center; }
+details.why summary::before { content: "+"; display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1px solid var(--rule); border-radius: 3px; font-size: 0.75rem; }
+details.why[open] summary::before { content: "\2212"; }
+details.why summary::-webkit-details-marker { display: none; }
+details.why p { margin: 8px 0 0; max-width: 62ch; }
+.mini { overflow-x: auto; margin-top: 8px; }
+.mini table { font-size: 0.85rem; width: auto; min-width: 320px; border: 1px solid var(--grid); }
+.mini th, .mini td { padding: 5px 10px; font-variant-numeric: tabular-nums; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 0.85rem; }
+:focus-visible { outline: 2px solid var(--bc); outline-offset: 2px; }
+</style>
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+
+<main>
+<header class="hero">
+  <div class="text">
+    <span class="eyebrow">CS 5180 Reinforcement Learning &middot; Final project</span>
+    <h1>Can a robot learn from mixed-quality examples?</h1>
+    <p class="lede">A simulated one-legged robot learns to hop by studying recorded examples, not by practising. Most examples come from a weak performer; a few come from an expert. We compared two learning methods to see how many expert examples each one needs.</p>
+    <p class="num" style="color:var(--ink-3);font-size:.85rem">70 training runs &middot; 5 repeats per setting &middot; results of 24 Nov 2026</p>
+  </div>
+  <div class="hero3d"><canvas id="hero-canvas" aria-label="3D robot leg replaying a recorded hop, with hip, knee and ankle labelled"></canvas><svg id="hero-labels" class="jlabels hero-labels" aria-hidden="true"></svg></div>
+</header>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">1 &middot; Background</span><h2>The robot and its task</h2></div>
+  <div class="col">
+    <p>Hopper is a standard simulated robot: one leg with a hip, a knee and an ankle. Its task is to hop forward as far as it can in 1,000 time steps without falling. It falls when its body tilts too far or drops too low.</p>
+    <p>The robot never practises. It learns only from recordings of other robots. This is called <i>offline learning</i>, and it matters wherever trial and error would be slow, costly or unsafe.</p>
+  </div>
+  <div class="facts">
+    <div><b>3</b><span>joints it controls</span></div>
+    <div><b>1,000</b><span>time steps per attempt</span></div>
+    <div><b>100</b><span>expert's score (0 = random movement)</span></div>
+    <div><b>42.7</b><span>weak performer's score</span></div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">2 &middot; Experiment</span><h2>Mixing expert and weak examples</h2></div>
+  <div class="col">
+    <p>Each training set holds 900,000 recorded moves. One setting, the <b>expert share</b>, decides how many come from the expert: 0%, 5%, 20%, 50% or 100%. At 5%, only 1 move in 20 is an expert move.</p>
+  </div>
+  <div class="duo">
+    <div class="teacher">
+      <h3><span class="swatch" style="background:var(--bc)"></span>Behavior cloning (BC)</h3>
+      <p>Copies every recorded move. It treats expert and weak examples the same.</p>
+    </div>
+    <div class="teacher">
+      <h3><span class="swatch" style="background:var(--iql)"></span>Implicit Q-Learning (IQL)</h3>
+      <p>Also copies, but first estimates which moves lead to better outcomes and copies those more. In principle, it can find the expert moves in a mostly weak pile.</p>
+    </div>
+  </div>
+  <div class="col"><p>Everything else is identical, so any difference between the two comes from that one idea.</p></div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">3 &middot; Method</span><h2>Three predictions, fixed in advance</h2></div>
+  <div class="col">
+    <p>Before running anything, we wrote down three predictions and an exact test for each. Every setting was trained 5 times from different random starts; a prediction counts as confirmed only if all 5 agree.</p>
+    <ul class="plain">
+      <li><b>H1</b> BC improves as the expert share grows.</li>
+      <li><b>H2</b> IQL reaches expert-level play (score 90) with a much smaller expert share than BC.</li>
+      <li><b>H3</b> IQL's &ldquo;pickiness&rdquo; setting (&tau;) matters more when expert examples are rare (5%) than when they are common (50%).</li>
+    </ul>
+    <p>All 70 runs used the same code on identical computers (Northeastern's Explorer cluster): 3 hours in total, with no failed runs.</p>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">4 &middot; Result</span><h2>Expert data helps BC only at 100%. IQL breaks down.</h2></div>
+  <figure>
+    <div class="legend"><span><i class="swatch" style="background:var(--bc)"></i>BC</span><span><i class="swatch" style="background:var(--iql)"></i>IQL</span><span style="color:var(--ink-3)">dots: individual runs &middot; bar: 95% range &middot; dashed: expert level (90)</span></div>
+    <svg id="main-chart" class="chart" viewBox="0 0 720 360" role="img" aria-label="Final normalized score versus expert fraction for BC and IQL"></svg>
+    <figcaption>Final score of each setting, 5 runs each. Hover over a point for its numbers.</figcaption>
+  </figure>
+  <div class="col">
+    <p>BC scores about 82 at every expert share up to 50%. It copies the weak performer, but more steadily, so it never falls. With 100% expert data it reaches 105.</p>
+    <p>IQL matches BC when there is no expert data. At a 5% share its score collapses to 6.7. It recovers as the share grows, but stays below BC even at 100%.</p>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">5 &middot; Training</span><h2>IQL gets worse the longer it trains</h2></div>
+  <figure>
+    <div class="legend"><span><i class="swatch" style="background:var(--bc)"></i>BC</span><span><i class="swatch" style="background:var(--iql)"></i>IQL</span><span style="color:var(--ink-3)">average of 5 runs, measured every 5,000 training steps</span></div>
+    <div class="multiples" id="curves"></div>
+    <figcaption>Score during training. At a 5% expert share, IQL is at its best at the very start (57.4) and ends at 9.5. BC settles near 82 early and stays there.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter" id="explorer">
+  <div class="tape"><span class="mark">6 &middot; Explore</span><h2>Watch any two robots side by side</h2></div>
+  <div class="col"><p>Each square is one training run, coloured by its score. Click a square to load it into slot A or B, then press Play. The presets show the clearest contrasts.</p></div>
+  <div class="explore">
+    <div class="ex-top">
+      <div class="ex-target" role="group" aria-label="Load clicked runs into"><span>load into</span><button type="button" data-target="A" class="on">slot A</button><button type="button" data-target="B">slot B</button></div>
+      <div class="ex-presets" role="group" aria-label="Presets">
+        <button type="button" data-preset="median-005" class="on">BC vs IQL at 5%</button>
+        <button type="button" data-preset="iql-best-worst">IQL: best vs worst run at 20%</button>
+        <button type="button" data-preset="tau">IQL: low vs high &tau; at 5%</button>
+        <button type="button" data-preset="bc-data">BC: weak vs expert data</button>
+        <button type="button" data-preset="p1">BC vs IQL at 100%</button>
+      </div>
+      <p class="ex-preset-label" id="ex-preset-label"></p>
+    </div>
+    <div class="tablewrap"><div class="ex-grid" id="ex-grid"></div></div>
+    <div class="screens">
+      <div class="slot" data-slot="A">
+        <div class="screen-head"><span class="who"><b class="slot-k">A</b><span data-f="title">loading</span></span><span class="tag" data-f="run"></span></div>
+        <div class="frame3d"><canvas aria-label="3D replay, slot A"></canvas><span class="badge" data-f="badge" hidden></span></div>
+        <div class="eps-row"><span class="eps-label">test attempt</span><div class="eps" data-f="eps"></div></div>
+        <dl class="readout"><div><dt>step</dt><dd data-f="step">0</dd></div><div><dt>return</dt><dd data-f="ret">0</dd></div><div><dt>tilt</dt><dd data-f="tilt">0.0&deg;</dd></div><div><dt>distance</dt><dd data-f="dist">0.0 m</dd></div></dl>
+      </div>
+      <div class="slot" data-slot="B">
+        <div class="screen-head"><span class="who"><b class="slot-k">B</b><span data-f="title">loading</span></span><span class="tag" data-f="run"></span></div>
+        <div class="frame3d"><canvas aria-label="3D replay, slot B"></canvas><span class="badge" data-f="badge" hidden></span></div>
+        <div class="eps-row"><span class="eps-label">test attempt</span><div class="eps" data-f="eps"></div></div>
+        <dl class="readout"><div><dt>step</dt><dd data-f="step">0</dd></div><div><dt>return</dt><dd data-f="ret">0</dd></div><div><dt>tilt</dt><dd data-f="tilt">0.0&deg;</dd></div><div><dt>distance</dt><dd data-f="dist">0.0 m</dd></div></dl>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="ex-play" type="button" class="primary">&#9654; Play both</button>
+      <div class="speeds" role="group" aria-label="Playback speed">
+        <button type="button" data-exrate="1">1&times;</button><button type="button" data-exrate="0.5" class="on">0.5&times;</button><button type="button" data-exrate="0.25">0.25&times;</button><button type="button" data-exrate="0.1">0.1&times;</button>
+      </div>
+      <label class="scrub" for="ex-scrub"><span class="num" id="ex-scrub-label">step 0 / 1000</span><input id="ex-scrub" type="range" min="0" max="1000" step="1" value="0"></label>
+    </div>
+    <p class="note">Each replay is a real test attempt from the experiment, checked against the original logs. The number under each attempt is its score; &darr; marks a fall.</p>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">7 &middot; Verdict</span><h2>What the predictions show</h2></div>
+  <div class="verdicts">
+    <div class="verdict"><span class="h">H1</span><div class="claim"><span>BC improves as the expert share grows.</span><small id="h1d"></small><details class="why"><summary>Why?</summary><p>BC scored higher with 100% expert data than with none on all 5 runs (82.2 to 105.4 on average). The rise comes only at the end: up to a 50% share, BC stays at about 82.</p></details></div><span class="pill ok">Confirmed</span></div>
+    <div class="verdict"><span class="h">H2</span><div class="claim"><span>IQL reaches expert level (90) with a much smaller expert share than BC.</span><small id="h2d"></small><details class="why"><summary>Why?</summary><p>The data went against it. Both methods reach 90 only at 100% expert data, and even there IQL is 5.7 points behind BC, on all 5 runs. At every share in between, IQL is far worse.</p><div class="mini"><table><thead><tr><th>Expert share</th><th>0%</th><th>5%</th><th>20%</th><th>50%</th><th>100%</th></tr></thead><tbody><tr><td>BC</td><td>82.2</td><td>82.2</td><td>82.2</td><td>82.1</td><td><b>105.4</b></td></tr><tr><td>IQL</td><td>82.0</td><td>6.7</td><td>28.0</td><td>54.1</td><td><b>99.7</b></td></tr></tbody></table></div></details></div><span class="pill no">Did not hold</span></div>
+    <div class="verdict"><span class="h">H3</span><div class="claim"><span>IQL&rsquo;s pickiness setting (&tau;) matters more when expert examples are rare.</span><small id="h3d"></small><details class="why"><summary>Why?</summary><p>On average the data points the opposite way: raising &tau; from 0.5 to 0.9 hurt at a 5% share and helped at 50%.</p><div class="mini"><table><thead><tr><th>Expert share</th><th>&tau; 0.5</th><th>&tau; 0.9</th><th>Effect of raising &tau;</th></tr></thead><tbody><tr><td>5%</td><td>15.3</td><td>3.2</td><td><b>&minus;12.1</b> (hurt)</td></tr><tr><td>50%</td><td>30.2</td><td>53.1</td><td><b>+22.9</b> (helped)</td></tr></tbody></table></div><p>The rule, fixed in advance, needs all 5 runs to agree before calling a result in either direction. Four runs pointed the opposite way and one went the predicted way, so the test cannot rule out chance. With 5 runs, all 5 lining up by luck happens 1 time in 32 (about 3%); allowing one exception would raise that to about 19%.</p></details></div><span class="pill warn">Not enough evidence</span></div>
+  </div>
+  <figure>
+    <div class="legend"><span><i class="swatch" style="background:var(--iql-lo)"></i>&tau; = 0.5</span><span><i class="swatch" style="background:var(--iql)"></i>&tau; = 0.7</span><span><i class="swatch" style="background:var(--iql-hi)"></i>&tau; = 0.9</span></div>
+    <svg id="tau-chart" class="chart" viewBox="0 0 720 260" role="img" aria-label="IQL final score by expectile tau at p 0.05 and 0.5"></svg>
+    <figcaption>Effect of IQL's pickiness setting &tau;. Raising it from 0.5 to 0.9 lowered the score at a 5% share (&minus;12.1) and raised it at 50% (+22.9).</figcaption>
+  </figure>
+  <div class="col"><p style="color:var(--ink-2);font-size:.95rem">&ldquo;Not enough evidence&rdquo; means the test could not tell, not that there is no effect; more runs could settle it. The three tests are not adjusted for being run together.</p></div>
+</section>
+
+<section class="chapter">
+  <div class="tape"><span class="mark">8 &middot; Limits</span><h2>Limitations</h2></div>
+  <div class="col">
+    <ul class="plain">
+      <li>One robot and one pair of recordings. The weak recordings are good enough that copying them scores 82, which makes copying hard to beat.</li>
+      <li>IQL used standard settings, not tuned for mixed data. Why it breaks down was not part of the pre-registered tests. A check after the results, on a few runs, suggests a candidate reason, not a finding: with 5% expert data, IQL copies the expert's first move and then cannot keep up the expert's hopping pattern; with 20% or more, it follows that pattern less closely than BC does.</li>
+      <li>Two IQL settings were still changing at the end of training, but not because they were still learning: by then the learning rate was below 2% of its starting value. Their scores jump between checkpoints, which points to fragile late policies. Whether longer training would change the results was not tested.</li>
+      <li>IQL was checked against a reference implementation, but both used the same data preparation.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>Data and code: <span class="num">github.com/rahulvishnuvardhana/offline-rl-hopper</span> (report/phase7). Score = 100 &times; (result &minus; random) / (expert &minus; random).</footer>
+</main>
+<div class="tip" id="tip" hidden></div>
+<script src="explorer.js" defer></script>
+
+<script>
+(function () {
+  const S = window.STORY;
+  if (!S) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const tip = document.getElementById("tip");
+  const el = (n, a, parent) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
+  const showTip = (ev, html) => { tip.innerHTML = html; tip.hidden = false; const x = Math.min(ev.clientX + 14, window.innerWidth - 270); tip.style.left = x + "px"; tip.style.top = (ev.clientY + 14) + "px"; };
+  const hideTip = () => { tip.hidden = true; };
+  const fmt = v => v.toFixed(1);
+  const pStr = v => v < 0.001 ? v.toExponential(1) : v.toFixed(3);
+
+  function axes(svg, W, H, m, yMax, yTicks) {
+    const y = v => m.t + (H - m.t - m.b) * (1 - (v + 5) / (yMax + 5));
+    for (const t of yTicks) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: "gridline" }, svg);
+      const tx = el("text", { x: m.l - 8, y: y(t) + 4, "text-anchor": "end" }, svg); tx.textContent = t;
+    }
+    return y;
+  }
+
+  // Main chart: score vs p
+  (function () {
+    const svg = document.getElementById("main-chart"), W = 720, H = 360, m = { l: 48, r: 20, t: 16, b: 44 };
+    const y = axes(svg, W, H, m, 112, [0, 25, 50, 75, 100]);
+    const x = i => m.l + 40 + i * (W - m.l - m.r - 80) / (S.p.length - 1);
+    el("line", { x1: m.l, x2: W - m.r, y1: y(90), y2: y(90), stroke: "var(--ink-3)", "stroke-dasharray": "5 4", "stroke-width": 1 }, svg);
+    const lab = el("text", { x: W - m.r - 4, y: y(90) - 6, "text-anchor": "end" }, svg); lab.textContent = "near-expert 90";
+    S.p.forEach((p, i) => { const t = el("text", { x: x(i), y: H - m.b + 20, "text-anchor": "middle" }, svg); t.textContent = (parseFloat(p) * 100) + "%"; });
+    const xl = el("text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle" }, svg); xl.textContent = "expert share of the training data";
+    const series = [["bc", "var(--bc)", -8, "BC"], ["iql", "var(--iql)", 8, "IQL"]];
+    for (const [key, color, off, name] of series) {
+      const cells = S[key];
+      el("polyline", { points: cells.map((c, i) => `${x(i) + off},${y(c.mean)}`).join(" "), fill: "none", stroke: color, "stroke-width": 2.5, "stroke-linejoin": "round" }, svg);
+      cells.forEach((c, i) => {
+        c.seeds.forEach((s, j) => el("circle", { cx: x(i) + off + (j - 2) * 2.2, cy: y(s), r: 2.6, fill: color, "fill-opacity": 0.35 }, svg));
+        el("line", { x1: x(i) + off, x2: x(i) + off, y1: y(c.t[0]), y2: y(c.t[1]), stroke: color, "stroke-width": 1.5 }, svg);
+        const dot = el("circle", { cx: x(i) + off, cy: y(c.mean), r: 6, fill: color, stroke: "var(--panel)", "stroke-width": 2 }, svg);
+        const hit = el("rect", { x: x(i) + off - 14, y: m.t, width: 28, height: H - m.t - m.b, fill: "transparent", tabindex: 0 }, svg);
+        const html = `<b>${name}, ${parseFloat(S.p[i]) * 100}% expert</b><br>mean ${fmt(c.mean)} &middot; median ${fmt(c.median)}<br>runs ${c.seeds.map(fmt).join(", ")}<br>95% t [${fmt(c.t[0])}, ${fmt(c.t[1])}]<br>fall rate ${c.fall.toFixed(2)}`;
+        hit.addEventListener("pointermove", ev => { dot.setAttribute("r", 8); showTip(ev, html); });
+        hit.addEventListener("pointerleave", () => { dot.setAttribute("r", 6); hideTip(); });
+        hit.addEventListener("focus", () => { const r = hit.getBoundingClientRect(); showTip({ clientX: r.right, clientY: r.top + 40 }, html); });
+        hit.addEventListener("blur", hideTip);
+      });
+    }
+    const l1 = el("text", { x: x(2) - 8, y: y(S.bc[2].mean) - 12, "text-anchor": "middle", style: "fill:var(--ink);font-weight:600" }, svg); l1.textContent = "BC";
+    const l2 = el("text", { x: x(1) + 26, y: y(S.iql[1].mean) + 4, "text-anchor": "start", style: "fill:var(--ink);font-weight:600" }, svg); l2.textContent = "IQL";
+  })();
+
+  // Learning curves, small multiples
+  (function () {
+    const host = document.getElementById("curves"), W = 200, H = 150, m = { l: 26, r: 6, t: 20, b: 22 };
+    const steps = S.steps;
+    S.p.forEach(p => {
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": `Learning curves at ${parseFloat(p) * 100}% expert` });
+      host.appendChild(svg);
+      const y = axes(svg, W, H, m, 110, [0, 50, 100]);
+      const x = s => m.l + (W - m.l - m.r) * s / 300000;
+      el("line", { x1: m.l, x2: W - m.r, y1: y(90), y2: y(90), stroke: "var(--ink-3)", "stroke-dasharray": "4 3", "stroke-width": 0.8 }, svg);
+      const t = el("text", { x: m.l, y: 12, style: "fill:var(--ink);font-weight:600" }, svg); t.textContent = (parseFloat(p) * 100) + "% expert";
+      for (const [k, color] of [["bc", "var(--bc)"], ["iql", "var(--iql)"]]) {
+        const ys = S.curves[k][p];
+        el("polyline", { points: ys.map((v, i) => `${x(steps[i])},${y(v)}`).join(" "), fill: "none", stroke: color, "stroke-width": 1.8, "stroke-linejoin": "round" }, svg);
+      }
+      for (const s of [0, 150000, 300000]) { const tx = el("text", { x: x(s), y: H - 6, "text-anchor": "middle" }, svg); tx.textContent = s / 1000 + "k"; }
+      const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+      const cross = el("line", { y1: m.t, y2: H - m.b, stroke: "var(--ink-3)", "stroke-width": 0.8, visibility: "hidden" }, svg);
+      hit.addEventListener("pointermove", ev => {
+        const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * W / r.width;
+        const i = Math.max(0, Math.min(steps.length - 1, Math.round(((sx - m.l) / (W - m.l - m.r) * 300000 - 5000) / 5000)));
+        cross.setAttribute("x1", x(steps[i])); cross.setAttribute("x2", x(steps[i])); cross.setAttribute("visibility", "visible");
+        showTip(ev, `<b>${parseFloat(p) * 100}% expert, step ${steps[i] / 1000}k</b><br>BC ${fmt(S.curves.bc[p][i])}<br>IQL ${fmt(S.curves.iql[p][i])}`);
+      });
+      hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+    });
+  })();
+
+  // Tau ablation
+  (function () {
+    const svg = document.getElementById("tau-chart"), W = 720, H = 260, m = { l: 48, r: 20, t: 12, b: 36 };
+    const y = axes(svg, W, H, m, 100, [0, 25, 50, 75, 100]);
+    const groups = ["0.05", "0.5"], taus = [["0.5", "var(--iql-lo)"], ["0.7", "var(--iql)"], ["0.9", "var(--iql-hi)"]];
+    groups.forEach((p, g) => {
+      const cx = m.l + (W - m.l - m.r) * (g + 0.5) / 2;
+      const t = el("text", { x: cx, y: H - 10, "text-anchor": "middle" }, svg); t.textContent = (parseFloat(p) * 100) + "% expert";
+      taus.forEach(([tau, color], k) => {
+        const c = S.abl[tau][p], x = cx + (k - 1) * 70;
+        c.seeds.forEach((s, j) => el("circle", { cx: x + (j - 2) * 3, cy: y(s), r: 3, fill: color, "fill-opacity": 0.45 }, svg));
+        el("line", { x1: x, x2: x, y1: y(c.t[0]), y2: y(c.t[1]), stroke: color, "stroke-width": 1.5 }, svg);
+        const d = el("rect", { x: x - 7, y: y(c.mean) - 7, width: 14, height: 14, fill: color, transform: `rotate(45 ${x} ${y(c.mean)})`, stroke: "var(--panel)", "stroke-width": 2 }, svg);
+        const hit = el("rect", { x: x - 22, y: m.t, width: 44, height: H - m.t - m.b, fill: "transparent", tabindex: 0 }, svg);
+        const html = `<b>IQL τ = ${tau}, ${parseFloat(p) * 100}% expert</b><br>mean ${fmt(c.mean)} &middot; median ${fmt(c.median)}<br>runs ${c.seeds.map(fmt).join(", ")}<br>fall rate ${c.fall.toFixed(2)}`;
+        hit.addEventListener("pointermove", ev => showTip(ev, html));
+        hit.addEventListener("pointerleave", hideTip);
+        hit.addEventListener("blur", hideTip);
+        const lt = el("text", { x, y: y(Math.max(...c.seeds, c.t[1])) - 8, "text-anchor": "middle" }, svg); lt.textContent = "τ " + tau;
+      });
+    });
+  })();
+
+  const seeds = d => d.map(v => (v > 0 ? "+" : "") + fmt(v)).join(", ");
+  document.getElementById("h1d").textContent = `BC(p=1) - BC(p=0): ${seeds(S.h1.d)} → mean +${fmt(S.h1.mean)}, P = ${pStr(S.h1.P)}`;
+  document.getElementById("h2d").textContent = `IQL - BC at p=1: ${seeds(S.h2.d)} → mean ${fmt(S.h2.mean)}, P = ${pStr(S.h2.P)}`;
+  document.getElementById("h3d").textContent = `contrast per seed: ${seeds(S.h3.d)} → mean ${fmt(S.h3.mean)}, P = ${pStr(S.h3.P)}`;
+})();
+</script>
+
+</body>
+
+</html>
