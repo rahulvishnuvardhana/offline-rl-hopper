@@ -1,0 +1,37 @@
+PASS  Table 2: bc p=0
+PASS  Table 2: bc p=0.05
+PASS  Table 2: bc p=0.2
+PASS  Table 2: bc p=0.5
+PASS  Table 2: bc p=1
+PASS  Table 2: iql tau=0.5 p=0.05
+PASS  Table 2: iql tau=0.5 p=0.5
+PASS  Table 2: iql tau=0.7 p=0
+PASS  Table 2: iql tau=0.7 p=0.05
+PASS  Table 2: iql tau=0.7 p=0.2
+PASS  Table 2: iql tau=0.7 p=0.5
+PASS  Table 2: iql tau=0.7 p=1
+PASS  Table 2: iql tau=0.9 p=0.05
+PASS  Table 2: iql tau=0.9 p=0.5
+PASS  H1 mean +23.2
+PASS  H1 per seed
+PASS  H1 P 0.031
+PASS  H1 t-interval
+PASS  H1 Spearman 0.46
+PASS  H2 mean -5.7
+PASS  H2 per seed
+PASS  H2 median gap 2.3
+PASS  H2 BC 105.4, IQL 99.7
+PASS  H3 contrast -35.0
+PASS  H3 P 0.969 / 0.0625
+PASS  H3 simple effects -12.1 / +22.9
+PASS  IQL minus BC at p=0.05
+PASS  IQL minus BC at p=0.2
+PASS  IQL minus BC at p=0.5
+PASS  IQL p=0 82.0
+PASS  IQL p=0.05 fall 98%
+PASS  Plateau +5.4 / +6.7
+PASS  11 of 15 collapsed at p=0.05
+PASS  README Results: decimals all appear in the paper
+PASS  poster: decimals all appear in the paper
+
+35 PASS, 0 FAIL

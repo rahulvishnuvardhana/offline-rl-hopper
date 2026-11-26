@@ -1,0 +1,66 @@
+PDF check for v1.1 (Poppler 26.09.0): every font embedded; no raster images, so both figures are vector.
+v1.0 was built with pdfLaTeX (Type 1 fonts plus two unmapped Type 3 fonts); v1.1 with XeLaTeX (Type 1C, Latin Modern Mono for monospace).
+
+=== v1.0 main.pdf, 320954 bytes
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+GGQTXH+NimbusRomNo9L-Medi            Type 1            Custom           yes yes yes     33  0
+XBUSSD+NimbusRomNo9L-Regu            Type 1            Custom           yes yes yes     34  0
+HVQYLG+CMMI10                        Type 1            Builtin          yes yes yes     35  0
+UIAPPI+CMSY10                        Type 1            Builtin          yes yes yes     36  0
+RHQEUH+CMR10                         Type 1            Builtin          yes yes yes     37  0
+LDHNTF+NimbusRomNo9L-ReguItal        Type 1            Custom           yes yes yes     38  0
+F77                                  Type 3            Custom           yes no  no      39  0
+HWBKQQ+CMR7                          Type 1            Builtin          yes yes yes     40  0
+ZQLTBN+CMSY7                         Type 1            Builtin          yes yes yes     41  0
+NNKNNF+CMR8                          Type 1            Builtin          yes yes yes     51  0
+KSMYZL+CMMI8                         Type 1            Builtin          yes yes yes     52  0
+TMCDBM+CMSY8                         Type 1            Builtin          yes yes yes     53  0
+JXPTPO+CMMI6                         Type 1            Builtin          yes yes yes     54  0
+KHUWCP+CMR6                          Type 1            Builtin          yes yes yes     55  0
+MYUUZS+TimesNewRomanPSMT             CID TrueType      Identity-H       yes yes yes     57  0
+FIMEMR+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     58  0
+BCVYAB+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     59  0
+XEUNHQ+CMMI7                         Type 1            Builtin          yes yes yes    103  0
+CYDDMY+CMMI9                         Type 1            Builtin          yes yes yes    111  0
+IRCNSN+CMSY9                         Type 1            Builtin          yes yes yes    112  0
+CTBJGX+CMR9                          Type 1            Builtin          yes yes yes    113  0
+EKCNUP+TimesNewRomanPSMT             CID TrueType      Identity-H       yes yes yes    115  0
+FIMEMR+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes    116  0
+BCVYAB+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes    117  0
+F244                                 Type 3            Custom           yes no  no     147  0
+--- pdfimages -list
+page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio
+--------------------------------------------------------------------------------------------
+
+=== v1.1 main.pdf, 175377 bytes
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+DWNTRA+NimbusRomNo9L-Medi            Type 1C           Custom           yes yes yes      4  0
+VGPCXC+NimbusRomNo9L-Regu            Type 1C           Custom           yes yes yes      5  0
+UACRXE+CMMI10                        Type 1C           Builtin          yes yes yes      6  0
+OJFNKL+CMSY10                        Type 1C           Builtin          yes yes yes      7  0
+NAHCEU+CMR10                         Type 1C           Builtin          yes yes yes      8  0
+HKRIDO+NimbusRomNo9L-ReguItal        Type 1C           Custom           yes yes yes      9  0
+ULGDNB+LMMono10-Regular              Type 1C           WinAnsi          yes yes yes     10  0
+JLSYEZ+CMR7                          Type 1C           Builtin          yes yes yes     11  0
+SNZKIN+CMSY7                         Type 1C           Builtin          yes yes yes     61  0
+MYUUZS+TimesNewRomanPSMT             CID TrueType      Identity-H       yes yes yes     17  0
+FIMEMR+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     24  0
+BCVYAB+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     31  0
+EANSWY+CMR8                          Type 1C           Builtin          yes yes yes     66  0
+NJRFSH+CMMI8                         Type 1C           Builtin          yes yes yes     67  0
+DOAZMB+CMSY8                         Type 1C           Builtin          yes yes yes     68  0
+YYTNGV+CMMI6                         Type 1C           Builtin          yes yes yes     69  0
+GMUGTJ+CMR6                          Type 1C           Builtin          yes yes yes     70  0
+NYLDSO+CMMI7                         Type 1C           Builtin          yes yes yes     72  0
+CZPDRK+CMMI9                         Type 1C           Builtin          yes yes yes    103  0
+NACSGL+CMSY9                         Type 1C           Builtin          yes yes yes    104  0
+PQPSQH+CMR9                          Type 1C           Builtin          yes yes yes    105  0
+EKCNUP+TimesNewRomanPSMT             CID TrueType      Identity-H       yes yes yes     77  0
+FIMEMR+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     84  0
+BCVYAB+STIXGeneral-Italic            CID TrueType      Identity-H       yes yes yes     91  0
+CWCSXT+LMMono9-Regular               Type 1C           WinAnsi          yes yes yes    112  0
+--- pdfimages -list
+page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio
+--------------------------------------------------------------------------------------------

@@ -20,9 +20,11 @@ slurm-*.out
 /report/paper/*.log
 /report/paper/*.out
 /report/paper/*.synctex.gz
+/report/paper/*.xdv
 /report/poster/*.aux
 /report/poster/*.fdb_latexmk
 /report/poster/*.fls
 /report/poster/*.log
 /report/poster/*.out
 /report/poster/*.synctex.gz
+/report/poster/*.xdv
