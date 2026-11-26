@@ -3,11 +3,19 @@
 Behavior Cloning vs. Implicit Q-Learning on mixed-quality Minari Hopper datasets (CS 5180 project).
 Plan and architecture: [ROADMAP.md](ROADMAP.md).
 
+![BC (left) hops for all 1,000 steps; IQL (right) falls after 27](report/demo/bc_vs_iql_p0.05_seed10000.webp)
+
+*With 5% expert data (`p` = 0.05), BC (left) hops for the full episode while IQL (right) falls after 27 steps. Each is its cell's median-scoring run on evaluation seed 10000, the pre-set demo rule, and both match their logged episodes exactly. [Full-quality MP4](report/demo/bc_vs_iql_p0.05_seed10000.mp4).*
+
 ## Results
 
 We mix expert and low-quality Hopper data at expert fractions `p` in {0, 0.05, 0.2, 0.5, 1} and train BC and IQL on each: 5 seeds, 300k steps, one commit (`ea11e14`), one CPU type, 70 runs, with hypotheses and tests [pre-registered](docs/preregistration.md) before any grid result.
 
-![Final score vs. expert fraction](report/figures/score_vs_p.png)
+![(a) Final score vs. expert fraction, BC and IQL](report/figures/score_vs_p_a.png)
+
+![(b) IQL tau ablation at p = 0.05 and 0.5](report/figures/score_vs_p_b.png)
+
+Dots are seeds, the marker the seed mean, the thin whisker the 95% t-interval and the thick bar the 95% bootstrap interval; the dashed line is near-expert (90). The paper uses both panels as one figure ([PDF](report/figures/score_vs_p.pdf)).
 
 | Hypothesis | Test (exact one-sided sign-flip, 5 seeds) | Verdict |
 |---|---|---|
@@ -18,6 +26,12 @@ We mix expert and low-quality Hopper data at expert fractions `p` in {0, 0.05, 0
 BC stays at about 82 from `p` = 0 to 0.5 and reaches 105.4 at `p` = 1. IQL collapses when expert data is scarce: at `p` = 0.05 it scores 6.7 and falls in 98% of final episodes, and its learning curves show the failure developing during training. No correction across H1 to H3; the per-`p` "BC leads" tests are exploratory.
 
 ![Learning curves](report/figures/learning_curves.png)
+
+**A second example, illustrative and not typical.** The same `p` = 0.05 mixture and evaluation seed, with a different IQL run (seed 2) chosen by hand to show a late fall: BC (its median run, as above) completes all 1,000 steps while IQL hops for about 600 steps and then falls. The median IQL run falls after 27 steps (above), so this is not what IQL usually does at `p` = 0.05. It is also a re-render, not an exact replay: Explorer's logged episode falls at step 613, while this laptop render falls at step 622, because floating-point differences between CPU types grow over a long episode (BC's side matches its log exactly). Made with [scripts/render_showcase_tolerant.py](scripts/render_showcase_tolerant.py), which accepts the same fall outcome within 15 steps of the log.
+
+![Illustrative, not typical: BC completes 1,000 steps; IQL seed 2 falls at step 622 (logged 613)](report/demo/bc_vs_iql_p0.05_seed10000_fall622.webp)
+
+[Full-quality MP4](report/demo/bc_vs_iql_p0.05_seed10000_fall622.mp4)
 
 - **Report:** [report/paper/main.pdf](report/paper/main.pdf) (NeurIPS 2026 style, preprint option)
 - **Poster:** [report/poster/poster.pdf](report/poster/poster.pdf)
