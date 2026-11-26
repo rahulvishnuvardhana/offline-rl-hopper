@@ -75,7 +75,30 @@ def main() -> None:
     fig, (ax, bx) = plt.subplots(
         1, 2, figsize=(5.5, 2.25), gridspec_kw={"width_ratios": [1.75, 1]}, sharey=True, layout="constrained"
     )
+    panel_a(ax, cells)
+    panel_b(bx, cells)
 
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    for ext in ("pdf", "png"):
+        fig.savefig(
+            args.out_dir / f"score_vs_p.{ext}",
+            dpi=300,
+            metadata={"CreationDate": None} if ext == "pdf" else None,
+        )
+    print(f"wrote {args.out_dir / 'score_vs_p.pdf'} and .png")
+
+    # Each panel on its own, for the README: GitHub shrinks the combined figure to the page width.
+    for name, draw, size in (("a", panel_a, (4.2, 2.6)), ("b", panel_b, (4.2, 2.6))):
+        f, a = plt.subplots(figsize=size, layout="constrained")
+        draw(a, cells, standalone=True)
+        f.savefig(args.out_dir / f"score_vs_p_{name}.png", dpi=300)
+        plt.close(f)
+    print(f"wrote {args.out_dir / 'score_vs_p_a.png'} and score_vs_p_b.png")
+    curves(args.curves, args.out_dir)
+
+
+def panel_a(ax, cells, standalone=False) -> None:
+    """BC vs. IQL (tau = 0.7) at every grid level."""
     x = np.arange(len(P_GRID))
     iql_label = r"IQL ($\tau$ = 0.7)"
     bcx, bcm = series(ax, x, [cells[f"bc p={p}"] for p in P_GRID], BLUE, "o", "BC", -0.09)
@@ -90,7 +113,12 @@ def main() -> None:
     ax.set_ylim(-12, 115)  # the lowest t-whisker ends at -9.8
     ax.set_title("(a) BC vs. IQL across $p$", fontsize=8, color=INK, loc="left")
     ax.legend(loc="lower right", fontsize=7, handlelength=1.6)
+    if standalone:
+        ax.set_xlim(-0.5, len(P_GRID) - 0.5)
 
+
+def panel_b(bx, cells, standalone=False) -> None:
+    """IQL tau ablation at p = 0.05 and 0.5."""
     taus = [("0.5", "#f29a72"), ("0.7", ORANGE), ("0.9", "#a8441a")]  # one-hue ordinal ramp, validated
     ps = ["0.05", "0.5"]
     w = 0.22
@@ -102,17 +130,13 @@ def main() -> None:
     bx.set_xlabel(r"expert fraction $p$")
     bx.set_title(r"(b) IQL $\tau$ ablation", fontsize=8, color=INK, loc="left")
     bx.axhline(NEAR_EXPERT, color=MUTED, lw=0.7, ls=(0, (3, 2)), zorder=1)
-    bx.legend(loc="upper left", fontsize=7, handlelength=1.2)
-
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    for ext in ("pdf", "png"):
-        fig.savefig(
-            args.out_dir / f"score_vs_p.{ext}",
-            dpi=300,
-            metadata={"CreationDate": None} if ext == "pdf" else None,
-        )
-    print(f"wrote {args.out_dir / 'score_vs_p.pdf'} and .png")
-    curves(args.curves, args.out_dir)
+    if standalone:  # pad the outer tau markers, which touch the edges in the combined figure
+        bx.legend(loc="upper center", ncol=3, fontsize=7, handlelength=1.2, columnspacing=1.2)
+        bx.set_xlim(-0.6, len(ps) - 0.4)
+        bx.set_ylim(-12, 115)
+        bx.set_ylabel("final normalized score")
+    else:
+        bx.legend(loc="upper left", fontsize=7, handlelength=1.2)
 
 
 def curves(path: Path, out_dir: Path) -> None:
