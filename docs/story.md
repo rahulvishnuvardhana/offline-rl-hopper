@@ -4,7 +4,7 @@
 
 A simulated one-legged robot learns to hop by studying recorded examples, not by practising. Most examples come from a weak performer; a few come from an expert. We compared two learning methods to see how many expert examples each one needs.
 
-*CS 5180 Reinforcement Learning, final project. 70 training runs, 5 repeats per setting, results of 24 Nov 2026.* This is the text version of the interactive [story page](https://claude.ai/artifact/TT1ATHyBdmQUFu5iGy5gZr), which adds 3D replays of every run; the full write-up is the [report](../report/paper/main.pdf).
+*CS 5180 Reinforcement Learning, final project. 70 training runs, 5 repeats per setting, results of 24 Nov 2026.* This is the text version of the interactive [story page](https://rahulvishnuvardhana.github.io/offline-rl-hopper/interactive/), which adds 3D replays of every run; the full write-up is the [report](../report/paper/main.pdf).
 
 ![BC (left) hops for all 1,000 steps; IQL (right) falls after 27](../report/demo/bc_vs_iql_p0.05_seed10000.webp)
 
@@ -65,7 +65,7 @@ IQL matches BC when there is no expert data. At a 5% share its score collapses t
 
 ## 6. Explore: watch two robots side by side
 
-The interactive [story page](https://claude.ai/artifact/TT1ATHyBdmQUFu5iGy5gZr) replays any run in 3D, side by side, from the real test attempts checked against the logs. In this text version, the median-run demo above is the clearest contrast. A second example, chosen by hand and not typical, shows IQL hopping for about 600 steps before falling:
+The interactive [story page](https://rahulvishnuvardhana.github.io/offline-rl-hopper/interactive/) replays any run in 3D, side by side, from the real test attempts checked against the logs. In this text version, the median-run demo above is the clearest contrast. A second example, chosen by hand and not typical, shows IQL hopping for about 600 steps before falling:
 
 ![Illustrative, not typical: BC completes 1,000 steps; IQL seed 2 falls at step 622 (logged 613)](../report/demo/bc_vs_iql_p0.05_seed10000_fall622.webp)
 
